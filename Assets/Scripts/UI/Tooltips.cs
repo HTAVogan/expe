@@ -37,7 +37,7 @@ namespace VRtist
 
         public static void SetText(VRDevice device, Location location, Action action, string text, bool visible = true)
         {
-            Transform tooltip = GetTooltipTransform(device, location);
+            Transform tooltip = GlobalState.GetTooltipTransform(device, location);
             if (null == tooltip) { return; }
 
             Transform textTransform = tooltip.Find("Canvas/Panel/Text");
@@ -71,7 +71,7 @@ namespace VRtist
 
         public static void SetVisible(VRDevice device, Location location, bool visible)
         {
-            Transform tooltip = GetTooltipTransform(device, location);
+            Transform tooltip = GlobalState.GetTooltipTransform(device, location);
             if (null == tooltip) { return; }
 
             tooltip.gameObject.SetActive(visible);
@@ -135,23 +135,6 @@ namespace VRtist
             color = imagePanel.color;
             color.a = 0.39f * factor;
             imagePanel.color = color;
-        }
-
-        private static Transform GetTooltipTransform(VRDevice device, Location location)
-        {
-            Transform controller = GlobalState.GetControllerTransform(device);
-            if (null == controller) { return null; }
-
-            Transform tooltip = null;
-            switch (location)
-            {
-                case Location.Grip: tooltip = controller.Find("GripButtonAnchor/Tooltip"); break;
-                case Location.Trigger: tooltip = controller.Find("TriggerButtonAnchor/Tooltip"); break;
-                case Location.Primary: tooltip = controller.Find("PrimaryButtonAnchor/Tooltip"); break;
-                case Location.Secondary: tooltip = controller.Find("SecondaryButtonAnchor/Tooltip"); break;
-                case Location.Joystick: tooltip = controller.Find("JoystickBaseAnchor/Tooltip"); break;
-            }
-            return tooltip;
         }
     }
 }

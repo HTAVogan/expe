@@ -553,6 +553,7 @@ namespace VRtist
                 }
                 if (currentControllerValues.Count == 2)
                 {
+                    GlobalState.Instance.controllerController.InitializeControllers(primaryController.name);
                     InitInvertedControllers();
                     FillCurrentControllerValues();
                     UpdateControllerValues();

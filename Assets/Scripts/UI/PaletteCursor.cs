@@ -60,12 +60,12 @@ namespace VRtist
                 return;
 
             // Device rotation
-            VRInput.GetControllerTransform(VRInput.primaryController, out Vector3 position, out Quaternion rotation);
+            Transform target = GlobalState.GetControllerLaser();
 
             // The main cursor object always follows the controller
             // so that the collider sticks to the actual hand position.
-            transform.localPosition = position;
-            transform.localRotation = rotation;
+            transform.position = target.position;
+            transform.rotation = target.rotation;
 
             if (null != ray)
             {
