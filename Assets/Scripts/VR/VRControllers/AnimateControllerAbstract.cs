@@ -23,7 +23,7 @@ namespace VRtist
         protected Transform secondaryTransform;
         protected Vector3 initSecondaryTranslation;
 
-        public bool rightHand = true;
+        public bool primaryController = true;
         protected InputDevice device;
 
         public float gripDirection = 1f;
@@ -36,7 +36,7 @@ namespace VRtist
         }
         private void CaptureController()
         {
-            if (rightHand) device = VRInput.primaryController;
+            if (primaryController) device = VRInput.primaryController;
             else device = VRInput.secondaryController;
         }
 

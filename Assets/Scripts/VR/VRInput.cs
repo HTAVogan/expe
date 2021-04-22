@@ -553,7 +553,7 @@ namespace VRtist
                 }
                 if (currentControllerValues.Count == 2)
                 {
-                    GlobalState.Instance.controllerController.InitializeControllers(primaryController.name);
+                    GlobalState.Instance.VRControllers.InitializeControllers(primaryController.name);
                     InitInvertedControllers();
                     FillCurrentControllerValues();
                     UpdateControllerValues();
@@ -609,13 +609,6 @@ namespace VRtist
         public static void UpdateTransformFromVRDevice(Transform transform, InputDevice device)
         {
             GetControllerTransform(device, out Vector3 position, out Quaternion rotation);
-            transform.localPosition = position;
-            transform.localRotation = rotation;
-        }
-
-        public static void UpdateTransformFromVRDevice(Transform transform, InputDevice device, out Vector3 position, out Quaternion rotation)
-        {
-            GetControllerTransform(device, out position, out rotation);
             transform.localPosition = position;
             transform.localRotation = rotation;
         }

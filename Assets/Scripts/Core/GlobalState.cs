@@ -41,7 +41,7 @@ namespace VRtist
 
         [Header("Parameters")]
         public PlayerController playerController;
-        public VRControllerManager controllerController;
+        public VRControllerManager VRControllers;
         public Transform toolsController;
         public Transform paletteController;
         public GameObject colorPanel = null;
@@ -67,8 +67,6 @@ namespace VRtist
         private static int fpsFrameRange = 60;
         private static int[] fpsBuffer = null;
         private static int fpsBufferIndex = 0;
-        private TextMeshProUGUI primaryControllerDisplay = null;
-        private TextMeshProUGUI secondaryControllerDisplay = null;
 
         // World
         public Transform world = null;
@@ -263,7 +261,7 @@ namespace VRtist
         private void Update()
         {
             // Info on the secondary controller
-            if (null != secondaryControllerDisplay)
+            if (null != VRControllers.GetSecondaryDisplay())
             {
                 string infoText = worldScale < 1f ? $"Scale\n-{1f / worldScale:F2}" : $"Scale\n{worldScale:F2}";
                 if (settings.DisplayFPS)
@@ -271,7 +269,7 @@ namespace VRtist
                     UpdateFps();
                     infoText += $"\n\nFPS\n{Fps}";
                 }
-                secondaryControllerDisplay.text = infoText;
+                VRControllers.GetSecondaryDisplay().text = infoText;
             }
 
             Tooltips.UpdateOpacity();
@@ -413,56 +411,50 @@ namespace VRtist
 
         public static Transform GetPrimaryControllerTransform()
         {
-            return Instance.controllerController.GetPrimaryControllerTransform();
+            return Instance.VRControllers.GetPrimaryControllerTransform();
+        }
+
+        public static Vector3 GetPrimaryControllerUp()
+        {
+            return Instance.VRControllers.GetPrimaryControllerUp();
         }
 
         public static Transform GetSecondaryControllerTransform()
         {
-            return Instance.controllerController.GetSecondaryControllerTransform();
+            return Instance.VRControllers.GetSecondaryControllerTransform();
         }
-
-        public static Transform GetControllerTransform(VRDevice device)
+        public static Vector3 GetSecondaryControllerUp()
         {
-            if (device == VRDevice.PrimaryController) { return GetPrimaryControllerTransform(); }
-            if (device == VRDevice.SecondaryController) { return GetSecondaryControllerTransform(); }
-            return null;
+            return Instance.VRControllers.GetSecondaryControllerUp();
         }
 
         public static void SetPrimaryControllerDisplayText(string text)
         {
-            if (null != Instance.primaryControllerDisplay)
+            if (null != instance.VRControllers.GetPrimaryDisplay())
             {
-                Instance.primaryControllerDisplay.text = text;
-            }
-        }
-
-        public static void SetSecondaryControllerDisplayText(string text)
-        {
-            if (null != Instance.secondaryControllerDisplay)
-            {
-                Instance.secondaryControllerDisplay.text = text;
+                instance.VRControllers.GetPrimaryDisplay().text = text;
             }
         }
 
         public static void SetRightHanded(bool value)
         {
-            if (null != Instance.secondaryControllerDisplay && Settings.rightHanded == value)
+            if (Settings.rightHanded == value)
                 return;
 
             Settings.rightHanded = value;
 
-            Instance.controllerController.SetRightHanded(value);
+            Instance.VRControllers.SetRightHanded(value);
         }
 
         public static Transform GetTooltipTransform(VRDevice device, Tooltips.Location location)
         {
-            if (device == VRDevice.PrimaryController) return instance.controllerController.GetPrimaryTooltipTransform(location);
-            else return instance.controllerController.GetSecondaryTooltipTransform(location);
+            if (device == VRDevice.PrimaryController) return instance.VRControllers.GetPrimaryTooltipTransform(location);
+            else return instance.VRControllers.GetSecondaryTooltipTransform(location);
         }
 
         public static Transform GetControllerLaser()
         {
-            return instance.controllerController.GetLaser();
+            return instance.VRControllers.GetLaser();
         }
     }
 }
