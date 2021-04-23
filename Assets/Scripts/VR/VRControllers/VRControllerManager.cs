@@ -23,6 +23,7 @@ namespace VRtist
             public Transform laserHolder;
             public Transform upAxis;
             public Transform paletteHolder;
+            public Transform helperHolder;
 
             public VRController(string rootPath, Transform toolsPalette)
             {
@@ -32,6 +33,7 @@ namespace VRtist
                 laserHolder = controllerTransform.Find("LaserHolder");
                 upAxis = controllerTransform.Find("UpAxis");
                 paletteHolder = controllerTransform.Find("PaletteHolder");
+                helperHolder = controllerTransform.Find("HelperHolder");
                 GetControllerTooltips();
             }
 
@@ -43,8 +45,8 @@ namespace VRtist
                 secondaryButtonDisplay = controllerTransform.Find("SecondaryButtonAnchor/Tooltip");
                 joystickDisplay = controllerTransform.Find("JoystickBaseAnchor/Tooltip");
             }
-
         }
+
         private VRController rightController;
         private VRController inverseRightController;
         private VRController leftController;
@@ -118,7 +120,8 @@ namespace VRtist
             inverseLeftController.controllerTransform.gameObject.SetActive(!value);
 
             Transform toolsController = GlobalState.Instance.toolsController;
-            toolsController.Find("mouthpieces").position = value? rightController.mouthpieceHolder.position : inverseLeftController.mouthpieceHolder.position;
+            Transform paletteController = GlobalState.Instance.paletteController;
+          
 
             // Update controller's displays
             rightController.controllerDisplay.text = "";
@@ -137,11 +140,21 @@ namespace VRtist
             GlobalState.Instance.playerController.HandleCommonTooltipsVisibility();
 
             Transform palette = GlobalState.Instance.paletteController.Find("PaletteHandle");
-            Vector3 currentPalettePosition = palette.localPosition;
+            Vector3 currentPalettePosition = paletteController.localPosition;
             if (value)
+            {
                 palette.SetPositionAndRotation(leftController.paletteHolder.position, leftController.paletteHolder.rotation);
+                toolsController.Find("mouthpieces").SetPositionAndRotation(rightController.mouthpieceHolder.position, rightController.mouthpieceHolder.rotation);
+                toolsController.Find("SelectionHelper").SetPositionAndRotation(rightController.helperHolder.position, rightController.helperHolder.rotation);
+                paletteController.Find("SceneHelper").SetPositionAndRotation(leftController.helperHolder.position, leftController.helperHolder.rotation);
+            }
             else
+            {
                 palette.SetPositionAndRotation(inverseRightController.paletteHolder.position, inverseRightController.paletteHolder.rotation);
+                toolsController.Find("mouthpieces").SetPositionAndRotation(inverseLeftController.mouthpieceHolder.position, inverseLeftController.mouthpieceHolder.rotation);
+                toolsController.Find("SelectionHelper").SetPositionAndRotation(inverseLeftController.helperHolder.position, inverseLeftController.helperHolder.rotation);
+                paletteController.Find("SceneHelper").SetPositionAndRotation(inverseRightController.helperHolder.position, inverseRightController.helperHolder.rotation);
+            }
         }
 
 
