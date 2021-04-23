@@ -62,7 +62,7 @@ namespace VRtist
                 case "Index Controller OpenXR": InitializeControllers(ControllerModel.Index); break;
                 case "Oculus Rift S": InitializeControllers(ControllerModel.Quest); break;
                 case "Quest": InitializeControllers(ControllerModel.Quest); break;
-                case "Quest2": InitializeControllers(ControllerModel.Quest2); break;
+                case "Oculus Touch Controller OpenXR": InitializeControllers(ControllerModel.Quest2); break;
             }
             SetRightHanded(GlobalState.Settings.rightHanded);
         }
@@ -82,7 +82,8 @@ namespace VRtist
                 case ControllerModel.Quest:
                     GetControllersValues("OculusQuest");
                     break;
-                case ControllerModel.Quest2: break;
+                case ControllerModel.Quest2: GetQuest2ControllersValues();
+                    break;
             }
         }
 
@@ -189,6 +190,23 @@ namespace VRtist
             leftController.controllerTransform.gameObject.SetActive(true);
 
             inverseLeftController = new VRController("ValveIndex/IndexLeftPivot/Index_controller_Left", toolsController);
+        }
+
+        private void GetQuest2ControllersValues()
+        {
+            Transform toolsController = GlobalState.Instance.toolsController;
+            Transform paletteController = GlobalState.Instance.paletteController;
+
+            rightController = new VRController("OculusQuest2/Quest2_controller_Right/right_controller", toolsController);
+            toolsController.Find("mouthpieces").position = rightController.mouthpieceHolder.position;
+            rightController.controllerTransform.gameObject.SetActive(true);
+
+            inverseRightController = new VRController("OculusQuest2/Quest2_controller_Right/right_controller", paletteController);
+
+            leftController = new VRController("OculusQuest2/Quest2_controller_Left/left_controller", paletteController);
+            leftController.controllerTransform.gameObject.SetActive(true);
+
+            inverseLeftController = new VRController("OculusQuest2/Quest2_controller_Left/left_controller", toolsController);
         }
 
         internal Transform GetPrimaryTooltipTransform(Tooltips.Location location)
