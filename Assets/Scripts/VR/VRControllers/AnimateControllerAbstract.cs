@@ -54,7 +54,7 @@ namespace VRtist
                 initTriggerRotation = triggerTransform.localRotation;
             }
 
-            joystickTransform = transform.Find("PrimaryAxisPivot/PrimaryAxis");
+            joystickTransform = transform.Find("PrimaryAxisPivot");
             if (null != joystickTransform)
             {
                 initJoystickRotation = joystickTransform.localRotation;

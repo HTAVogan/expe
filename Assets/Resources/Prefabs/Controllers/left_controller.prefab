@@ -2552,14 +2552,13 @@ GameObject:
   - component: {fileID: 2262819812566665851}
   - component: {fileID: 5502184652452624002}
   - component: {fileID: 1872091940}
-  - component: {fileID: 2062056096}
   m_Layer: 13
   m_Name: left_controller
   m_TagString: UIObject
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7078568029554978893
 Transform:
   m_ObjectHideFlags: 0
@@ -2660,20 +2659,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   primaryController: 1
   gripDirection: 1
---- !u!114 &2062056096
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6081963715641033310}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1b149ecb8ccc97646bae2fabfe075d4f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  primaryController: 1
-  gripDirection: -1
 --- !u!1 &6176252481538389097
 GameObject:
   m_ObjectHideFlags: 0

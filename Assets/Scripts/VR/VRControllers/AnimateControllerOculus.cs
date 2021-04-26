@@ -22,7 +22,7 @@ namespace VRtist
         protected override void AnimateJoystick(Vector2 joystick)
         {
             joystickTransform.localRotation = initJoystickRotation * Quaternion.Euler(joystick.y * joystickRotationAmplitude, 0, joystick.x * -joystickRotationAmplitude);
-            joystickTransform.gameObject.GetComponent<MeshRenderer>().materials[1].SetColor("_BaseColor", joystick.magnitude > 0.05f ? UIOptions.SelectedColor : Color.black);
+            joystickTransform.gameObject.GetComponentInChildren<MeshRenderer>().materials[1].SetColor("_BaseColor", joystick.magnitude > 0.05f ? UIOptions.SelectedColor : Color.black);
         }
 
         protected override void AnimatePrimaryButton(bool primaryState)
