@@ -418,6 +418,13 @@ namespace VRtist
         {
             return Instance.VRControllers.GetPrimaryControllerUp();
         }
+        public static void SetPrimaryControllerDisplayText(string text)
+        {
+            if (null != instance.VRControllers.GetPrimaryDisplay())
+            {
+                instance.VRControllers.GetPrimaryDisplay().text = text;
+            }
+        }
 
         public static Transform GetSecondaryControllerTransform()
         {
@@ -428,13 +435,6 @@ namespace VRtist
             return Instance.VRControllers.GetSecondaryControllerUp();
         }
 
-        public static void SetPrimaryControllerDisplayText(string text)
-        {
-            if (null != instance.VRControllers.GetPrimaryDisplay())
-            {
-                instance.VRControllers.GetPrimaryDisplay().text = text;
-            }
-        }
 
         public static void SetRightHanded(bool value)
         {
@@ -454,7 +454,7 @@ namespace VRtist
 
         public static Transform GetControllerLaser()
         {
-            return instance.VRControllers.GetLaser();
+            return instance.VRControllers.GetLaserTransform();
         }
     }
 }

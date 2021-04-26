@@ -59,12 +59,11 @@ namespace VRtist
         {
             switch (name)
             {
-                case "Index Controller OpenXR": InitializeControllers(ControllerModel.Index); break;
                 case "Oculus Rift S": InitializeControllers(ControllerModel.Quest); break;
-                case "Quest": InitializeControllers(ControllerModel.Quest); break;
                 case "Oculus Touch Controller OpenXR": InitializeControllers(ControllerModel.Quest2); break;
+                case "Index Controller OpenXR": InitializeControllers(ControllerModel.Index); break;
+                default: InitializeControllers(ControllerModel.Quest);break;
             }
-            SetRightHanded(GlobalState.Settings.rightHanded);
         }
 
         public void InitializeControllers(ControllerModel model)
@@ -80,11 +79,12 @@ namespace VRtist
                     GetIndexControllersValues();
                     break;
                 case ControllerModel.Quest:
-                    GetControllersValues("OculusQuest");
+                    GetQuestControllersValues();
                     break;
                 case ControllerModel.Quest2: GetQuest2ControllersValues();
                     break;
             }
+            SetRightHanded(GlobalState.Settings.rightHanded);
         }
 
         public Transform GetPrimaryControllerTransform()
@@ -144,35 +144,36 @@ namespace VRtist
             Vector3 currentPalettePosition = paletteController.localPosition;
             if (value)
             {
-                palette.SetPositionAndRotation(leftController.paletteHolder.position, leftController.paletteHolder.rotation);
-                toolsController.Find("mouthpieces").SetPositionAndRotation(rightController.mouthpieceHolder.position, rightController.mouthpieceHolder.rotation);
-                toolsController.Find("SelectionHelper").SetPositionAndRotation(rightController.helperHolder.position, rightController.helperHolder.rotation);
-                paletteController.Find("SceneHelper").SetPositionAndRotation(leftController.helperHolder.position, leftController.helperHolder.rotation);
+                SetHolders(leftController, rightController, toolsController, paletteController, palette);
             }
             else
             {
-                palette.SetPositionAndRotation(inverseRightController.paletteHolder.position, inverseRightController.paletteHolder.rotation);
-                toolsController.Find("mouthpieces").SetPositionAndRotation(inverseLeftController.mouthpieceHolder.position, inverseLeftController.mouthpieceHolder.rotation);
-                toolsController.Find("SelectionHelper").SetPositionAndRotation(inverseLeftController.helperHolder.position, inverseLeftController.helperHolder.rotation);
-                paletteController.Find("SceneHelper").SetPositionAndRotation(inverseRightController.helperHolder.position, inverseRightController.helperHolder.rotation);
+                SetHolders(inverseRightController, inverseLeftController, toolsController, paletteController, palette);
             }
         }
 
+        private void SetHolders(VRController primary, VRController secondary, Transform toolsController, Transform paletteController, Transform palette)
+        {
+            palette.SetPositionAndRotation(primary.paletteHolder.position, primary.paletteHolder.rotation);
+            toolsController.Find("mouthpieces").SetPositionAndRotation(secondary.mouthpieceHolder.position, secondary.mouthpieceHolder.rotation);
+            toolsController.Find("SelectionHelper").SetPositionAndRotation(secondary.helperHolder.position, secondary.helperHolder.rotation);
+            paletteController.Find("SceneHelper").SetPositionAndRotation(primary.helperHolder.position, primary.helperHolder.rotation);
+        }
 
-        private void GetControllersValues(string controllerPath)
+        private void GetQuestControllersValues()
         {
             Transform toolsController = GlobalState.Instance.toolsController;
             Transform paletteController = GlobalState.Instance.paletteController;
 
-            rightController = new VRController(controllerPath + "/right_controller", toolsController);
+            rightController = new VRController("OculusQuest/right_controller", toolsController);
             rightController.controllerTransform.gameObject.SetActive(true);
 
-            inverseRightController = new VRController(controllerPath + "/right_controller", paletteController);
+            inverseRightController = new VRController("OculusQuest/right_controller", paletteController);
 
-            leftController = new VRController(controllerPath + "/left_controller", paletteController);
+            leftController = new VRController("OculusQuest/left_controller", paletteController);
             leftController.controllerTransform.gameObject.SetActive(true);
 
-            inverseLeftController = new VRController(controllerPath + "/left_controller", toolsController);
+            inverseLeftController = new VRController("OculusQuest/left_controller", toolsController);
         }
 
         private void GetIndexControllersValues()
@@ -248,7 +249,7 @@ namespace VRtist
             }
         }
 
-        internal Transform GetLaser()
+        internal Transform GetLaserTransform()
         {
             if (GlobalState.Settings.rightHanded) return rightController.laserHolder;
             else return inverseLeftController.laserHolder;
