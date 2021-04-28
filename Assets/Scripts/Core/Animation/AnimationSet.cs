@@ -34,6 +34,9 @@ namespace VRtist
     {
         public Transform transform;
         public readonly Dictionary<AnimatableProperty, Curve> curves = new Dictionary<AnimatableProperty, Curve>();
+        public readonly List<AnimationSet> constraintedAnimations = new List<AnimationSet>();
+        public AnimationSet parentConstraint;
+        public AnimationSet lookAtConstraint;
 
         public AnimationSet(GameObject gobject)
         {
@@ -43,6 +46,72 @@ namespace VRtist
             if (null != lightController) { CreateLightCurves(); }
             else if (null != cameraController) { CreateCameraCurves(); }
             else { CreateTransformCurves(); }
+        }
+
+        public void EvaluateAnimation(int currentFrame)
+        {
+            Transform trans = transform;
+            Vector3 position = trans.localPosition;
+            Vector3 rotation = trans.localEulerAngles;
+            Vector3 scale = trans.localScale;
+
+            float power = -1;
+            Color color = Color.white;
+
+            float cameraFocal = -1;
+            float cameraFocus = -1;
+            float cameraAperture = -1;
+
+            foreach (Curve curve in curves.Values)
+            {
+                if (!curve.Evaluate(currentFrame, out float value))
+                    continue;
+                switch (curve.property)
+                {
+                    case AnimatableProperty.PositionX: position.x = value; break;
+                    case AnimatableProperty.PositionY: position.y = value; break;
+                    case AnimatableProperty.PositionZ: position.z = value; break;
+
+                    case AnimatableProperty.RotationX: rotation.x = value; break;
+                    case AnimatableProperty.RotationY: rotation.y = value; break;
+                    case AnimatableProperty.RotationZ: rotation.z = value; break;
+
+                    case AnimatableProperty.ScaleX: scale.x = value; break;
+                    case AnimatableProperty.ScaleY: scale.y = value; break;
+                    case AnimatableProperty.ScaleZ: scale.z = value; break;
+
+                    case AnimatableProperty.Power: power = value; break;
+                    case AnimatableProperty.ColorR: color.r = value; break;
+                    case AnimatableProperty.ColorG: color.g = value; break;
+                    case AnimatableProperty.ColorB: color.b = value; break;
+
+                    case AnimatableProperty.CameraFocal: cameraFocal = value; break;
+                    case AnimatableProperty.CameraFocus: cameraFocus = value; break;
+                    case AnimatableProperty.CameraAperture: cameraAperture = value; break;
+                }
+            }
+
+            trans.localPosition = position;
+            trans.localEulerAngles = rotation;
+            trans.localScale = scale;
+
+            if (power != -1)
+            {
+                LightController controller = trans.GetComponent<LightController>();
+                controller.Power = power;
+                controller.Color = color;
+            }
+
+            if (cameraFocal != -1 || cameraFocus != -1 || cameraAperture != -1)
+            {
+                CameraController controller = trans.GetComponent<CameraController>();
+                if (cameraFocal != -1)
+                    controller.focal = cameraFocal;
+                if (cameraFocus != -1)
+                    controller.Focus = cameraFocus;
+                if (cameraAperture != -1)
+                    controller.aperture = cameraAperture;
+            }
         }
 
         public Curve GetCurve(AnimatableProperty property)
@@ -101,6 +170,34 @@ namespace VRtist
         {
             foreach (Curve curve in curves.Values)
                 curve.ComputeCache();
+
+            constraintedAnimations.ForEach(x => x.ComputeRestrictedCache());
+        }
+
+        public void ComputeRestrictedCache()
+        {
+            foreach (Curve curve in curves.Values) curve.ComputeCache();
+
+            if(null != parentConstraint)
+            {
+                float[] posXCurve = GetCurve(AnimatableProperty.PositionX).CachedValues;
+                float[] posYCurve = GetCurve(AnimatableProperty.PositionY).CachedValues;
+                float[] posZCurve = GetCurve(AnimatableProperty.PositionZ).CachedValues;
+
+                float[] parentPosXCurve = parentConstraint.GetCurve(AnimatableProperty.PositionX).CachedValues;
+                float[] parentPosYCurve = parentConstraint.GetCurve(AnimatableProperty.PositionY).CachedValues;
+                float[] parentPosZcurve = parentConstraint.GetCurve(AnimatableProperty.PositionZ).CachedValues;
+
+                Debug.Assert(posXCurve.Length == parentPosXCurve.Length, "object and parent have different cached value length");
+
+                for(int i =1; i < posXCurve.Length; i++)
+                {
+                    posXCurve[i] += parentPosXCurve[i] - parentPosXCurve[i - 1];
+                    posYCurve[i] += parentPosYCurve[i] - parentPosYCurve[i - 1];
+                    posZCurve[i] += parentPosZcurve[i] - parentPosZcurve[i - 1];
+                }
+
+            }
         }
 
         public void ClearCache()

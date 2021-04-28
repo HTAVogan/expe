@@ -38,6 +38,7 @@ namespace VRtist
         public List<AnimationKey> keys;
         private int[] cachedKeysIndices;
         private float[] cachedValues;
+        public float[] CachedValues { get { return cachedValues; } }
 
         public Curve(AnimatableProperty property)
         {

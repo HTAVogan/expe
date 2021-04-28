@@ -50,4 +50,10 @@ namespace VRtist
     {
 
     }
+
+    [Serializable]
+    public class GameObjectConstraintChange : UnityEvent<Constraint>
+    {
+
+    }
 }

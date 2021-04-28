@@ -86,6 +86,7 @@ namespace VRtist
     {
         // All animations
         readonly Dictionary<GameObject, AnimationSet> animations = new Dictionary<GameObject, AnimationSet>();
+        readonly Dictionary<GameObject, AnimationSet> constrainedAnimation = new Dictionary<GameObject, AnimationSet>();
         readonly Dictionary<GameObject, AnimationSet> disabledAnimations = new Dictionary<GameObject, AnimationSet>();
         readonly Dictionary<GameObject, AnimationSet> recordingObjects = new Dictionary<GameObject, AnimationSet>();
         readonly Dictionary<GameObject, AnimationSet> oldAnimations = new Dictionary<GameObject, AnimationSet>();
@@ -184,6 +185,8 @@ namespace VRtist
 
             GlobalState.ObjectAddedEvent.AddListener(OnObjectAdded);
             GlobalState.ObjectRemovedEvent.AddListener(OnObjectRemoved);
+            GlobalState.ConstraintAddedEvent.AddListener(OnConstrainAdded);
+            GlobalState.ConstraintRemovedEvent.AddListener(OnConstraintRemoved);
         }
 
         public void RegisterTimeHook(TimeHook timeHook)
@@ -285,6 +288,37 @@ namespace VRtist
             }
         }
 
+        void OnConstrainAdded(Constraint constraint)
+        {
+            GameObject gobject = constraint.gobject;
+            GameObject target = constraint.target.gameObject;
+            AnimationSet gobjectAnimation = GetObjectAnimation(gobject);
+            if (null != gobjectAnimation)
+            {
+                animations.Remove(gobject);
+                constrainedAnimation.Add(gobject, gobjectAnimation);
+                AnimationSet targetAnimation = GetOrCreateObjectAnimation(target);
+                targetAnimation.constraintedAnimations.Add(gobjectAnimation);
+                targetAnimation.ComputeCache();
+            }
+        }
+
+        void OnConstraintRemoved(Constraint constraint)
+        {
+            GameObject gobject = constraint.gobject;
+            GameObject target = constraint.target.gameObject;
+            AnimationSet targetAnimation = GetObjectAnimation(target);
+            if (constrainedAnimation.TryGetValue(gobject, out AnimationSet gobjectAnimation))
+            {
+                constrainedAnimation.Remove(gobject);
+                targetAnimation.constraintedAnimations.Remove(gobjectAnimation);
+                animations.Add(gobject, gobjectAnimation);
+                if (constraint.constraintType == ConstraintType.LookAt) gobjectAnimation.lookAtConstraint = null;
+                if (constraint.constraintType == ConstraintType.Parent) gobjectAnimation.parentConstraint = null;
+                gobjectAnimation.ComputeCache();
+            }
+        }
+
         private void RecomputeCurvesCache(Vector2Int _)
         {
             foreach (AnimationSet animationSet in animations.Values)
@@ -323,68 +357,7 @@ namespace VRtist
         {
             foreach (AnimationSet animationSet in animations.Values)
             {
-                Transform trans = animationSet.transform;
-                Vector3 position = trans.localPosition;
-                Vector3 rotation = trans.localEulerAngles;
-                Vector3 scale = trans.localScale;
-
-                float power = -1;
-                Color color = Color.white;
-
-                float cameraFocal = -1;
-                float cameraFocus = -1;
-                float cameraAperture = -1;
-
-                foreach (Curve curve in animationSet.curves.Values)
-                {
-                    if (!curve.Evaluate(currentFrame, out float value))
-                        continue;
-                    switch (curve.property)
-                    {
-                        case AnimatableProperty.PositionX: position.x = value; break;
-                        case AnimatableProperty.PositionY: position.y = value; break;
-                        case AnimatableProperty.PositionZ: position.z = value; break;
-
-                        case AnimatableProperty.RotationX: rotation.x = value; break;
-                        case AnimatableProperty.RotationY: rotation.y = value; break;
-                        case AnimatableProperty.RotationZ: rotation.z = value; break;
-
-                        case AnimatableProperty.ScaleX: scale.x = value; break;
-                        case AnimatableProperty.ScaleY: scale.y = value; break;
-                        case AnimatableProperty.ScaleZ: scale.z = value; break;
-
-                        case AnimatableProperty.Power: power = value; break;
-                        case AnimatableProperty.ColorR: color.r = value; break;
-                        case AnimatableProperty.ColorG: color.g = value; break;
-                        case AnimatableProperty.ColorB: color.b = value; break;
-
-                        case AnimatableProperty.CameraFocal: cameraFocal = value; break;
-                        case AnimatableProperty.CameraFocus: cameraFocus = value; break;
-                        case AnimatableProperty.CameraAperture: cameraAperture = value; break;
-                    }
-                }
-
-                trans.localPosition = position;
-                trans.localEulerAngles = rotation;
-                trans.localScale = scale;
-
-                if (power != -1)
-                {
-                    LightController controller = trans.GetComponent<LightController>();
-                    controller.Power = power;
-                    controller.Color = color;
-                }
-
-                if (cameraFocal != -1 || cameraFocus != -1 || cameraAperture != -1)
-                {
-                    CameraController controller = trans.GetComponent<CameraController>();
-                    if (cameraFocal != -1)
-                        controller.focal = cameraFocal;
-                    if (cameraFocus != -1)
-                        controller.Focus = cameraFocus;
-                    if (cameraAperture != -1)
-                        controller.aperture = cameraAperture;
-                }
+                animationSet.EvaluateAnimation(CurrentFrame);
             }
         }
 
