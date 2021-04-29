@@ -299,7 +299,11 @@ namespace VRtist
                 constrainedAnimation.Add(gobject, gobjectAnimation);
                 AnimationSet targetAnimation = GetOrCreateObjectAnimation(target);
                 targetAnimation.constraintedAnimations.Add(gobjectAnimation);
+                if (constraint.constraintType == ConstraintType.LookAt) gobjectAnimation.lookAtConstraint = targetAnimation;
+                if (constraint.constraintType == ConstraintType.Parent) gobjectAnimation.parentConstraint = targetAnimation;
                 targetAnimation.ComputeCache();
+
+                Debug.Log("added constraint between " + constraint.gobject + " and  " + constraint.target);
             }
         }
 
@@ -373,7 +377,10 @@ namespace VRtist
 
         public AnimationSet GetObjectAnimation(GameObject gobject)
         {
-            animations.TryGetValue(gobject, out AnimationSet animationSet);
+            if(!animations.TryGetValue(gobject, out AnimationSet animationSet))
+            {
+                constrainedAnimation.TryGetValue(gobject, out animationSet);
+            }
             return animationSet;
         }
 

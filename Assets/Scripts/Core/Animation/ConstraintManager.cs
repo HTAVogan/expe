@@ -141,6 +141,7 @@ namespace VRtist
                     {
                         GameObject.Destroy(con.lineGameObject);
                         constraints.Remove(con);
+                        GlobalState.FireConstraintRemoved(con);
                         break;
                     }
                 }
@@ -223,6 +224,7 @@ namespace VRtist
                     targetParametersController = target.AddComponent<ParametersController>();
                 }
                 targetParametersController.AddConstraintHolder(gobject);
+                GlobalState.FireConstraintAdded(newConstraint);
             }
             else
             {

@@ -24,6 +24,7 @@
 using System.Collections.Generic;
 
 using UnityEngine;
+using UnityEngine.Animations;
 
 namespace VRtist
 {
@@ -50,6 +51,12 @@ namespace VRtist
 
         public void EvaluateAnimation(int currentFrame)
         {
+            if (null != parentConstraint)
+            {
+                ParentConstraint constraint = transform.GetComponent<ParentConstraint>();
+                constraint.constraintActive = false;
+            }
+
             Transform trans = transform;
             Vector3 position = trans.localPosition;
             Vector3 rotation = trans.localEulerAngles;
@@ -111,6 +118,12 @@ namespace VRtist
                     controller.Focus = cameraFocus;
                 if (cameraAperture != -1)
                     controller.aperture = cameraAperture;
+            }
+
+            if (null != parentConstraint)
+            {
+                ParentConstraint constraint = transform.GetComponent<ParentConstraint>();
+                constraint.constraintActive = true;
             }
         }
 
@@ -178,7 +191,7 @@ namespace VRtist
         {
             foreach (Curve curve in curves.Values) curve.ComputeCache();
 
-            if(null != parentConstraint)
+            if (null != parentConstraint)
             {
                 float[] posXCurve = GetCurve(AnimatableProperty.PositionX).CachedValues;
                 float[] posYCurve = GetCurve(AnimatableProperty.PositionY).CachedValues;
@@ -190,13 +203,13 @@ namespace VRtist
 
                 Debug.Assert(posXCurve.Length == parentPosXCurve.Length, "object and parent have different cached value length");
 
-                for(int i =1; i < posXCurve.Length; i++)
+                for (int i = 1; i < posXCurve.Length; i++)
                 {
                     posXCurve[i] += parentPosXCurve[i] - parentPosXCurve[i - 1];
                     posYCurve[i] += parentPosYCurve[i] - parentPosYCurve[i - 1];
                     posZCurve[i] += parentPosZcurve[i] - parentPosZcurve[i - 1];
                 }
-
+                Debug.Log("compute restricted cache on " + transform);
             }
         }
 
