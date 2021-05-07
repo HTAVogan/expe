@@ -211,6 +211,7 @@ namespace VRtist
             AddBuiltinAsset("Prop", "Warn Cone", "Prefabs/UI/JUNK/UI_warn_cone", "Prefabs/Primitives/JUNK/warn_cone");
 
             AddBuiltinAsset("Vehicle", "Car", "Prefabs/UI/JUNK/UI_car", "Prefabs/Primitives/JUNK/car");
+            //AddBuiltinAsset("Character", "Arm", "Prefabs/Primitives/CHARACTERS/ultra_realistic_robot_arm", "Prefabs/UI/CHARACTERS/UI_ultra_realistic_robot_arm");
         }
 
         private IEnumerator ScanDirectory(string path, Action onEndScan = null)

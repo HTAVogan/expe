@@ -37,7 +37,6 @@ namespace VRtist
         public readonly Dictionary<AnimatableProperty, Curve> curves = new Dictionary<AnimatableProperty, Curve>();
         public readonly List<AnimationSet> constraintedAnimations = new List<AnimationSet>();
         public AnimationSet parentConstraint;
-        public AnimationSet lookAtConstraint;
 
         public AnimationSet(GameObject gobject)
         {
@@ -51,12 +50,6 @@ namespace VRtist
 
         public void EvaluateAnimation(int currentFrame)
         {
-            if (null != parentConstraint)
-            {
-                ParentConstraint constraint = transform.GetComponent<ParentConstraint>();
-                constraint.constraintActive = false;
-            }
-
             Transform trans = transform;
             Vector3 position = trans.localPosition;
             Vector3 rotation = trans.localEulerAngles;
@@ -123,7 +116,8 @@ namespace VRtist
             if (null != parentConstraint)
             {
                 ParentConstraint constraint = transform.GetComponent<ParentConstraint>();
-                constraint.constraintActive = true;
+                Vector3 offset = Vector3.Scale(parentConstraint.transform.InverseTransformPoint(transform.position), parentConstraint.transform.lossyScale);
+                constraint.SetTranslationOffset(0, offset);
             }
         }
 
@@ -201,15 +195,12 @@ namespace VRtist
                 float[] parentPosYCurve = parentConstraint.GetCurve(AnimatableProperty.PositionY).CachedValues;
                 float[] parentPosZcurve = parentConstraint.GetCurve(AnimatableProperty.PositionZ).CachedValues;
 
-                Debug.Assert(posXCurve.Length == parentPosXCurve.Length, "object and parent have different cached value length");
-
                 for (int i = 1; i < posXCurve.Length; i++)
                 {
-                    posXCurve[i] += parentPosXCurve[i] - parentPosXCurve[i - 1];
-                    posYCurve[i] += parentPosYCurve[i] - parentPosYCurve[i - 1];
-                    posZCurve[i] += parentPosZcurve[i] - parentPosZcurve[i - 1];
+                    posXCurve[i] += parentPosXCurve[i] - parentPosXCurve[0];
+                    posYCurve[i] += parentPosYCurve[i] - parentPosYCurve[0];
+                    posZCurve[i] += parentPosZcurve[i] - parentPosZcurve[0];
                 }
-                Debug.Log("compute restricted cache on " + transform);
             }
         }
 
@@ -218,6 +209,9 @@ namespace VRtist
             foreach (Curve curve in curves.Values)
                 curve.ClearCache();
         }
-    }
 
+
+
+
+    }
 }

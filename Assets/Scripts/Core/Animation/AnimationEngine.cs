@@ -299,9 +299,9 @@ namespace VRtist
                 constrainedAnimation.Add(gobject, gobjectAnimation);
                 AnimationSet targetAnimation = GetOrCreateObjectAnimation(target);
                 targetAnimation.constraintedAnimations.Add(gobjectAnimation);
-                if (constraint.constraintType == ConstraintType.LookAt) gobjectAnimation.lookAtConstraint = targetAnimation;
                 if (constraint.constraintType == ConstraintType.Parent) gobjectAnimation.parentConstraint = targetAnimation;
                 targetAnimation.ComputeCache();
+                PositionCurvechange(gobject);
 
                 Debug.Log("added constraint between " + constraint.gobject + " and  " + constraint.target);
             }
@@ -309,6 +309,7 @@ namespace VRtist
 
         void OnConstraintRemoved(Constraint constraint)
         {
+            if (constraint.constraintType != ConstraintType.Parent) return;
             GameObject gobject = constraint.gobject;
             GameObject target = constraint.target.gameObject;
             AnimationSet targetAnimation = GetObjectAnimation(target);
@@ -317,10 +318,17 @@ namespace VRtist
                 constrainedAnimation.Remove(gobject);
                 targetAnimation.constraintedAnimations.Remove(gobjectAnimation);
                 animations.Add(gobject, gobjectAnimation);
-                if (constraint.constraintType == ConstraintType.LookAt) gobjectAnimation.lookAtConstraint = null;
                 if (constraint.constraintType == ConstraintType.Parent) gobjectAnimation.parentConstraint = null;
                 gobjectAnimation.ComputeCache();
+                PositionCurvechange(gobject);
             }
+        }
+
+        public void PositionCurvechange(GameObject gobject)
+        {
+            onChangeCurve.Invoke(gobject, AnimatableProperty.PositionX);
+            onChangeCurve.Invoke(gobject, AnimatableProperty.PositionY);
+            onChangeCurve.Invoke(gobject, AnimatableProperty.PositionZ);
         }
 
         private void RecomputeCurvesCache(Vector2Int _)
@@ -363,6 +371,10 @@ namespace VRtist
             {
                 animationSet.EvaluateAnimation(CurrentFrame);
             }
+            foreach (AnimationSet animationSet in constrainedAnimation.Values)
+            {
+                animationSet.EvaluateAnimation(CurrentFrame);
+            }
         }
 
         public int TimeToFrame(float time)
@@ -377,7 +389,7 @@ namespace VRtist
 
         public AnimationSet GetObjectAnimation(GameObject gobject)
         {
-            if(!animations.TryGetValue(gobject, out AnimationSet animationSet))
+            if (!animations.TryGetValue(gobject, out AnimationSet animationSet))
             {
                 constrainedAnimation.TryGetValue(gobject, out animationSet);
             }
