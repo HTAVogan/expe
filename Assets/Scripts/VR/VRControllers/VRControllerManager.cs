@@ -141,7 +141,6 @@ namespace VRtist
             GlobalState.Instance.playerController.HandleCommonTooltipsVisibility();
 
             Transform palette = GlobalState.Instance.paletteController.Find("PaletteHandle");
-            Vector3 currentPalettePosition = paletteController.localPosition;
             if (value)
             {
                 SetHolders(leftController, rightController, toolsController, paletteController, palette);
@@ -154,6 +153,7 @@ namespace VRtist
 
         private void SetHolders(VRController primary, VRController secondary, Transform toolsController, Transform paletteController, Transform palette)
         {
+            Debug.Log(palette + " " + primary);
             palette.SetPositionAndRotation(primary.paletteHolder.position, primary.paletteHolder.rotation);
             toolsController.Find("mouthpieces").SetPositionAndRotation(secondary.mouthpieceHolder.position, secondary.mouthpieceHolder.rotation);
             toolsController.Find("SelectionHelper").SetPositionAndRotation(secondary.helperHolder.position, secondary.helperHolder.rotation);
