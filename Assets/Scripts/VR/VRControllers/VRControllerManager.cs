@@ -154,10 +154,22 @@ namespace VRtist
 
         private void SetHolders(VRController primary, VRController secondary, Transform toolsController, Transform paletteController, Transform palette)
         {
-            palette.SetPositionAndRotation(primary.paletteHolder.position, primary.paletteHolder.rotation);
+            if(null != palette) palette.SetPositionAndRotation(primary.paletteHolder.position, primary.paletteHolder.rotation);
             toolsController.Find("mouthpieces").SetPositionAndRotation(secondary.mouthpieceHolder.position, secondary.mouthpieceHolder.rotation);
             toolsController.Find("SelectionHelper").SetPositionAndRotation(secondary.helperHolder.position, secondary.helperHolder.rotation);
             paletteController.Find("SceneHelper").SetPositionAndRotation(primary.helperHolder.position, primary.helperHolder.rotation);
+        }
+
+        public void SetPaletteHolder(Transform palette)
+        {
+            if (GlobalState.Settings.rightHanded)
+            {
+                palette.SetPositionAndRotation(leftController.paletteHolder.position, leftController.paletteHolder.rotation);
+            }
+            else
+            {
+                palette.SetPositionAndRotation(inverseRightController.paletteHolder.position, inverseRightController.paletteHolder.rotation);
+            }
         }
 
         private void GetQuestControllersValues()
@@ -254,6 +266,8 @@ namespace VRtist
             if (GlobalState.Settings.rightHanded) return rightController.laserHolder;
             else return inverseLeftController.laserHolder;
         }
+
+
 
     }
 }
