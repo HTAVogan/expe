@@ -416,6 +416,7 @@ namespace VRtist
             }
         }
 
+        #region VRControllers
         public static void SetPrimaryControllerVisible(bool visible)
         {
             GetPrimaryControllerTransform().gameObject.SetActive(visible);
@@ -468,5 +469,12 @@ namespace VRtist
         {
             return instance.VRControllers.GetLaserTransform();
         }
+
+        public static void SetPaletteOnHolder(Transform palette)
+        {
+            Instance.VRControllers.SetPaletteHolder(palette);
+        }
+
+        #endregion
     }
 }

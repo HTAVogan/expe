@@ -126,9 +126,6 @@ namespace VRtist
         private string currentToolName;
         private string currentTabName;
 
-        private Vector3 paletteOffsetPosition = new Vector3(-0.02f, 0.05f, 0.05f);
-        private Quaternion paletteOffsetRotation = Quaternion.Euler(30, 0, 0);
-
         private GameObject colorPanel = null;
 
         // Map of the 3d object widgets. Used for passing messages by int instead of GameObject. Key is a Hash.
@@ -378,9 +375,7 @@ namespace VRtist
 
             // Re-parent to Hand
             paletteRoot.transform.parent = handContainer.transform;
-            // Re-apply offset relative to hand.
-            paletteRoot.transform.localPosition = paletteOffsetPosition;
-            paletteRoot.transform.localRotation = paletteOffsetRotation;
+            GlobalState.SetPaletteOnHolder(paletteRoot);
             // Switch system buttons states
             palettePinButton.Disabled = false;
             paletteCloseButton.Disabled = true;
@@ -393,10 +388,7 @@ namespace VRtist
             // security
             if (GlobalState.Settings.pinnedPalette)
                 Debug.LogError("Palette is already pinned, we shouldnt be able to pin it again.");
-
-            // get current offset to apply it later when closing the palette
-            paletteOffsetPosition = paletteRoot.transform.localPosition;
-            paletteOffsetRotation = paletteRoot.transform.localRotation;
+            
             // change parent -> vehicle
             paletteRoot.transform.parent = vehicleContainer.transform;
             // Switch system buttons states
