@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 4268771102132507116}
   - component: {fileID: 1054725762687640208}
   - component: {fileID: 9204683964271825053}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: UI_ultra_realistic_robot_arm
-  m_TagString: Untagged
+  m_TagString: UICollider
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -132,7 +132,7 @@ GameObject:
   - component: {fileID: 8405059193969297601}
   - component: {fileID: 1970897989421882280}
   - component: {fileID: 4392865039928309690}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -213,7 +213,7 @@ GameObject:
   - component: {fileID: 7354144823891408785}
   - component: {fileID: 8984172904873626861}
   - component: {fileID: 8878586601919885807}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Arm01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -295,7 +295,7 @@ GameObject:
   - component: {fileID: 6816263954794144122}
   - component: {fileID: 7581775229324816095}
   - component: {fileID: 5679909046829849109}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: ultra_realistic_robot_arm
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -377,7 +377,7 @@ GameObject:
   - component: {fileID: 617779774284512738}
   - component: {fileID: 8892852036272214574}
   - component: {fileID: 1071883453645435976}
-  m_Layer: 0
+  m_Layer: 17
   m_Name: Arm02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
