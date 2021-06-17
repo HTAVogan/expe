@@ -661,26 +661,23 @@ namespace VRtist
 
         private async Task<Assimp.Scene> ImportAssimpFile(string fileName)
         {
-            Debug.Log("import assimp file " + fileName);
             Assimp.Scene aScene = null;
             await Task<Assimp.Scene>.Run(() =>
             {
                 try
                 {
                     Assimp.AssimpContext ctx = new Assimp.AssimpContext();
-                    var aScene = ctx.ImportFile(fileName,
+                    aScene = ctx.ImportFile(fileName,
                         Assimp.PostProcessSteps.Triangulate |
                         Assimp.PostProcessSteps.GenerateNormals |
                         Assimp.PostProcessSteps.GenerateUVCoords);
                 }
                 catch (Assimp.AssimpException e)
                 {
-                    Debug.Log("catch");
                     Debug.LogError(e.Message);
                     aScene = null;
                 }
             });
-            Debug.Log("finished " + scene.RootNode.Name);
             return aScene;
         }
 
