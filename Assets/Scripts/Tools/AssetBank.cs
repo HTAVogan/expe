@@ -399,6 +399,10 @@ namespace VRtist
                         controller.isImported = true;
                         controller.importPath = item.assetName;
                     }
+                    if(newObject.TryGetComponent<HumanIk>(out HumanIk humanIk))
+                    {
+                        humanIk.Setup();
+                    }
                 }
 
                 // Set the object size to 20cm in the user space

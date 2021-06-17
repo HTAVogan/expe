@@ -340,7 +340,12 @@ namespace VRtist
                     return true;
                 }
                 MeshFilter meshFilter = gObject.GetComponentInChildren<MeshFilter>();
-                if (meshFilter.gameObject != gObject)
+                if (meshFilter != null && meshFilter.gameObject != gObject)
+                {
+                    return true;
+                }
+                SkinnedMeshRenderer meshRenderer = gObject.GetComponentInChildren<SkinnedMeshRenderer>();
+                if(meshRenderer != null && meshRenderer.gameObject != gObject)
                 {
                     return true;
                 }
@@ -859,7 +864,8 @@ namespace VRtist
                 if (null == firstSelectedObject)
                     firstSelectedObject = obj;
                 MeshFilter meshFilter = obj.GetComponentInChildren<MeshFilter>();
-                if (null != meshFilter)
+                HumanIk human = obj.GetComponentInParent<HumanIk>();
+                if (null != meshFilter && null == human)
                 {
                     Matrix4x4 transformMatrix;
                     if (selectionCount > 1 || foundHierarchicalObject)

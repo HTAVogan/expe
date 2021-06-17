@@ -361,6 +361,7 @@ namespace VRtist
             ToolsManager.ChangeTool("Selector");
         }
 
+        [ContextMenu("new Loby")]
         public void OnCreateNewProject()
         {
             OnBackToScene();
