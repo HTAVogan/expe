@@ -168,6 +168,7 @@ namespace VRtist
 
         private bool GetKeyIndex(int frame, out int index)
         {
+
             index = cachedKeysIndices[frame - GlobalState.Animation.StartFrame];
             if (index == -1)
                 return false;

@@ -113,7 +113,7 @@ namespace VRtist
             }
         }
 
-        private int endFrame = 250;
+        private int endFrame = 2500;
         public int EndFrame
         {
             get { return endFrame; }
@@ -356,7 +356,7 @@ namespace VRtist
             oldAnimations.Clear();
             fps = 24f;
             StartFrame = 1;
-            EndFrame = 250;
+            //EndFrame = 250;
             CurrentFrame = 1;
         }
 

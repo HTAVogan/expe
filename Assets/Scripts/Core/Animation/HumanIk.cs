@@ -13,7 +13,8 @@ namespace VRtist
 
         private Animator animator;
         private Transform humanRoot;
-        private bool toSetup = false;
+        public bool toSetup = false;
+        private string baseName = "";
 
         private FullBodyIKJob job;
         private PlayableGraph graph;
@@ -29,7 +30,7 @@ namespace VRtist
         private GameObject leftElbowEffector;
         private GameObject rightElbowEffector;
 
-        private GameObject headEffector;
+        //private GameObject headEffector;
         private GameObject bodyEffector;
 
         public void Start()
@@ -39,19 +40,19 @@ namespace VRtist
 
         public void Update()
         {
-            //if (toSetup && animator.isInitialized)
-            //{
-            //    GenerateAvatar();
-            //    CreateEffectors();
-            //    SetupIK();
-            //    CreateGraph();
-            //    toSetup = false;
-            //    Debug.Log("is init");
-            //}
-            //if (graph.IsValid())
-            //{
-            //    graph.Evaluate();
-            //}
+            if (toSetup && animator.isInitialized)
+            {
+                GenerateAvatar();
+                CreateEffectors();
+                SetupIK();
+                CreateGraph();
+                toSetup = false;
+                Debug.Log("is init");
+            }
+            if (graph.IsValid())
+            {
+                graph.Evaluate();
+            }
         }
 
         private void CreateGraph()
@@ -69,25 +70,50 @@ namespace VRtist
         private GameObject AddBoneEffector(HumanBodyBones bone)
         {
             GameObject newEffector = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            newEffector.tag = "PhysicObject";
-            newEffector.name = bone.ToString() + "Actuator";
             Transform target = animator.GetBoneTransform(bone);
-            newEffector.transform.position = target.transform.position;
-            newEffector.transform.rotation = target.transform.rotation;
+
+            newEffector.tag = "PhysicObject";
+            newEffector.name = bone.ToString() + "_Actuator";
             newEffector.transform.parent = transform;
+            newEffector.transform.localPosition = transform.InverseTransformPoint(target.transform.position);
+            newEffector.transform.rotation = target.transform.rotation;
+            newEffector.transform.localScale = Vector3.one;
             SphereCollider effectorCollider = newEffector.AddComponent<SphereCollider>();
             effectorCollider.radius = 1;
             return newEffector;
         }
 
+        //private GameObject AddHeadEffector()
+        //{
+        //    GameObject newEffector = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        //    Transform target = animator.GetBoneTransform(HumanBodyBones.Head);
+
+        //    newEffector.tag = "PhysicObject";
+        //    newEffector.name = "LookAt_Actuator";
+        //    newEffector.transform.parent = transform;
+        //    newEffector.transform.localPosition = transform.InverseTransformPoint(target.transform.forward * 0.1f);
+        //    newEffector.transform.rotation = target.transform.rotation;
+        //    newEffector.transform.localScale = Vector3.one;
+        //    SphereCollider effectorCollider = newEffector.AddComponent<SphereCollider>();
+        //    effectorCollider.radius = 1;
+        //    return newEffector;
+        //}
+
         internal void Setup()
         {
-            toSetup = true;
+            //toSetup = true;
         }
 
         private void GenerateAvatar()
         {
-            humanRoot = transform.Find("mixamorig:Hips");
+            foreach (Transform child in transform)
+            {
+                if (child.name.Contains("Hips"))
+                {
+                    humanRoot = child;
+                    baseName = humanRoot.name.Split(':')[0];
+                }
+            }
             Dictionary<string, string> boneNames = new Dictionary<string, string>();
             if (humanRoot.name.Contains("mixamorig")) UseMixamoBoneNames(boneNames);
 
@@ -167,7 +193,7 @@ namespace VRtist
             SetupHintEffector(ref job.leftKneeHintEffector, leftKneeEffector);
             SetupHintEffector(ref job.rightKneeHintEffector, rightKneeEffector);
 
-            SetupLookAtEffector(ref job.lookAtEffector, headEffector);
+            //SetupLookAtEffector(ref job.lookAtEffector, headEffector);
             SetupBodyEffector(ref job.bodyEffector, bodyEffector);
         }
 
@@ -188,7 +214,7 @@ namespace VRtist
             leftElbowEffector = AddBoneEffector(HumanBodyBones.LeftLowerArm);
             rightElbowEffector = AddBoneEffector(HumanBodyBones.RightLowerArm);
 
-            headEffector = AddBoneEffector(HumanBodyBones.Head);
+            //headEffector = AddBoneEffector(HumanBodyBones.Head);
             bodyEffector = AddBoneEffector(HumanBodyBones.Hips);
 
         }
@@ -231,30 +257,30 @@ namespace VRtist
 
         private void UseMixamoBoneNames(Dictionary<string, string> boneNames)
         {
-            boneNames["Hips"] = "mixamorig:Hips";
-            boneNames["Spine"] = "mixamorig:Spine";
-            boneNames["Chest"] = "mixamorig:Spine1";
-            boneNames["Head"] = "mixamorig:Head";
-            boneNames["LeftFoot"] = "mixamorig:LeftFoot";
-            boneNames["LeftLowerLeg"] = "mixamorig:LeftLeg";
-            boneNames["LeftUpperLeg"] = "mixamorig:LeftUpLeg";
-            boneNames["LeftHand"] = "mixamorig:LeftHand";
-            boneNames["LeftLowerArm"] = "mixamorig:LeftForeArm";
-            boneNames["LeftUpperArm"] = "mixamorig:LeftArm";
-            boneNames["LeftShoulder"] = "mixamorig:LeftShoulder";
-            boneNames["RightFoot"] = "mixamorig:RightFoot";
-            boneNames["RightLowerLeg"] = "mixamorig:RightLeg";
-            boneNames["RightUpperLeg"] = "mixamorig:RightUpLeg";
-            boneNames["RightHand"] = "mixamorig:RightHand";
-            boneNames["RightLowerArm"] = "mixamorig:RightForeArm";
-            boneNames["RightUpperArm"] = "mixamorig:RightArm";
-            boneNames["RightShoulder"] = "mixamorig:RightShoulder";
+            boneNames["Hips"] = baseName + ":Hips";
+            boneNames["Spine"] = baseName + ":Spine";
+            boneNames["Chest"] = baseName + ":Spine1";
+            boneNames["Head"] = baseName + ":Head";
+            boneNames["LeftFoot"] = baseName + ":LeftFoot";
+            boneNames["LeftLowerLeg"] = baseName + ":LeftLeg";
+            boneNames["LeftUpperLeg"] = baseName + ":LeftUpLeg";
+            boneNames["LeftHand"] = baseName + ":LeftHand";
+            boneNames["LeftLowerArm"] = baseName + ":LeftForeArm";
+            boneNames["LeftUpperArm"] = baseName + ":LeftArm";
+            boneNames["LeftShoulder"] = baseName + ":LeftShoulder";
+            boneNames["RightFoot"] = baseName + ":RightFoot";
+            boneNames["RightLowerLeg"] = baseName + ":RightLeg";
+            boneNames["RightUpperLeg"] = baseName + ":RightUpLeg";
+            boneNames["RightHand"] = baseName + ":RightHand";
+            boneNames["RightLowerArm"] = baseName + ":RightForeArm";
+            boneNames["RightUpperArm"] = baseName + ":RightArm";
+            boneNames["RightShoulder"] = baseName + ":RightShoulder";
         }
 
         private void GetBoneTransforms(Transform root, List<string> boneName, Dictionary<string, Transform> dictionary)
         {
             if (boneName.Contains(root.name)) dictionary[root.name] = root;
-            foreach(Transform child in root)
+            foreach (Transform child in root)
             {
                 GetBoneTransforms(child, boneName, dictionary);
             }
@@ -267,18 +293,9 @@ namespace VRtist
             Debug.Assert(dict.ContainsKey(name) && dict[name] != null, " Bone does not exist : " + name);
             Transform boneTransform = dict[name];
             thisBone.position = boneTransform.localPosition;// root.InverseTransformPoint(boneTransform.position);
-            if (name.Contains("RightHand"))
-            {
-                thisBone.rotation = Quaternion.Euler(0, 90, 0);
-            }
-            else if (name.Contains("LeftHand"))
-            {
-                thisBone.rotation = Quaternion.Euler(0, -90, 0);
-            }
-            else
-            {
-                thisBone.rotation = Quaternion.identity;
-            }
+
+            thisBone.rotation = Quaternion.identity;
+
             thisBone.scale = boneTransform.localScale;
             return thisBone;
         }
@@ -287,180 +304,192 @@ namespace VRtist
         {
             List<string> names = new List<string>()
             {
-                this.name, "mixamorig:Hips", "mixamorig:LeftUpLeg", "mixamorig:LeftLeg","mixamorig:LeftFoot","mixamorig:LeftToeBase","mixamorig:RightUpLeg","mixamorig:RightLeg",
-                "mixamorig:RightFoot","mixamorig:RightToeBase","mixamorig:Spine","mixamorig:Spine1","mixamorig:Spine2","mixamorig:LeftShoulder","mixamorig:LeftArm","mixamorig:LeftForeArm",
-                "mixamorig:LeftHand","mixamorig:Neck","mixamorig:Head","mixamorig:RightShoulder","mixamorig:RightArm","mixamorig:RightForeArm","mixamorig:RightHand"
+                this.name, baseName+":Hips", baseName+":LeftUpLeg", baseName+":LeftLeg",baseName+":LeftFoot",baseName+":LeftToeBase",baseName+":RightUpLeg",baseName+":RightLeg",
+                baseName+":RightFoot",baseName+":RightToeBase",baseName+":Spine",baseName+":Spine1",baseName+":Spine2",baseName+":LeftShoulder",baseName+":LeftArm",baseName+":LeftForeArm",
+                baseName+":LeftHand",baseName+":Neck",baseName+":Head",baseName+":RightShoulder",baseName+":RightArm",baseName+":RightForeArm",baseName+":RightHand"
             };
             Dictionary<string, Transform> dictionary = new Dictionary<string, Transform>();
             GetBoneTransforms(transform, names, dictionary);
-            names.ForEach(x =>
-            {
-                skeleton.Add(GetBone(dictionary["mixamorig:Hips"], x, dictionary));
-            });
+            AddMixamoSkeletonBones(skeleton, dictionary);
+            //names.ForEach(x =>
+            //{
+            //    skeleton.Add(GetBone(humanRoot, x, dictionary));
+            //});
         }
 
-        private void AddMixamoSkeletonBones(List<SkeletonBone> skeleton)
+        public Vector3 GetBonePosition(string name, Dictionary<string, Transform> dictionary)
+        {
+            Debug.Log(name + " / " + dictionary[name].localPosition);
+            return dictionary[name].localPosition;
+        }
+
+        public Vector3 GetBoneScale(string name, Dictionary<string, Transform> dictionary)
+        {
+            return dictionary[name].localScale;
+        }
+
+        private void AddMixamoSkeletonBones(List<SkeletonBone> skeleton, Dictionary<string, Transform> dictionary)
         {
             skeleton.Add(new SkeletonBone()
             {
                 name = gameObject.name,
-                position = Vector3.zero,
+                position = GetBonePosition(gameObject.name, dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale(gameObject.name, dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:Hips",
-                position = new Vector3(0.00348425494f, 1.05444169f, 0.0209799856f),
+                position = GetBonePosition("mixamorig:Hips", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:Hips", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:LeftUpLeg",
-                position = new Vector3(-0.0820778161f, -0.067517139f, -0.0159955565f),
-                rotation = new Quaternion(2.28283135e-08f, 2.18278746e-08f, 4.5702091e-09f, 1),
-                scale = Vector3.one
+                position = GetBonePosition("mixamorig:LeftUpLeg", dictionary),
+                rotation = Quaternion.identity,
+                scale = GetBoneScale("mixamorig:LeftUpLeg", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:LeftLeg",
-                position = new Vector3(4.11015799e-09f, -0.443704724f, 0.00284642633f),
-                rotation = new Quaternion(7.10542736e-15f, -7.27595761e-09f, -7.27595673e-09f, 1),
-                scale = Vector3.one
+                position = GetBonePosition("mixamorig:LeftLeg", dictionary),
+                rotation = Quaternion.identity,
+                scale = GetBoneScale("mixamorig:LeftLeg", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:LeftFoot",
-                position = new Vector3(-4.7163935e-09f, -0.444278717f, -0.0298219062f),
-                rotation = new Quaternion(-2.32830679e-08f, 8.73114914e-09f, -1.03397577e-23f, 1),
-                scale = Vector3.one
+                position = GetBonePosition("mixamorig:LeftFoot", dictionary),
+                rotation = Quaternion.identity,
+                scale = GetBoneScale("mixamorig:LeftFoot", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:LeftToeBase",
-                position = new Vector3(2.9609879e-08f, -0.0872866958f, 0.107105598f),
-                rotation = new Quaternion(-2.32830644e-08f, -5.82076609e-09f, -5.82076742e-09f, 1),
-                scale = Vector3.one
+                position = GetBonePosition("mixamorig:LeftToeBase", dictionary),
+                rotation = Quaternion.identity,
+                scale = GetBoneScale("mixamorig:LeftToeBase", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:RightUpLeg",
-                position = new Vector3(0.0820779577f, -0.0675166175f, -0.0159955937f),
+                position = GetBonePosition("mixamorig:RightUpLeg", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:RightUpLeg", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:RightLeg",
-                position = new Vector3(-8.43557224e-10f, -0.44370535f, 0.00286156381f),
+                position = GetBonePosition("mixamorig:RightLeg", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:RightLeg", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:RightFoot",
-                position = new Vector3(-9.64458202e-09f, -0.444277287f, -0.0298378896f),
+                position = GetBonePosition("mixamorig:RightFoot", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:RightFoot", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:RightToeBase",
-                position = new Vector3(2.36043807e-08f, -0.0872866884f, 0.107105605f),
+                position = GetBonePosition("mixamorig:RightToeBase", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:RightToeBase", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:Spine",
-                position = new Vector3(-9.23415229e-08f, 0.101815879f, 0.0013152092f),
+                position = GetBonePosition("mixamorig:Spine", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:Spine", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:Spine1",
-                position = new Vector3(-2.51940291e-09f, 0.100834511f, -0.0100080427f),
+                position = GetBonePosition("mixamorig:Spine1", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:Spine1", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:Spine2",
-                position = new Vector3(-3.4574863e-09f, 0.0910001099f, -0.0137341712f),
+                position = GetBonePosition("mixamorig:Spine2", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:Spine2", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:LeftShoulder",
-                position = new Vector3(-0.0457044654f, 0.109459847f, -0.0262798797f),
+                position = GetBonePosition("mixamorig:LeftShoulder", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:LeftShoulder", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:LeftArm",
-                position = new Vector3(-0.105923697f, -0.005245829f, -0.0223212f),
+                position = GetBonePosition("mixamorig:LeftArm", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:LeftArm", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:LeftForeArm",
-                position = new Vector3(-0.278415203f, -8.94286472e-07f, 3.74589092e-07f),
+                position = GetBonePosition("mixamorig:LeftForeArm", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:LeftForeArm", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:LeftHand",
-                position = new Vector3(-0.283288389f, -1.74407177e-07f, 3.78045229e-07f),
+                position = GetBonePosition("mixamorig:LeftHand", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:LeftHand", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:Neck",
-                position = new Vector3(-6.33428554e-09f, 0.16671668f, -0.025161678f),
+                position = GetBonePosition("mixamorig:Neck", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:Neck", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:Head",
-                position = new Vector3(4.2423185e-09f, 0.0961787477f, 0.0168500748f),
+                position = GetBonePosition("mixamorig:Head", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:Head", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:RightShoulder",
-                position = new Vector3(0.045699697f, 0.109461762f, -0.026280174f),
+                position = GetBonePosition("mixamorig:RightShoulder", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:RightShoulder", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:RightArm",
-                position = new Vector3(0.105928436f, -0.00524798362f, -0.0223209858f),
+                position = GetBonePosition("mixamorig:RightArm", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:RightArm", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:RightForeArm",
-                position = new Vector3(0.278415203f, -3.30792176e-07f, 1.16763104e-07f),
+                position = GetBonePosition("mixamorig:RightForeArm", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:RightForeArm", dictionary)
             });
             skeleton.Add(new SkeletonBone()
             {
                 name = "mixamorig:RightHand",
-                position = new Vector3(0.283288389f, -1.58141711e-09f, 5.58160139e-07f),
+                position = GetBonePosition("mixamorig:RightHand", dictionary),
                 rotation = Quaternion.identity,
-                scale = Vector3.one
+                scale = GetBoneScale("mixamorig:RightHand", dictionary)
             });
         }
     }

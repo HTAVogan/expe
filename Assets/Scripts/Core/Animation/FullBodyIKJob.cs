@@ -46,7 +46,7 @@ namespace VRtist
         public HintEffectorHandle leftElbowEffector;
         public HintEffectorHandle rightElbowEffector;
 
-        public LookEffectorHandle lookAtEffector;
+        //public LookEffectorHandle lookAtEffector;
 
         public BodyEffectorHandle bodyEffector;
         public Vector3 bodyPosition;
@@ -125,18 +125,18 @@ namespace VRtist
             }
         }
 
-        private void SetLookAtEffector(AnimationStream stream, ref LookEffectorHandle handle)
-        {
-            if (handle.lookAt.IsValid(stream))
-            {
-                AnimationHumanStream humanStream = stream.AsHuman();
-                humanStream.SetLookAtPosition(handle.lookAt.GetPosition(stream));
-                humanStream.SetLookAtEyesWeight(handle.eyesWeight);
-                humanStream.SetLookAtHeadWeight(handle.headWeight);
-                humanStream.SetLookAtBodyWeight(handle.bodyWeight);
-                humanStream.SetLookAtClampWeight(handle.clampWeight);
-            }
-        }
+        //private void SetLookAtEffector(AnimationStream stream, ref LookEffectorHandle handle)
+        //{
+        //    if (handle.lookAt.IsValid(stream))
+        //    {
+        //        AnimationHumanStream humanStream = stream.AsHuman();
+        //        humanStream.SetLookAtPosition(handle.lookAt.GetPosition(stream));
+        //        humanStream.SetLookAtEyesWeight(handle.eyesWeight);
+        //        humanStream.SetLookAtHeadWeight(handle.headWeight);
+        //        humanStream.SetLookAtBodyWeight(handle.bodyWeight);
+        //        humanStream.SetLookAtClampWeight(handle.clampWeight);
+        //    }
+        //}
 
         private void SetMaximumExtension(AnimationStream stream, ref IKLimbHandle handle)
         {
@@ -250,7 +250,7 @@ namespace VRtist
                 SetHintEffector(stream, AvatarIKHint.LeftElbow, ref leftElbowEffector);
                 SetHintEffector(stream, AvatarIKHint.RightElbow, ref rightElbowEffector);
 
-                SetLookAtEffector(stream, ref lookAtEffector);
+                //SetLookAtEffector(stream, ref lookAtEffector);
 
                 SetBodyEffector(stream, ref bodyEffector);
                 Solve(stream);
