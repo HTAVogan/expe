@@ -431,7 +431,6 @@ namespace VRtist
                     }
                     else
                     {
-
                         List<Assimp.EmbeddedTexture> texts = scene.Textures;
                         if (texts.Count > 0)
                         {
