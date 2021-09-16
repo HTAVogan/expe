@@ -410,6 +410,7 @@ namespace VRtist
             foreach (Curve curve in animationSet.curves.Values)
                 curve.ComputeCache();
             onAddAnimation.Invoke(gobject);
+            Debug.Log("added animation on " + gobject);
         }
 
         public bool ObjectHasAnimation(GameObject gobject)

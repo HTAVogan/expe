@@ -47,6 +47,8 @@ namespace VRtist
 
         private Transform rootBone;
         private bool isHuman;
+        private Vector3 meshCenter;
+        private Vector3 meshSize;
 
         // We consider that half of the total time is spent inside the assimp engine
         // A quarter of the total time is necessary to create meshes
@@ -213,6 +215,8 @@ namespace VRtist
             meshes = new List<SubMeshComponent>();
             bones = new Dictionary<string, Transform>();
             delayedMesh = new Dictionary<Assimp.Node, GameObject>();
+            meshCenter = Vector3.zero;
+            meshSize = Vector3.zero;
 
             //textures = new Dictionary<string, Texture2D>();   
         }
@@ -474,7 +478,7 @@ namespace VRtist
                 mats[i] = materials[meshes[indice].materialIndex];
                 i++;
             }
-            AddNormalMesh(node, parent, mats, combine);
+            AddSimpleMesh(node, parent, mats, combine);
 
             progress += (0.25f * node.MeshIndices.Count) / scene.MeshCount;
         }
@@ -558,7 +562,7 @@ namespace VRtist
                         }
                         else
                         {
-                            Debug.Log("A vertices has more than 4 bones weight");
+                            //Debug.Log("A vertices has more than 4 bones weight");
                             break;
                         }
                     }
@@ -590,9 +594,16 @@ namespace VRtist
             meshRenderer.sharedMesh.name = meshes[node.MeshIndices[0]].name;
             meshRenderer.sharedMaterials = mats;
             meshRenderer.rootBone = rootBone;
+
+            if (meshRenderer.sharedMesh.bounds.size.magnitude > meshSize.magnitude)
+            {
+                meshCenter = meshRenderer.bounds.center;
+                meshSize = meshRenderer.bounds.size;
+            }
+
         }
 
-        private void AddNormalMesh(Assimp.Node node, GameObject parent, Material[] mats, CombineInstance[] combine)
+        private void AddSimpleMesh(Assimp.Node node, GameObject parent, Material[] mats, CombineInstance[] combine)
         {
             MeshFilter meshFilter = parent.AddComponent<MeshFilter>();
             MeshRenderer meshRenderer = parent.AddComponent<MeshRenderer>();
@@ -733,6 +744,20 @@ namespace VRtist
                 ImportHierarchy(scene.RootNode, root, objectRoot).MoveNext();
             else
                 yield return StartCoroutine(ImportHierarchy(scene.RootNode, root, objectRoot));
+
+            foreach (KeyValuePair<Assimp.Node, GameObject> pair in delayedMesh)
+            {
+                AssignSkinnedMeshes(pair.Key, pair.Value);
+            }
+
+            if (isHuman)
+            {
+                objectRoot.tag = "PhysicObject";
+                BoxCollider objectCollider = objectRoot.AddComponent<BoxCollider>();
+                objectCollider.center = meshCenter;
+                objectCollider.size = meshSize;
+            }
+
         }
 
         private async Task<Assimp.Scene> ImportAssimpFile(string fileName)
