@@ -103,6 +103,7 @@ namespace VRtist
                 {
                     GameObject instance = SceneManager.InstantiateObject(item.prefab);
                     AddObject(instance);
+                    GlobalState.Animation.CopyAnimation(item.prefab, instance);
                 }
             }
             selectedItem = -1;
