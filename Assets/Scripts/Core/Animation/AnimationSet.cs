@@ -45,6 +45,83 @@ namespace VRtist
             else { CreateTransformCurves(); }
         }
 
+
+        public void EvaluateAnimation(int currentFrame)
+        {
+            Transform trans = transform;
+            Vector3 position = trans.localPosition;
+            Vector3 rotation = trans.localEulerAngles;
+            Vector3 scale = trans.localScale;
+
+            Vector3 prevPosition = trans.localPosition;
+
+            float power = -1;
+            Color color = Color.white;
+
+            float cameraFocal = -1;
+            float cameraFocus = -1;
+            float cameraAperture = -1;
+
+            foreach (Curve curve in curves.Values)
+            {
+                if (!curve.Evaluate(currentFrame, out float value))
+                    continue;
+                switch (curve.property)
+                {
+                    case AnimatableProperty.PositionX: position.x = value; break;
+                    case AnimatableProperty.PositionY: position.y = value; break;
+                    case AnimatableProperty.PositionZ: position.z = value; break;
+
+                    case AnimatableProperty.RotationX: rotation.x = value; break;
+                    case AnimatableProperty.RotationY: rotation.y = value; break;
+                    case AnimatableProperty.RotationZ: rotation.z = value; break;
+
+                    case AnimatableProperty.ScaleX: scale.x = value; break;
+                    case AnimatableProperty.ScaleY: scale.y = value; break;
+                    case AnimatableProperty.ScaleZ: scale.z = value; break;
+
+                    case AnimatableProperty.Power: power = value; break;
+                    case AnimatableProperty.ColorR: color.r = value; break;
+                    case AnimatableProperty.ColorG: color.g = value; break;
+                    case AnimatableProperty.ColorB: color.b = value; break;
+
+                    case AnimatableProperty.CameraFocal: cameraFocal = value; break;
+                    case AnimatableProperty.CameraFocus: cameraFocus = value; break;
+                    case AnimatableProperty.CameraAperture: cameraAperture = value; break;
+                }
+            }
+
+            trans.localPosition = position;
+            trans.localEulerAngles = rotation;
+            trans.localScale = scale;
+
+            if (power != -1)
+            {
+                LightController controller = trans.GetComponent<LightController>();
+                controller.Power = power;
+                controller.Color = color;
+            }
+
+            if (cameraFocal != -1 || cameraFocus != -1 || cameraAperture != -1)
+            {
+                CameraController controller = trans.GetComponent<CameraController>();
+                if (cameraFocal != -1)
+                    controller.focal = cameraFocal;
+                if (cameraFocus != -1)
+                    controller.Focus = cameraFocus;
+                if (cameraAperture != -1)
+                    controller.aperture = cameraAperture;
+            }
+
+            Vector3 postPosition = trans.localPosition;
+            float vv;
+            curves[0].Evaluate(currentFrame, out vv);
+
+            if (trans.gameObject.name.Contains("Hips"))
+                Debug.Log(trans.gameObject + " from " + prevPosition + " to " + postPosition + " x " + vv, trans.gameObject);
+
+        }
+
         public Curve GetCurve(AnimatableProperty property)
         {
             curves.TryGetValue(property, out Curve result);

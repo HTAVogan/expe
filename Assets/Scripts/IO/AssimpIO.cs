@@ -345,7 +345,6 @@ namespace VRtist
                 if (assimpMesh.HasBones) isHuman = true;
 
                 SubMeshComponent subMeshComponent = ImportMesh(assimpMesh);
-
                 meshes.Add(subMeshComponent);
                 i++;
 
@@ -685,7 +684,6 @@ namespace VRtist
             Assimp.NodeAnimationChannel nodeChannel = animation.NodeAnimationChannels.Find(x => x.NodeName == node.Name);
             if (null != nodeChannel)
             {
-
                 AnimationSet animationSet = new AnimationSet(go);
                 animationSet.ComputeCache();
                 foreach (Assimp.VectorKey vectorKey in nodeChannel.PositionKeys)
@@ -737,8 +735,11 @@ namespace VRtist
             objectRoot.name = Utils.CreateUniqueName(Path.GetFileNameWithoutExtension(fileName));
             objectRoot.transform.parent = root;
             objectRoot.transform.localPosition = Vector3.zero;
-            objectRoot.transform.localScale = new Vector3(-1, 1, 1);
-            objectRoot.transform.localRotation = Quaternion.Euler(0, 180, 0);
+            if (!isHuman)
+            {
+                objectRoot.transform.localScale = new Vector3(-1, 1, 1);
+                objectRoot.transform.localRotation = Quaternion.Euler(0, 180, 0);
+            }
 
             if (blocking)
                 ImportHierarchy(scene.RootNode, root, objectRoot).MoveNext();
@@ -784,6 +785,7 @@ namespace VRtist
 
         private IEnumerator CreateUnityDataFromAssimp(string fileName, Assimp.Scene aScene, Transform root)
         {
+            Debug.Log(root);
             scene = aScene;
             directoryName = Path.GetDirectoryName(fileName);
 

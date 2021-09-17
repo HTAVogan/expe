@@ -266,8 +266,26 @@ namespace VRtist
             }
         }
 
+        public void CopyAnimation(GameObject source, GameObject target)
+        {
+            if (animations.TryGetValue(source, out AnimationSet sourceAnim))
+            {
+                AnimationSet targetAnim = new AnimationSet(target);
+                foreach (KeyValuePair<AnimatableProperty, Curve> curve in sourceAnim.curves)
+                {
+                    targetAnim.SetCurve(curve.Key, curve.Value.keys);
+                }
+                SetObjectAnimations(target, targetAnim);
+            }
+            for(int i = 0; i < source.transform.childCount; i++)
+            {
+                CopyAnimation(source.transform.GetChild(i).gameObject, target.transform.GetChild(i).gameObject);
+            }
+        }
+
         void OnObjectAdded(GameObject gobject)
         {
+            Debug.Log("object added " + gobject, gobject);
             if (disabledAnimations.TryGetValue(gobject, out AnimationSet animationSet))
             {
                 disabledAnimations.Remove(gobject);
@@ -321,72 +339,14 @@ namespace VRtist
 
         private void EvaluateAnimations()
         {
+            Debug.Log("eval start");
             foreach (AnimationSet animationSet in animations.Values)
             {
-                Transform trans = animationSet.transform;
-                Vector3 position = trans.localPosition;
-                Vector3 rotation = trans.localEulerAngles;
-                Vector3 scale = trans.localScale;
-
-                float power = -1;
-                Color color = Color.white;
-
-                float cameraFocal = -1;
-                float cameraFocus = -1;
-                float cameraAperture = -1;
-
-                foreach (Curve curve in animationSet.curves.Values)
-                {
-                    if (!curve.Evaluate(currentFrame, out float value))
-                        continue;
-                    switch (curve.property)
-                    {
-                        case AnimatableProperty.PositionX: position.x = value; break;
-                        case AnimatableProperty.PositionY: position.y = value; break;
-                        case AnimatableProperty.PositionZ: position.z = value; break;
-
-                        case AnimatableProperty.RotationX: rotation.x = value; break;
-                        case AnimatableProperty.RotationY: rotation.y = value; break;
-                        case AnimatableProperty.RotationZ: rotation.z = value; break;
-
-                        case AnimatableProperty.ScaleX: scale.x = value; break;
-                        case AnimatableProperty.ScaleY: scale.y = value; break;
-                        case AnimatableProperty.ScaleZ: scale.z = value; break;
-
-                        case AnimatableProperty.Power: power = value; break;
-                        case AnimatableProperty.ColorR: color.r = value; break;
-                        case AnimatableProperty.ColorG: color.g = value; break;
-                        case AnimatableProperty.ColorB: color.b = value; break;
-
-                        case AnimatableProperty.CameraFocal: cameraFocal = value; break;
-                        case AnimatableProperty.CameraFocus: cameraFocus = value; break;
-                        case AnimatableProperty.CameraAperture: cameraAperture = value; break;
-                    }
-                }
-
-                trans.localPosition = position;
-                trans.localEulerAngles = rotation;
-                trans.localScale = scale;
-
-                if (power != -1)
-                {
-                    LightController controller = trans.GetComponent<LightController>();
-                    controller.Power = power;
-                    controller.Color = color;
-                }
-
-                if (cameraFocal != -1 || cameraFocus != -1 || cameraAperture != -1)
-                {
-                    CameraController controller = trans.GetComponent<CameraController>();
-                    if (cameraFocal != -1)
-                        controller.focal = cameraFocal;
-                    if (cameraFocus != -1)
-                        controller.Focus = cameraFocus;
-                    if (cameraAperture != -1)
-                        controller.aperture = cameraAperture;
-                }
+                animationSet.EvaluateAnimation(CurrentFrame);
             }
+            Debug.Log("eval end");
         }
+
 
         public int TimeToFrame(float time)
         {
@@ -410,7 +370,6 @@ namespace VRtist
             foreach (Curve curve in animationSet.curves.Values)
                 curve.ComputeCache();
             onAddAnimation.Invoke(gobject);
-            Debug.Log("added animation on " + gobject);
         }
 
         public bool ObjectHasAnimation(GameObject gobject)
