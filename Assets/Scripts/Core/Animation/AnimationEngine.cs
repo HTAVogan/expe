@@ -339,12 +339,10 @@ namespace VRtist
 
         private void EvaluateAnimations()
         {
-            Debug.Log("eval start");
             foreach (AnimationSet animationSet in animations.Values)
             {
                 animationSet.EvaluateAnimation(CurrentFrame);
             }
-            Debug.Log("eval end");
         }
 
 

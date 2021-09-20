@@ -116,10 +116,6 @@ namespace VRtist
             Vector3 postPosition = trans.localPosition;
             float vv;
             curves[0].Evaluate(currentFrame, out vv);
-
-            if (trans.gameObject.name.Contains("Hips"))
-                Debug.Log(trans.gameObject + " from " + prevPosition + " to " + postPosition + " x " + vv, trans.gameObject);
-
         }
 
         public Curve GetCurve(AnimatableProperty property)
