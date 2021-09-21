@@ -391,7 +391,7 @@ namespace VRtist
             Material transpMat = Resources.Load<Material>("Materials/ObjectTransparent");
             foreach (Assimp.Material assimpMaterial in scene.Materials)
             {
-                if (assimpMaterial.HasOpacity && assimpMaterial.Opacity < 0.99f)
+                if (assimpMaterial.HasOpacity && assimpMaterial.Opacity < 0.99f || assimpMaterial.HasTransparencyFactor)
                 {
                     materials.Add(new Material(transpMat));
                 }
@@ -419,36 +419,24 @@ namespace VRtist
                     Color baseColor = new Color(assimpMaterial.ColorDiffuse.R, assimpMaterial.ColorDiffuse.G, assimpMaterial.ColorDiffuse.B, assimpMaterial.ColorDiffuse.A);
                     material.SetColor("_BaseColor", baseColor);
                 }
+                if (assimpMaterial.HasTextureOpacity)
+                {
+                    Assimp.TextureSlot tslot = assimpMaterial.TextureOpacity;
+                    GetTexture(tslot, out Texture2D texture, out float useMap);
+                    material.SetFloat("_UseOpacityMap",useMap);
+                    material.SetTexture("_OpacityMap", texture);
+                }
                 if (assimpMaterial.HasOpacity && assimpMaterial.Opacity < 1.0f)
                 {
                     material.SetFloat("_Opacity", assimpMaterial.Opacity);
                 }
                 if (assimpMaterial.HasTextureDiffuse)
                 {
-                    Debug.Log(assimpMaterial.Name + "  " + assimpMaterial.GetAllMaterialTextures().Length);
-                    Assimp.TextureSlot[] slots = assimpMaterial.GetAllMaterialTextures();
+                    //Assimp.TextureSlot[] slots = assimpMaterial.GetAllMaterialTextures();
                     Assimp.TextureSlot tslot = assimpMaterial.TextureDiffuse;
-                    string fullpath = Path.IsPathRooted(tslot.FilePath) ? tslot.FilePath : directoryName + "\\" + tslot.FilePath;
-                    if (File.Exists(fullpath))
-                    {
-                        Texture2D texture = GetOrCreateTextureFromFile(fullpath);
-                        material.SetFloat("_UseColorMap", 1f);
-                        material.SetTexture("_ColorMap", texture);
-                    }
-                    else
-                    {
-                        List<Assimp.EmbeddedTexture> texts = scene.Textures;
-                        Debug.Log("text count " + texts.Count);
-                        if (texts.Count > 0)
-                        {
-                            byte[] data = texts[0].CompressedData;
-                            Texture2D tex = new Texture2D(1, 1);
-                            tex.LoadImage(data);
-                            material.SetFloat("_UseColorMap", 1f);
-                            material.SetTexture("_ColorMap", tex);
-                        }
-
-                    }
+                    GetTexture(tslot, out Texture2D texture, out float useMap);
+                    material.SetFloat("_UseColorMap", useMap);
+                    material.SetTexture("_ColorMap", texture);
                 }
                 i++;
 
@@ -457,6 +445,29 @@ namespace VRtist
             }
         }
 
+        private void GetTexture(Assimp.TextureSlot tslot, out Texture2D texture, out float useColorMap)
+        {
+            string fullpath = Path.IsPathRooted(tslot.FilePath) ? tslot.FilePath : directoryName + "\\" + tslot.FilePath;
+            texture = new Texture2D(1, 1, TextureFormat.RGBA32,0,true);
+            useColorMap = 0f;
+            if (File.Exists(fullpath))
+            {
+                texture = GetOrCreateTextureFromFile(fullpath);
+                useColorMap = 1f;
+            }
+            else
+            {
+                List<Assimp.EmbeddedTexture> texts = scene.Textures;
+                Assimp.EmbeddedTexture diffuseTexture = texts.Find(x => x.Filename == tslot.FilePath);
+                if (diffuseTexture != null)
+                {
+                    byte[] data = diffuseTexture.CompressedData;
+                    texture.LoadImage(data);
+                    useColorMap = 1f;
+                }
+
+            }
+        }
 
         private void AssignMeshes(Assimp.Node node, GameObject parent)
         {
