@@ -425,6 +425,8 @@ namespace VRtist
                 }
                 if (assimpMaterial.HasTextureDiffuse)
                 {
+                    Debug.Log(assimpMaterial.Name + "  " + assimpMaterial.GetAllMaterialTextures().Length);
+                    Assimp.TextureSlot[] slots = assimpMaterial.GetAllMaterialTextures();
                     Assimp.TextureSlot tslot = assimpMaterial.TextureDiffuse;
                     string fullpath = Path.IsPathRooted(tslot.FilePath) ? tslot.FilePath : directoryName + "\\" + tslot.FilePath;
                     if (File.Exists(fullpath))
@@ -436,6 +438,7 @@ namespace VRtist
                     else
                     {
                         List<Assimp.EmbeddedTexture> texts = scene.Textures;
+                        Debug.Log("text count " + texts.Count);
                         if (texts.Count > 0)
                         {
                             byte[] data = texts[0].CompressedData;
@@ -495,19 +498,19 @@ namespace VRtist
                 mats[i] = materials[meshes[indice].materialIndex];
                 i++;
             }
-            AddSkinnedMesh2(node, parent, mats, combine);
+            AddSkinnedMesh(node, parent, mats, combine);
             progress += (0.25f * node.MeshIndices.Count) / scene.MeshCount;
         }
 
-        private void AddSkinnedMesh2(Assimp.Node node, GameObject parent, Material[] mats, CombineInstance[] combine)
+        private void AddSkinnedMesh(Assimp.Node node, GameObject parent, Material[] mats, CombineInstance[] combine)
         {
-            Debug.Log("add skinned mesh");
             SkinnedMeshRenderer meshRenderer = parent.AddComponent<SkinnedMeshRenderer>();
             List<List<Assimp.Bone>> meshBones = new List<List<Assimp.Bone>>();
             Dictionary<int, List<BoneWeight1>> VertexBonesWeights = new Dictionary<int, List<BoneWeight1>>();
             List<Transform[]> bonesArray = new List<Transform[]>();
             List<Matrix4x4[]> bindPoses = new List<Matrix4x4[]>();
 
+            int previousVertexCount = 0;
             for (int iMesh = 0; iMesh < node.MeshIndices.Count; iMesh++)
             {
                 Assimp.Mesh currentMesh = scene.Meshes[node.MeshIndices[iMesh]];
@@ -528,13 +531,14 @@ namespace VRtist
 
                     for (int iVertex = 0; iVertex < currentBones.VertexWeightCount; iVertex++)
                     {
-                        int vertexIndex = currentBones.VertexWeights[iVertex].VertexID;
+                        int vertexIndex = currentBones.VertexWeights[iVertex].VertexID + previousVertexCount;
                         float weight = currentBones.VertexWeights[iVertex].Weight;
                         BoneWeight1 boneWeight = new BoneWeight1() { boneIndex = iBone, weight = weight };
                         if (!VertexBonesWeights.ContainsKey(vertexIndex)) VertexBonesWeights.Add(vertexIndex, new List<BoneWeight1>());
                         VertexBonesWeights[vertexIndex].Add(boneWeight);
                     }
                 }
+                previousVertexCount += currentMesh.VertexCount;
             }
 
             List<Assimp.Bone> meshBonesFlat = new List<Assimp.Bone>();
@@ -551,7 +555,7 @@ namespace VRtist
                 bonesPerVertes[i] = (byte)VertexBonesWeights[i].Count;
                 VertexBonesWeights[i].Sort((x, y) =>
                 {
-                    if(x == null)
+                    if (x == null)
                     {
                         if (y == null) return 0;
                         else return -1;
@@ -578,109 +582,6 @@ namespace VRtist
                 meshCenter = meshRenderer.bounds.center;
                 meshSize = meshRenderer.bounds.size;
             }
-        }
-
-        private void AddSkinnedMesh(Assimp.Node node, GameObject parent, Material[] mats, CombineInstance[] combine)
-        {
-            SkinnedMeshRenderer meshRenderer = parent.AddComponent<SkinnedMeshRenderer>();
-            List<List<Assimp.Bone>> meshBones = new List<List<Assimp.Bone>>();
-            List<Transform[]> bonesArray = new List<Transform[]>();
-            List<Matrix4x4[]> bindPoses = new List<Matrix4x4[]>();
-            List<BoneWeight[]> bonesWeights = new List<BoneWeight[]>();
-
-            for (int iMesh = 0; iMesh < node.MeshIndices.Count; iMesh++)
-            {
-                Assimp.Mesh currentMesh = scene.Meshes[node.MeshIndices[iMesh]];
-                meshBones.Add(currentMesh.Bones);
-                bonesArray.Add(new Transform[currentMesh.BoneCount]);
-                bindPoses.Add(new Matrix4x4[currentMesh.BoneCount]);
-                bonesWeights.Add(new BoneWeight[currentMesh.VertexCount]);
-
-                for (int iBone = 0; iBone < bonesArray[iMesh].Length; iBone++)
-                {
-                    if (!bones.ContainsKey(meshBones[iMesh][iBone].Name))
-                    {
-                        Debug.Log("missing bone " + meshBones[iMesh][iBone].Name);
-                        continue;
-                    }
-                    bonesArray[iMesh][iBone] = bones[meshBones[iMesh][iBone].Name];
-                    bindPoses[iMesh][iBone] = bonesArray[iMesh][iBone].worldToLocalMatrix;
-
-                    for (int iVertex = 0; iVertex < meshBones[iMesh][iBone].VertexWeightCount; iVertex++)
-                    {
-                        int vertexIndex = meshBones[iMesh][iBone].VertexWeights[iVertex].VertexID;
-                        float weight = meshBones[iMesh][iBone].VertexWeights[iVertex].Weight;
-                        if (bonesWeights[iMesh][vertexIndex].weight0 <= weight)
-                        {
-                            bonesWeights[iMesh][vertexIndex].boneIndex1 = bonesWeights[iMesh][vertexIndex].boneIndex0;
-                            bonesWeights[iMesh][vertexIndex].weight1 = bonesWeights[iMesh][vertexIndex].weight0;
-                            bonesWeights[iMesh][vertexIndex].boneIndex0 = iBone;
-                            bonesWeights[iMesh][vertexIndex].weight0 = weight;
-                            continue;
-                        }
-                        if (bonesWeights[iMesh][vertexIndex].weight1 <= weight)
-                        {
-                            bonesWeights[iMesh][vertexIndex].boneIndex2 = bonesWeights[iMesh][vertexIndex].boneIndex1;
-                            bonesWeights[iMesh][vertexIndex].weight2 = bonesWeights[iMesh][vertexIndex].weight1;
-                            bonesWeights[iMesh][vertexIndex].boneIndex1 = iBone;
-                            bonesWeights[iMesh][vertexIndex].weight1 = weight;
-                            continue;
-                        }
-                        if (bonesWeights[iMesh][vertexIndex].weight2 <= weight)
-                        {
-                            bonesWeights[iMesh][vertexIndex].boneIndex3 = bonesWeights[iMesh][vertexIndex].boneIndex2;
-                            bonesWeights[iMesh][vertexIndex].weight3 = bonesWeights[iMesh][vertexIndex].weight2;
-                            bonesWeights[iMesh][vertexIndex].boneIndex2 = iBone;
-                            bonesWeights[iMesh][vertexIndex].weight2 = weight;
-                            continue;
-                        }
-                        if (bonesWeights[iMesh][vertexIndex].weight3 <= weight)
-                        {
-                            bonesWeights[iMesh][vertexIndex].boneIndex3 = iBone;
-                            bonesWeights[iMesh][vertexIndex].weight3 = weight;
-                            continue;
-                        }
-                        else
-                        {
-                            Debug.Log("A vertices has more than 4 bones weight " + meshBones[iMesh][iBone].Name);
-                            break;
-                        }
-                    }
-                }
-                for (int vert = 0; vert < bonesWeights[iMesh].Length; vert++)
-                {
-                    float totalWeight = bonesWeights[iMesh][vert].weight0 + bonesWeights[iMesh][vert].weight1 + bonesWeights[iMesh][vert].weight2 + bonesWeights[iMesh][vert].weight3;
-                    if (totalWeight != 1)
-                    {
-                        bonesWeights[iMesh][vert].weight0 += (1 - totalWeight);
-                    }
-                }
-            }
-
-            List<Assimp.Bone> meshBonesFlat = new List<Assimp.Bone>();
-            meshBones.ForEach(x => meshBonesFlat.AddRange(x));
-            List<Transform> bonesArrayFlat = new List<Transform>();
-            bonesArray.ForEach(x => bonesArrayFlat.AddRange(x));
-            List<Matrix4x4> bindPosesFlat = new List<Matrix4x4>();
-            bindPoses.ForEach(x => bindPosesFlat.AddRange(x));
-            List<BoneWeight> bonesWeightsFlat = new List<BoneWeight>();
-            bonesWeights.ForEach(x => bonesWeightsFlat.AddRange(x));
-
-            meshRenderer.bones = bonesArrayFlat.ToArray();
-            meshRenderer.sharedMesh = new Mesh();
-            meshRenderer.sharedMesh.bindposes = bindPosesFlat.ToArray();
-            meshRenderer.sharedMesh.CombineMeshes(combine, false);
-            meshRenderer.sharedMesh.boneWeights = bonesWeightsFlat.ToArray();
-            meshRenderer.sharedMesh.name = meshes[node.MeshIndices[0]].name;
-            meshRenderer.sharedMaterials = mats;
-            meshRenderer.rootBone = rootBone;
-
-            if (meshRenderer.sharedMesh.bounds.size.magnitude > meshSize.magnitude)
-            {
-                meshCenter = meshRenderer.bounds.center;
-                meshSize = meshRenderer.bounds.size;
-            }
-
         }
 
         private void AddSimpleMesh(Assimp.Node node, GameObject parent, Material[] mats, CombineInstance[] combine)
