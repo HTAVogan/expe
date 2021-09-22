@@ -423,7 +423,7 @@ namespace VRtist
                 {
                     Assimp.TextureSlot tslot = assimpMaterial.TextureOpacity;
                     GetTexture(tslot, out Texture2D texture, out float useMap);
-                    material.SetFloat("_UseOpacityMap",useMap);
+                    material.SetFloat("_UseOpacityMap", useMap);
                     material.SetTexture("_OpacityMap", texture);
                 }
                 if (assimpMaterial.HasOpacity && assimpMaterial.Opacity < 1.0f)
@@ -462,7 +462,7 @@ namespace VRtist
         private void GetTexture(Assimp.TextureSlot tslot, out Texture2D texture, out float useColorMap)
         {
             string fullpath = Path.IsPathRooted(tslot.FilePath) ? tslot.FilePath : directoryName + "\\" + tslot.FilePath;
-            texture = new Texture2D(1, 1, TextureFormat.RGBA32,0,true);
+            texture = new Texture2D(1, 1, TextureFormat.RGBA32, 0, true);
             useColorMap = 0f;
             if (File.Exists(fullpath))
             {
@@ -687,6 +687,10 @@ namespace VRtist
         private IEnumerator ImportAnimation(Assimp.Node node, GameObject go)
         {
             Assimp.Animation animation = scene.Animations[0];
+            if ((GlobalState.Animation.fps / (float)animation.TicksPerSecond) * animation.DurationInTicks > GlobalState.Animation.EndFrame)
+            {
+                GlobalState.Animation.EndFrame = Mathf.CeilToInt(GlobalState.Animation.fps / (float)animation.TicksPerSecond * (float)animation.DurationInTicks) + 1;
+            }
             Assimp.NodeAnimationChannel nodeChannel = animation.NodeAnimationChannels.Find(x => x.NodeName == node.Name);
             if (null != nodeChannel)
             {
@@ -695,9 +699,10 @@ namespace VRtist
                 foreach (Assimp.VectorKey vectorKey in nodeChannel.PositionKeys)
                 {
                     int frame = Mathf.CeilToInt((float)vectorKey.Time * GlobalState.Animation.fps / (float)animation.TicksPerSecond) + 1;
-                    animationSet.curves[AnimatableProperty.PositionX].AddKey(new AnimationKey(frame, vectorKey.Value.X));
-                    animationSet.curves[AnimatableProperty.PositionY].AddKey(new AnimationKey(frame, vectorKey.Value.Y));
-                    animationSet.curves[AnimatableProperty.PositionZ].AddKey(new AnimationKey(frame, vectorKey.Value.Z));
+                    Debug.Log(frame);
+                    animationSet.curves[AnimatableProperty.PositionX].AddKey(new AnimationKey(frame, vectorKey.Value.X, Interpolation.Linear));
+                    animationSet.curves[AnimatableProperty.PositionY].AddKey(new AnimationKey(frame, vectorKey.Value.Y, Interpolation.Linear));
+                    animationSet.curves[AnimatableProperty.PositionZ].AddKey(new AnimationKey(frame, vectorKey.Value.Z, Interpolation.Linear));
                 }
                 Vector3 previousRotation = Vector3.zero;
                 foreach (Assimp.QuaternionKey quaternionKey in nodeChannel.RotationKeys)
@@ -708,9 +713,9 @@ namespace VRtist
                     eulerValue.x = previousRotation.x + Mathf.DeltaAngle(previousRotation.x, eulerValue.x);
                     eulerValue.y = previousRotation.y + Mathf.DeltaAngle(previousRotation.y, eulerValue.y);
                     eulerValue.z = previousRotation.z + Mathf.DeltaAngle(previousRotation.z, eulerValue.z);
-                    animationSet.curves[AnimatableProperty.RotationX].AddKey(new AnimationKey(frame, eulerValue.x));
-                    animationSet.curves[AnimatableProperty.RotationY].AddKey(new AnimationKey(frame, eulerValue.y));
-                    animationSet.curves[AnimatableProperty.RotationZ].AddKey(new AnimationKey(frame, eulerValue.z));
+                    animationSet.curves[AnimatableProperty.RotationX].AddKey(new AnimationKey(frame, eulerValue.x, Interpolation.Linear));
+                    animationSet.curves[AnimatableProperty.RotationY].AddKey(new AnimationKey(frame, eulerValue.y, Interpolation.Linear));
+                    animationSet.curves[AnimatableProperty.RotationZ].AddKey(new AnimationKey(frame, eulerValue.z, Interpolation.Linear));
                     previousRotation = eulerValue;
                 }
 
