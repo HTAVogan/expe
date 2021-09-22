@@ -391,7 +391,7 @@ namespace VRtist
             Material transpMat = Resources.Load<Material>("Materials/ObjectTransparent");
             foreach (Assimp.Material assimpMaterial in scene.Materials)
             {
-                if (assimpMaterial.HasOpacity && assimpMaterial.Opacity < 0.99f || assimpMaterial.HasTransparencyFactor)
+                if (assimpMaterial.HasOpacity && !assimpMaterial.HasColorTransparent)
                 {
                     materials.Add(new Material(transpMat));
                 }
@@ -438,6 +438,20 @@ namespace VRtist
                     material.SetFloat("_UseColorMap", useMap);
                     material.SetTexture("_ColorMap", texture);
                 }
+                if (assimpMaterial.HasTextureNormal)
+                {
+                    Assimp.TextureSlot tslot = assimpMaterial.TextureNormal;
+                    GetTexture(tslot, out Texture2D texture, out float useMap);
+                    material.SetFloat("_UseNormalMap", useMap);
+                    material.SetTexture("_NormalMap", texture);
+                }
+                if (assimpMaterial.HasTextureEmissive)
+                {
+                    Assimp.TextureSlot tslot = assimpMaterial.TextureEmissive;
+                    GetTexture(tslot, out Texture2D texture, out float useMap);
+                    material.SetFloat("_UseEmissiveMap", useMap);
+                    material.SetTexture("_EmissiveMap", texture);
+                }
                 i++;
 
                 if (!blocking)
@@ -465,7 +479,6 @@ namespace VRtist
                     texture.LoadImage(data);
                     useColorMap = 1f;
                 }
-
             }
         }
 
