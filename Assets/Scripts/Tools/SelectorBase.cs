@@ -344,11 +344,6 @@ namespace VRtist
                 {
                     return true;
                 }
-                SkinnedMeshRenderer SkinnedMesh = gObject.GetComponentInChildren<SkinnedMeshRenderer>();
-                if (SkinnedMesh != null && SkinnedMesh.gameObject != gObject)
-                {
-                    return true;
-                }
             }
             return false;
 
@@ -868,11 +863,12 @@ namespace VRtist
                 if (null != meshFilter)
                 {
                     GetMeshFilterBounds(selectionCount, foundHierarchicalObject, obj, meshFilter);
+                    continue;
                 }
-                SkinnedMeshRenderer[] skinnedMeshes = obj.GetComponentsInChildren<SkinnedMeshRenderer>();
-                if (skinnedMeshes.Length > 0)
+                SkinnedMeshRenderer[] skinMeshes = obj.GetComponentsInChildren<SkinnedMeshRenderer>(); ;
+                if (null != skinMeshes)
                 {
-                    GetSkinnedMeshBounds(selectionCount, foundHierarchicalObject, obj, skinnedMeshes);
+                    GetBoxColliderBounds(selectionCount, foundHierarchicalObject, obj, skinMeshes);
                 }
             }
             if (hasBounds)
@@ -889,7 +885,7 @@ namespace VRtist
             UpdateSelectionPlanes();
         }
 
-        private void GetSkinnedMeshBounds(int selectionCount, bool foundHierarchicalObject, GameObject obj, SkinnedMeshRenderer[] skinnedMeshes)
+        private void GetBoxColliderBounds(int selectionCount, bool foundHierarchicalObject, GameObject obj, SkinnedMeshRenderer[] skinnedMeshes)
         {
             Vector3 maxBoundSize = Vector3.zero;
             SkinnedMeshRenderer maxMesh = new SkinnedMeshRenderer();
@@ -901,6 +897,7 @@ namespace VRtist
                     maxMesh = mesh;
                 }
             }
+
 
             Matrix4x4 transformMatrix;
             if (selectionCount > 1 || foundHierarchicalObject)
@@ -915,14 +912,15 @@ namespace VRtist
 
             // Get vertices
             Vector3[] vertices = new Vector3[8];
-            vertices[0] = new Vector3(maxMesh.bounds.min.x, maxMesh.bounds.min.y, maxMesh.bounds.min.z);
-            vertices[1] = new Vector3(maxMesh.bounds.min.x, maxMesh.bounds.min.y, maxMesh.bounds.max.z);
-            vertices[2] = new Vector3(maxMesh.bounds.min.x, maxMesh.bounds.max.y, maxMesh.bounds.min.z);
-            vertices[3] = new Vector3(maxMesh.bounds.min.x, maxMesh.bounds.max.y, maxMesh.bounds.max.z);
-            vertices[4] = new Vector3(maxMesh.bounds.max.x, maxMesh.bounds.min.y, maxMesh.bounds.min.z);
-            vertices[5] = new Vector3(maxMesh.bounds.max.x, maxMesh.bounds.min.y, maxMesh.bounds.max.z);
-            vertices[6] = new Vector3(maxMesh.bounds.max.x, maxMesh.bounds.max.y, maxMesh.bounds.min.z);
-            vertices[7] = new Vector3(maxMesh.bounds.max.x, maxMesh.bounds.max.y, maxMesh.bounds.max.z);
+            Vector3 center = maxMesh.localBounds.center;
+            vertices[0] = new Vector3(maxMesh.localBounds.min.x + center.x, maxMesh.localBounds.min.y + center.y, maxMesh.localBounds.min.z + center.z);
+            vertices[1] = new Vector3(maxMesh.localBounds.min.x + center.x, maxMesh.localBounds.min.y + center.y, maxMesh.localBounds.max.z + center.z);
+            vertices[2] = new Vector3(maxMesh.localBounds.min.x + center.x, maxMesh.localBounds.max.y + center.y, maxMesh.localBounds.min.z + center.z);
+            vertices[3] = new Vector3(maxMesh.localBounds.min.x + center.x, maxMesh.localBounds.max.y + center.y, maxMesh.localBounds.max.z + center.z);
+            vertices[4] = new Vector3(maxMesh.localBounds.max.x + center.x, maxMesh.localBounds.min.y + center.y, maxMesh.localBounds.min.z + center.z);
+            vertices[5] = new Vector3(maxMesh.localBounds.max.x + center.x, maxMesh.localBounds.min.y + center.y, maxMesh.localBounds.max.z + center.z);
+            vertices[6] = new Vector3(maxMesh.localBounds.max.x + center.x, maxMesh.localBounds.max.y + center.y, maxMesh.localBounds.min.z + center.z);
+            vertices[7] = new Vector3(maxMesh.localBounds.max.x + center.x, maxMesh.localBounds.max.y + center.y, maxMesh.localBounds.max.z + center.z);
 
             for (int i = 0; i < vertices.Length; i++)
             {
@@ -937,7 +935,14 @@ namespace VRtist
                 if (vertices[i].z > maxBound.z) { maxBound.z = vertices[i].z; }
             }
             hasBounds = true;
-            planeContainerMatrix = SceneManager.RightHanded.worldToLocalMatrix * obj.transform.localToWorldMatrix;
+            if (selectionCount == 1 && !foundHierarchicalObject)
+            {
+                planeContainerMatrix = SceneManager.RightHanded.worldToLocalMatrix * maxMesh.localToWorldMatrix;
+            }
+            else
+            {
+                planeContainerMatrix = maxMesh.localToWorldMatrix;
+            }
         }
 
         private void GetMeshFilterBounds(int selectionCount, bool foundHierarchicalObject, GameObject obj, MeshFilter meshFilter)
@@ -995,31 +1000,13 @@ namespace VRtist
             }
         }
 
-        public void OnDrawGizmos()
-        {
-            if (planePositions != null)
-            {
-                for (int i = 0; i < planePositions.Length; i++)
-                {
-                    Color bl = Color.blue;
-                    bl.a = 0.25f;
-                    Gizmos.color = bl;
-
-                    Gizmos.DrawCube(planePositions[i], Vector3.one * 0.1f);
-                    bl = Color.red;
-                    bl.a = 0.25f;
-                    Gizmos.color = bl;
-                    Gizmos.DrawCube(boundingBox.transform.position, boundingBox.transform.localScale);
-                }
-            }
-        }
-
         public void UpdateSelectionPlanes()
         {
             Maths.DecomposeMatrix(planeContainerMatrix, out Vector3 planePosition, out Quaternion planeRotation, out Vector3 planeScale);
             boundingBox.transform.localPosition = planePosition;
             boundingBox.transform.localRotation = planeRotation;
             boundingBox.transform.localScale = planeScale;
+
 
             if (!hasBounds)
             {
@@ -1108,6 +1095,8 @@ namespace VRtist
             snapRays[5] = new Ray(mouthpieces.transform.InverseTransformPoint(worldPlanePosition), mouthpieces.transform.InverseTransformDirection(boundingBox.transform.forward));
         }
 
+
+
         protected void Snap(ref Matrix4x4 currentMouthPieceLocalToWorld)
         {
             foreach (Transform snapUI in snapTargets)
@@ -1173,6 +1162,22 @@ namespace VRtist
             return -1;
         }
 
+        Vector3 org;
+        Vector3 orgop;
+        Ray ra;
+
+        public void OnDrawGizmos()
+        {
+            if (!hasBounds) return;
+
+            Gizmos.color = Color.blue;
+            Gizmos.DrawCube(org, Vector3.one * 0.1f);
+            Gizmos.color = Color.black;
+            Gizmos.DrawCube(orgop, Vector3.one * 0.1f);
+            Gizmos.color = Color.white;
+            Gizmos.DrawRay(ra);
+        }
+
         protected bool SnapPlane(ref Matrix4x4 currentMouthPieceLocalToWorld, int planeIndex)
         {
             if (!hasBounds)
@@ -1184,6 +1189,9 @@ namespace VRtist
             Vector3 originOppositePlane = currentMouthPieceLocalToWorld.MultiplyPoint(snapRays[GetOppositePlaneIndex(planeIndex)].origin);
 
             Ray ray = new Ray(originOppositePlane, currentMouthPieceLocalToWorld.MultiplyVector(snapRays[planeIndex].direction).normalized);
+            org = origin;
+            orgop = originOppositePlane;
+            ra = ray;
 
             LineRenderer line = planeLines[planeIndex];
             Transform snapTarget = snapTargets[planeIndex];

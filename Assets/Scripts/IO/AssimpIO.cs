@@ -521,7 +521,7 @@ namespace VRtist
             foreach (int indice in node.MeshIndices)
             {
                 combine[i].mesh = meshes[indice].mesh;
-                combine[i].transform = Matrix4x4.identity;
+                combine[i].transform = parent.transform.worldToLocalMatrix;
                 mats[i] = materials[meshes[indice].materialIndex];
                 i++;
             }
@@ -639,10 +639,11 @@ namespace VRtist
                 new Vector4(node.Transform.A3, node.Transform.B3, node.Transform.C3, node.Transform.D3),
                 new Vector4(node.Transform.A4, node.Transform.B4, node.Transform.C4, node.Transform.D4)
                 );
-
             Vector3 position, scale;
             Quaternion rotation;
             Maths.DecomposeMatrix(mat, out position, out rotation, out scale);
+
+            node.Transform.Decompose(out Assimp.Vector3D scale1,out Assimp.Quaternion rot, out Assimp.Vector3D trans);
 
             AssignMeshes(node, go);
 
