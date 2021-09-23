@@ -285,7 +285,6 @@ namespace VRtist
 
         void OnObjectAdded(GameObject gobject)
         {
-            Debug.Log("object added " + gobject, gobject);
             if (disabledAnimations.TryGetValue(gobject, out AnimationSet animationSet))
             {
                 disabledAnimations.Remove(gobject);

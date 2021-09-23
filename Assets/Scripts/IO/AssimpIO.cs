@@ -668,7 +668,7 @@ namespace VRtist
                 ImportAnimation(node, go);
             }
 
-
+            importCount++;
             foreach (Assimp.Node assimpChild in node.Children)
             {
                 GameObject child = new GameObject();
@@ -790,7 +790,6 @@ namespace VRtist
 
         private IEnumerator CreateUnityDataFromAssimp(string fileName, Assimp.Scene aScene, Transform root)
         {
-            Debug.Log(root);
             scene = aScene;
             directoryName = Path.GetDirectoryName(fileName);
 
