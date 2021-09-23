@@ -94,11 +94,13 @@ namespace VRtist
             if (!Selection.IsSelected(gObject))
                 return;
 
+            Debug.Log("curve changed");
             UpdateCurve(gObject);
         }
 
         void OnAnimationAdded(GameObject gObject)
         {
+            Debug.Log("added animation");
             if (!Selection.IsSelected(gObject))
                 return;
 
@@ -128,6 +130,7 @@ namespace VRtist
 
         void UpdateCurve(GameObject gObject)
         {
+            Debug.Log("update curve");
             DeleteCurve(gObject);
             AddCurve(gObject);
         }

@@ -479,6 +479,7 @@ namespace VRtist
 
         protected virtual void OnEndGrip()
         {
+            Debug.Log("on end grip");
             snapUIContainer.SetActive(false);
             boundingBox.SetActive(false);
             SetControllerVisible(true);
