@@ -393,7 +393,7 @@ namespace VRtist
             Material transpMat = Resources.Load<Material>("Materials/ObjectTransparent");
             foreach (Assimp.Material assimpMaterial in scene.Materials)
             {
-                GlobalState.Instance.messageBox.ShowMessage("Importing Materials : " + i + " : " + scene.MaterialCount);
+                GlobalState.Instance.messageBox.ShowMessage("Importing Materials : " + i + " / " + scene.MaterialCount);
                 if (assimpMaterial.HasOpacity && !assimpMaterial.HasColorTransparent)
                 {
                     materials.Add(new Material(transpMat));
