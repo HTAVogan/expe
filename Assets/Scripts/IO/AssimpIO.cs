@@ -49,6 +49,7 @@ namespace VRtist
         private bool isHuman;
         private Vector3 meshCenter;
         private Vector3 meshSize;
+        private int importCount;
 
         // We consider that half of the total time is spent inside the assimp engine
         // A quarter of the total time is necessary to create meshes
@@ -342,6 +343,7 @@ namespace VRtist
             int i = 0;
             foreach (Assimp.Mesh assimpMesh in scene.Meshes)
             {
+                GlobalState.Instance.messageBox.ShowMessage("Importing Meshes : " + i + " / " + scene.MeshCount);
                 if (assimpMesh.HasBones) isHuman = true;
 
                 SubMeshComponent subMeshComponent = ImportMesh(assimpMesh);
@@ -391,6 +393,7 @@ namespace VRtist
             Material transpMat = Resources.Load<Material>("Materials/ObjectTransparent");
             foreach (Assimp.Material assimpMaterial in scene.Materials)
             {
+                GlobalState.Instance.messageBox.ShowMessage("Importing Materials : " + i + " : " + scene.MaterialCount);
                 if (assimpMaterial.HasOpacity && !assimpMaterial.HasColorTransparent)
                 {
                     materials.Add(new Material(transpMat));
@@ -627,7 +630,7 @@ namespace VRtist
             if (parent != null && parent != go.transform)
                 go.transform.parent = parent;
 
-
+            GlobalState.Instance.messageBox.ShowMessage("Importing Hierarchy : " + importCount);
             // Do not use Assimp Decompose function, it does not work properly
             // use unity decomposition instead
             Matrix4x4 mat = new Matrix4x4(
@@ -659,16 +662,10 @@ namespace VRtist
                 }
             }
 
+
             if (scene.HasAnimations)
             {
-                if (blocking)
-                {
-                    ImportAnimation(node, go).MoveNext();
-                }
-                else
-                {
-                    yield return StartCoroutine(ImportAnimation(node, go));
-                }
+                ImportAnimation(node, go);
             }
 
 
@@ -684,7 +681,7 @@ namespace VRtist
 
         }
 
-        private IEnumerator ImportAnimation(Assimp.Node node, GameObject go)
+        private void ImportAnimation(Assimp.Node node, GameObject go)
         {
             Assimp.Animation animation = scene.Animations[0];
             if ((GlobalState.Animation.fps / (float)animation.TicksPerSecond) * animation.DurationInTicks > GlobalState.Animation.EndFrame)
@@ -719,15 +716,12 @@ namespace VRtist
                 }
 
                 GlobalState.Animation.SetObjectAnimations(go, animationSet);
-                if (!blocking)
-                {
-                    yield return null;
-                }
             }
         }
 
         private IEnumerator ImportScene(string fileName, Transform root = null)
         {
+
             if (blocking)
                 ImportMaterials().MoveNext();
             else
@@ -751,6 +745,7 @@ namespace VRtist
                 objectRoot.transform.localRotation = Quaternion.Euler(0, 180, 0);
             }
 
+            importCount = 1;
             if (blocking)
                 ImportHierarchy(scene.RootNode, root, objectRoot).MoveNext();
             else
