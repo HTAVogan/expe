@@ -868,7 +868,7 @@ namespace VRtist
                 SkinnedMeshRenderer[] skinMeshes = obj.GetComponentsInChildren<SkinnedMeshRenderer>(); ;
                 if (null != skinMeshes)
                 {
-                    GetBoxColliderBounds(selectionCount, foundHierarchicalObject, obj, skinMeshes);
+                    GetSkinnedMeshBounds(selectionCount, foundHierarchicalObject, obj, skinMeshes);
                 }
             }
             if (hasBounds)
@@ -885,7 +885,7 @@ namespace VRtist
             UpdateSelectionPlanes();
         }
 
-        private void GetBoxColliderBounds(int selectionCount, bool foundHierarchicalObject, GameObject obj, SkinnedMeshRenderer[] skinnedMeshes)
+        private void GetSkinnedMeshBounds(int selectionCount, bool foundHierarchicalObject, GameObject obj, SkinnedMeshRenderer[] skinnedMeshes)
         {
             Vector3 maxBoundSize = Vector3.zero;
             SkinnedMeshRenderer maxMesh = new SkinnedMeshRenderer();
@@ -897,7 +897,6 @@ namespace VRtist
                     maxMesh = mesh;
                 }
             }
-
 
             Matrix4x4 transformMatrix;
             if (selectionCount > 1 || foundHierarchicalObject)
@@ -912,15 +911,14 @@ namespace VRtist
 
             // Get vertices
             Vector3[] vertices = new Vector3[8];
-            Vector3 center = maxMesh.localBounds.center;
-            vertices[0] = new Vector3(maxMesh.localBounds.min.x + center.x, maxMesh.localBounds.min.y + center.y, maxMesh.localBounds.min.z + center.z);
-            vertices[1] = new Vector3(maxMesh.localBounds.min.x + center.x, maxMesh.localBounds.min.y + center.y, maxMesh.localBounds.max.z + center.z);
-            vertices[2] = new Vector3(maxMesh.localBounds.min.x + center.x, maxMesh.localBounds.max.y + center.y, maxMesh.localBounds.min.z + center.z);
-            vertices[3] = new Vector3(maxMesh.localBounds.min.x + center.x, maxMesh.localBounds.max.y + center.y, maxMesh.localBounds.max.z + center.z);
-            vertices[4] = new Vector3(maxMesh.localBounds.max.x + center.x, maxMesh.localBounds.min.y + center.y, maxMesh.localBounds.min.z + center.z);
-            vertices[5] = new Vector3(maxMesh.localBounds.max.x + center.x, maxMesh.localBounds.min.y + center.y, maxMesh.localBounds.max.z + center.z);
-            vertices[6] = new Vector3(maxMesh.localBounds.max.x + center.x, maxMesh.localBounds.max.y + center.y, maxMesh.localBounds.min.z + center.z);
-            vertices[7] = new Vector3(maxMesh.localBounds.max.x + center.x, maxMesh.localBounds.max.y + center.y, maxMesh.localBounds.max.z + center.z);
+            vertices[0] = new Vector3(maxMesh.localBounds.min.x, maxMesh.localBounds.min.y, maxMesh.localBounds.min.z);
+            vertices[1] = new Vector3(maxMesh.localBounds.min.x, maxMesh.localBounds.min.y, maxMesh.localBounds.max.z);
+            vertices[2] = new Vector3(maxMesh.localBounds.min.x, maxMesh.localBounds.max.y, maxMesh.localBounds.min.z);
+            vertices[3] = new Vector3(maxMesh.localBounds.min.x, maxMesh.localBounds.max.y, maxMesh.localBounds.max.z);
+            vertices[4] = new Vector3(maxMesh.localBounds.max.x, maxMesh.localBounds.min.y, maxMesh.localBounds.min.z);
+            vertices[5] = new Vector3(maxMesh.localBounds.max.x, maxMesh.localBounds.min.y, maxMesh.localBounds.max.z);
+            vertices[6] = new Vector3(maxMesh.localBounds.max.x, maxMesh.localBounds.max.y, maxMesh.localBounds.min.z);
+            vertices[7] = new Vector3(maxMesh.localBounds.max.x, maxMesh.localBounds.max.y, maxMesh.localBounds.max.z);
 
             for (int i = 0; i < vertices.Length; i++)
             {
@@ -937,7 +935,12 @@ namespace VRtist
             hasBounds = true;
             if (selectionCount == 1 && !foundHierarchicalObject)
             {
+                //postest = maxMesh.bounds.center;
+                maxMesh.transform.position = maxMesh.rootBone.position;
                 planeContainerMatrix = SceneManager.RightHanded.worldToLocalMatrix * maxMesh.localToWorldMatrix;
+                //Vector3 meshPosition = planeContainerMatrix.GetColumn(3);
+                //meshPosition += (maxMesh.bounds.center - maxMesh.transform.position);
+                //planeContainerMatrix.SetColumn(3, meshPosition);
             }
             else
             {
@@ -1007,6 +1010,7 @@ namespace VRtist
             boundingBox.transform.localRotation = planeRotation;
             boundingBox.transform.localScale = planeScale;
 
+            postest = planePosition;
 
             if (!hasBounds)
             {
@@ -1162,20 +1166,13 @@ namespace VRtist
             return -1;
         }
 
-        Vector3 org;
-        Vector3 orgop;
-        Ray ra;
+        Vector3 postest;
 
         public void OnDrawGizmos()
         {
             if (!hasBounds) return;
 
-            Gizmos.color = Color.blue;
-            Gizmos.DrawCube(org, Vector3.one * 0.1f);
-            Gizmos.color = Color.black;
-            Gizmos.DrawCube(orgop, Vector3.one * 0.1f);
-            Gizmos.color = Color.white;
-            Gizmos.DrawRay(ra);
+            Gizmos.DrawCube(postest, Vector3.one * 0.1f);
         }
 
         protected bool SnapPlane(ref Matrix4x4 currentMouthPieceLocalToWorld, int planeIndex)
@@ -1189,9 +1186,6 @@ namespace VRtist
             Vector3 originOppositePlane = currentMouthPieceLocalToWorld.MultiplyPoint(snapRays[GetOppositePlaneIndex(planeIndex)].origin);
 
             Ray ray = new Ray(originOppositePlane, currentMouthPieceLocalToWorld.MultiplyVector(snapRays[planeIndex].direction).normalized);
-            org = origin;
-            orgop = originOppositePlane;
-            ra = ray;
 
             LineRenderer line = planeLines[planeIndex];
             Transform snapTarget = snapTargets[planeIndex];

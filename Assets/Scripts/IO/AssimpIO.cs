@@ -49,6 +49,7 @@ namespace VRtist
         private bool isHuman;
         private Vector3 meshCenter;
         private Vector3 meshSize;
+        private SkinnedMeshRenderer bodyMesh;
         private int importCount;
 
         // We consider that half of the total time is spent inside the assimp engine
@@ -608,6 +609,7 @@ namespace VRtist
             {
                 meshCenter = meshRenderer.bounds.center;
                 meshSize = meshRenderer.bounds.size;
+                bodyMesh = meshRenderer;
             }
         }
 
@@ -763,6 +765,13 @@ namespace VRtist
                 BoxCollider objectCollider = objectRoot.AddComponent<BoxCollider>();
                 objectCollider.center = meshCenter;
                 objectCollider.size = meshSize;
+                bodyMesh.updateWhenOffscreen = true;
+
+                SkinMeshController skinMesh = objectRoot.AddComponent<SkinMeshController>();
+                skinMesh.SkinMesh = bodyMesh;
+                skinMesh.Collider = objectCollider;
+                skinMesh.RootObject = rootBone;
+                
             }
 
         }
