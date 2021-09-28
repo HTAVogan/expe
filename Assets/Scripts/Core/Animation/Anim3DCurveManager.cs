@@ -94,13 +94,11 @@ namespace VRtist
             if (!Selection.IsSelected(gObject))
                 return;
 
-            Debug.Log("curve changed");
             UpdateCurve(gObject);
         }
 
         void OnAnimationAdded(GameObject gObject)
         {
-            Debug.Log("added animation");
             if (!Selection.IsSelected(gObject))
                 return;
 
@@ -130,7 +128,6 @@ namespace VRtist
 
         void UpdateCurve(GameObject gObject)
         {
-            Debug.Log("update curve");
             DeleteCurve(gObject);
             AddCurve(gObject);
         }
@@ -189,7 +186,23 @@ namespace VRtist
             line.startWidth = lineWidth / GlobalState.WorldScale;
             line.endWidth = line.startWidth;
 
+            MeshCollider collider = curve.GetComponent<MeshCollider>();
+            Mesh lineMesh = new Mesh();
+            line.BakeMesh(lineMesh);
+            collider.sharedMesh = lineMesh;
+
             curves.Add(gObject, curve);
         }
+
+        public GameObject GetObjectFromCurve(GameObject curve)
+        {
+            foreach(KeyValuePair<GameObject,GameObject> pair in curves)
+            {
+                if (pair.Value == curve) return pair.Key;
+            }
+            return null;
+        }
+
+
     }
 }

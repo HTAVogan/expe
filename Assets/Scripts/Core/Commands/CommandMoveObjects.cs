@@ -101,7 +101,6 @@ namespace VRtist
         }
         public override void Submit()
         {
-            Debug.Log("moved object");
             if (null != objects && objects.Count > 0)
             {
                 Redo();

@@ -8,6 +8,7 @@ TagManager:
   - UIObject
   - UICollider
   - WindowAnchor
+  - Curve
   layers:
   - Default
   - TransparentFX

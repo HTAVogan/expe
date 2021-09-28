@@ -73,6 +73,20 @@ namespace VRtist
             }
         }
 
+        public CommandAddKeyframes(GameObject obj, int frame, Vector3 position, Vector3 rotation)
+        {
+            gObject = obj;
+            Interpolation interpolation = GlobalState.Settings.interpolation;
+
+            new CommandAddKeyframe(gObject, AnimatableProperty.PositionX, frame, position.x, interpolation).Submit();
+            new CommandAddKeyframe(gObject, AnimatableProperty.PositionY, frame, position.y, interpolation).Submit();
+            new CommandAddKeyframe(gObject, AnimatableProperty.PositionZ, frame, position.z, interpolation).Submit();
+            new CommandAddKeyframe(gObject, AnimatableProperty.RotationX, frame, rotation.x, interpolation).Submit();
+            new CommandAddKeyframe(gObject, AnimatableProperty.RotationY, frame, rotation.y, interpolation).Submit();
+            new CommandAddKeyframe(gObject, AnimatableProperty.RotationZ, frame, rotation.z, interpolation).Submit();
+
+        }
+
         public override void Undo()
         {
             base.Undo();

@@ -479,7 +479,6 @@ namespace VRtist
 
         protected virtual void OnEndGrip()
         {
-            Debug.Log("on end grip");
             snapUIContainer.SetActive(false);
             boundingBox.SetActive(false);
             SetControllerVisible(true);
@@ -993,25 +992,6 @@ namespace VRtist
             else
             {
                 planeContainerMatrix = Matrix4x4.identity;
-            }
-        }
-
-        public void OnDrawGizmos()
-        {
-            if (planePositions != null)
-            {
-                for (int i = 0; i < planePositions.Length; i++)
-                {
-                    Color bl = Color.blue;
-                    bl.a = 0.25f;
-                    Gizmos.color = bl;
-
-                    Gizmos.DrawCube(planePositions[i], Vector3.one * 0.1f);
-                    bl = Color.red;
-                    bl.a = 0.25f;
-                    Gizmos.color = bl;
-                    Gizmos.DrawCube(boundingBox.transform.position, boundingBox.transform.localScale);
-                }
             }
         }
 

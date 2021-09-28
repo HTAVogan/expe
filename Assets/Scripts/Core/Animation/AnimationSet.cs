@@ -45,15 +45,20 @@ namespace VRtist
             else { CreateTransformCurves(); }
         }
 
+        public AnimationSet(AnimationSet set)
+        {
+            transform = set.transform;
+            foreach(KeyValuePair<AnimatableProperty, Curve> curve in set.curves)
+            {
+                curves.Add(curve.Key, curve.Value);
+            }
+        }
 
         public void EvaluateAnimation(int currentFrame)
         {
-            Transform trans = transform;
-            Vector3 position = trans.localPosition;
-            Vector3 rotation = trans.localEulerAngles;
-            Vector3 scale = trans.localScale;
-
-            Vector3 prevPosition = trans.localPosition;
+            Vector3 position = transform.localPosition;
+            Vector3 rotation = transform.localEulerAngles;
+            Vector3 scale = transform.localScale;
 
             float power = -1;
             Color color = Color.white;
@@ -91,20 +96,20 @@ namespace VRtist
                 }
             }
 
-            trans.localPosition = position;
-            trans.localEulerAngles = rotation;
-            trans.localScale = scale;
+            transform.localPosition = position;
+            transform.localEulerAngles = rotation;
+            transform.localScale = scale;
 
             if (power != -1)
             {
-                LightController controller = trans.GetComponent<LightController>();
+                LightController controller = transform.GetComponent<LightController>();
                 controller.Power = power;
                 controller.Color = color;
             }
 
             if (cameraFocal != -1 || cameraFocus != -1 || cameraAperture != -1)
             {
-                CameraController controller = trans.GetComponent<CameraController>();
+                CameraController controller = transform.GetComponent<CameraController>();
                 if (cameraFocal != -1)
                     controller.focal = cameraFocal;
                 if (cameraFocus != -1)
@@ -112,10 +117,37 @@ namespace VRtist
                 if (cameraAperture != -1)
                     controller.aperture = cameraAperture;
             }
+        }
 
-            Vector3 postPosition = trans.localPosition;
-            float vv;
-            curves[0].Evaluate(currentFrame, out vv);
+        public void EvaluateTransform(int currentFrame, Transform target)
+        {
+            Vector3 position = target.localPosition;
+            Vector3 rotation = target.localEulerAngles;
+            Vector3 scale = target.localScale;
+
+            foreach (Curve curve in curves.Values)
+            {
+                if (!curve.Evaluate(currentFrame, out float value))
+                    continue;
+                switch (curve.property)
+                {
+                    case AnimatableProperty.PositionX: position.x = value; break;
+                    case AnimatableProperty.PositionY: position.y = value; break;
+                    case AnimatableProperty.PositionZ: position.z = value; break;
+
+                    case AnimatableProperty.RotationX: rotation.x = value; break;
+                    case AnimatableProperty.RotationY: rotation.y = value; break;
+                    case AnimatableProperty.RotationZ: rotation.z = value; break;
+
+                    case AnimatableProperty.ScaleX: scale.x = value; break;
+                    case AnimatableProperty.ScaleY: scale.y = value; break;
+                    case AnimatableProperty.ScaleZ: scale.z = value; break;
+                }
+            }
+
+            target.localPosition = position;
+            target.localEulerAngles = rotation;
+            target.localScale = scale;
         }
 
         public Curve GetCurve(AnimatableProperty property)
