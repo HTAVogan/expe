@@ -754,6 +754,14 @@ namespace VRtist
             else
                 yield return StartCoroutine(ImportHierarchy(scene.RootNode, root, objectRoot));
 
+            if(null == rootBone)
+            {
+                foreach(Transform child in objectRoot.transform)
+                {
+                    if (child.childCount > 0) rootBone = child;
+                }
+            }
+
             foreach (KeyValuePair<Assimp.Node, GameObject> pair in delayedMesh)
             {
                 AssignSkinnedMeshes(pair.Key, pair.Value);
