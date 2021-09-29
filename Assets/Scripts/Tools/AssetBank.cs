@@ -139,6 +139,12 @@ namespace VRtist
                         controller.isImported = true;
                         controller.importPath = item.assetName;
                     }
+                    if(controller is SkinMeshController)
+                    {
+                        controller.isImported = true;
+                        controller.importPath = item.assetName;
+                        Debug.Log("has skin mesh controller");
+                    }
                 }
 
                 // Set the object size to 20cm in the user space
@@ -148,6 +154,13 @@ namespace VRtist
                     if (!useDefaultInstantiationScale)
                     {
                         bounds.Encapsulate(subMeshFilter.mesh.bounds);
+                    }
+                }
+                foreach(var subSkinneMesh in newObject.GetComponentsInChildren<SkinnedMeshRenderer>())
+                {
+                    if (!useDefaultInstantiationScale)
+                    {
+                        bounds.Encapsulate(subSkinneMesh.sharedMesh.bounds);
                     }
                 }
                 if (bounds.size.magnitude > 0)
