@@ -38,7 +38,7 @@ namespace VRtist
             bool triggerState = VRInput.GetValue(VRInput.primaryController, CommonUsages.gripButton);
             if (triggerState && hoveredCurves.Count > 0)
             {
-                animator.DragCurve(hoveredCurves[0], transform.position, transform.eulerAngles);
+                animator.DragCurve(hoveredCurves[0], transform.position, transform.rotation);
                 isGrip = true;  
             }
             else if (isGrip)

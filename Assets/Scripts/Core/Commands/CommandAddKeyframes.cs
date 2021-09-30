@@ -73,7 +73,7 @@ namespace VRtist
             }
         }
 
-        public CommandAddKeyframes(GameObject obj, int frame, Vector3 position, Vector3 rotation)
+        public CommandAddKeyframes(GameObject obj, int frame, Vector3 position, Vector3 rotation) : base("Add Keyframes")
         {
             gObject = obj;
             Interpolation interpolation = GlobalState.Settings.interpolation;

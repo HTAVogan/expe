@@ -177,7 +177,7 @@ namespace VRtist
 
         public void SetKeys(List<AnimationKey> k)
         {
-            keys = k;
+            keys = new List<AnimationKey>(k);
             ComputeCache();
         }
 

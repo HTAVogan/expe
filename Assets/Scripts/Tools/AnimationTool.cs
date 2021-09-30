@@ -15,6 +15,8 @@ namespace VRtist
         {
             public GameObject target;
             public AnimationSet Animation;
+            public Quaternion rotation;
+            public Vector3 previousRotation;
             public int Frame;
         }
 
@@ -27,14 +29,12 @@ namespace VRtist
 
         public void Start()
         {
-            Debug.Log("animation tool started");
         }
 
         public void DrawCurveGhost(GameObject target, Vector3 point)
         {
             LineRenderer line = target.GetComponent<LineRenderer>();
-            Vector3 correctedPoint = line.transform.InverseTransformPoint(point);
-            int frame = GetFrameFromPoint(line, correctedPoint);
+            int frame = GetFrameFromPoint(line, point);
             GameObject gobject = CurveManager.GetObjectFromCurve(target);
             DrawCurveGhost(gobject, frame);
         }
@@ -63,36 +63,38 @@ namespace VRtist
 
         internal void ReleaseCurve(Vector3 position, Vector3 rotation)
         {
-            Debug.Log("release curve");
             position = dragData.target.transform.parent.InverseTransformPoint(position);
             GlobalState.Animation.SetObjectAnimations(dragData.target, dragData.Animation);
             CommandGroup group = new CommandGroup("Add Keyframe");
-            new CommandAddKeyframes(dragData.target, dragData.Frame, position, rotation);
+            new CommandAddKeyframes(dragData.target, dragData.Frame, position, rotation).Submit();
             group.Submit();
+
+            dragData.Frame = -1;
         }
 
-        internal void DragCurve(GameObject gameObject, Vector3 position, Vector3 rotation)
+        internal void DragCurve(GameObject gameObject, Vector3 position, Quaternion rotation)
         {
             if (dragData.Frame == -1)
             {
-                Debug.Log("start drag curve");
                 LineRenderer line = gameObject.GetComponent<LineRenderer>();
                 GameObject target = CurveManager.GetObjectFromCurve(gameObject);
                 int frame = GetFrameFromPoint(line, position);
-                StartDrag(target, frame);
+                StartDrag(target, frame, rotation);
             }
             else
             {
                 int frame = dragData.Frame;
                 position = dragData.target.transform.parent.InverseTransformPoint(position);
-                Debug.Log("drag curve");
+                Quaternion deltaRotation = dragData.rotation * Quaternion.Inverse(rotation);
+                dragData.rotation = rotation;
+                dragData.previousRotation = dragData.previousRotation + deltaRotation.eulerAngles;
                 Interpolation interpolation = GlobalState.Settings.interpolation;
                 AnimationKey posX = new AnimationKey(frame, position.x, interpolation);
                 AnimationKey posY = new AnimationKey(frame, position.y, interpolation);
                 AnimationKey posZ = new AnimationKey(frame, position.z, interpolation);
-                AnimationKey rotX = new AnimationKey(frame, rotation.x, interpolation);
-                AnimationKey rotY = new AnimationKey(frame, rotation.y, interpolation);
-                AnimationKey rotZ = new AnimationKey(frame, rotation.z, interpolation);
+                AnimationKey rotX = new AnimationKey(frame, dragData.previousRotation.x, interpolation);
+                AnimationKey rotY = new AnimationKey(frame, dragData.previousRotation.y, interpolation);
+                AnimationKey rotZ = new AnimationKey(frame, dragData.previousRotation.z, interpolation);
 
                 GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.PositionX, posX);
                 GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.PositionY, posY);
@@ -103,10 +105,10 @@ namespace VRtist
             }
         }
 
-        private void StartDrag(GameObject target, int frame)
+        private void StartDrag(GameObject target, int frame, Quaternion rotation)
         {
             AnimationSet previousSet = GlobalState.Animation.GetObjectAnimation(target);
-            dragData = new DraggedCurveData() { Animation = new AnimationSet(previousSet), target = target, Frame = frame };
+            dragData = new DraggedCurveData() { Animation = new AnimationSet(previousSet), target = target, Frame = frame, rotation = rotation, previousRotation = target.transform.eulerAngles };
         }
 
         internal void HideGhost()
@@ -116,13 +118,14 @@ namespace VRtist
 
         private int GetFrameFromPoint(LineRenderer line, Vector3 point)
         {
+            Vector3 correctedPoint = line.transform.InverseTransformPoint(point);
             Vector3[] positions = new Vector3[line.positionCount];
             line.GetPositions(positions);
             int closestPoint = 0;
-            float closestDistance = Vector3.Distance(positions[0], point);
+            float closestDistance = Vector3.Distance(positions[0], correctedPoint);
             for (int i = 1; i < line.positionCount; i++)
             {
-                float dist = Vector3.Distance(positions[i], point);
+                float dist = Vector3.Distance(positions[i], correctedPoint);
                 if (dist < closestDistance)
                 {
                     closestDistance = dist;
