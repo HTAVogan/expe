@@ -48,9 +48,11 @@ namespace VRtist
         public AnimationSet(AnimationSet set)
         {
             transform = set.transform;
-            foreach(KeyValuePair<AnimatableProperty, Curve> curve in set.curves)
+            foreach (KeyValuePair<AnimatableProperty, Curve> curve in set.curves)
             {
-                curves.Add(curve.Key, curve.Value);
+                curves.Add(curve.Key, new Curve(curve.Key));
+                SetCurve(curve.Key, curve.Value.keys);
+                curves[curve.Key].ComputeCache();
             }
         }
 
