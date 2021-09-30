@@ -375,8 +375,17 @@ namespace VRtist
             {
                 loadingAsset = true;
                 GlobalState.Instance.messageBox.ShowMessage("Loading asset, please wait...");
+                try
+                {
+                    data.prefab = await data.importFunction(data);
+                }
+                catch (Exception e)
+                {
+                    GlobalState.Instance.messageBox.ShowMessage(e.Message, 3f);
+                    loadingAsset = false;
+                    return;
+                }
                 Selection.ClearSelection();
-                data.prefab = await data.importFunction(data);
                 Utils.NameObjectMeshes(data.prefab);
                 data.imported = true;
                 GlobalState.Instance.messageBox.SetVisible(false);

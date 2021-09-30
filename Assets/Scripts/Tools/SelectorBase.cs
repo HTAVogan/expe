@@ -344,11 +344,6 @@ namespace VRtist
                 {
                     return true;
                 }
-                SkinnedMeshRenderer SkinnedMesh = gObject.GetComponentInChildren<SkinnedMeshRenderer>();
-                if (SkinnedMesh != null && SkinnedMesh.gameObject != gObject)
-                {
-                    return true;
-                }
             }
             return false;
 
@@ -868,11 +863,12 @@ namespace VRtist
                 if (null != meshFilter)
                 {
                     GetMeshFilterBounds(selectionCount, foundHierarchicalObject, obj, meshFilter);
+                    continue;
                 }
-                SkinnedMeshRenderer[] skinnedMeshes = obj.GetComponentsInChildren<SkinnedMeshRenderer>();
-                if (skinnedMeshes.Length > 0)
+                SkinnedMeshRenderer[] skinMeshes = obj.GetComponentsInChildren<SkinnedMeshRenderer>(); ;
+                if (null != skinMeshes)
                 {
-                    GetSkinnedMeshBounds(selectionCount, foundHierarchicalObject, obj, skinnedMeshes);
+                    GetSkinnedMeshBounds(selectionCount, foundHierarchicalObject, obj, skinMeshes);
                 }
             }
             if (hasBounds)
@@ -915,14 +911,14 @@ namespace VRtist
 
             // Get vertices
             Vector3[] vertices = new Vector3[8];
-            vertices[0] = new Vector3(maxMesh.bounds.min.x, maxMesh.bounds.min.y, maxMesh.bounds.min.z);
-            vertices[1] = new Vector3(maxMesh.bounds.min.x, maxMesh.bounds.min.y, maxMesh.bounds.max.z);
-            vertices[2] = new Vector3(maxMesh.bounds.min.x, maxMesh.bounds.max.y, maxMesh.bounds.min.z);
-            vertices[3] = new Vector3(maxMesh.bounds.min.x, maxMesh.bounds.max.y, maxMesh.bounds.max.z);
-            vertices[4] = new Vector3(maxMesh.bounds.max.x, maxMesh.bounds.min.y, maxMesh.bounds.min.z);
-            vertices[5] = new Vector3(maxMesh.bounds.max.x, maxMesh.bounds.min.y, maxMesh.bounds.max.z);
-            vertices[6] = new Vector3(maxMesh.bounds.max.x, maxMesh.bounds.max.y, maxMesh.bounds.min.z);
-            vertices[7] = new Vector3(maxMesh.bounds.max.x, maxMesh.bounds.max.y, maxMesh.bounds.max.z);
+            vertices[0] = new Vector3(maxMesh.localBounds.min.x, maxMesh.localBounds.min.y, maxMesh.localBounds.min.z);
+            vertices[1] = new Vector3(maxMesh.localBounds.min.x, maxMesh.localBounds.min.y, maxMesh.localBounds.max.z);
+            vertices[2] = new Vector3(maxMesh.localBounds.min.x, maxMesh.localBounds.max.y, maxMesh.localBounds.min.z);
+            vertices[3] = new Vector3(maxMesh.localBounds.min.x, maxMesh.localBounds.max.y, maxMesh.localBounds.max.z);
+            vertices[4] = new Vector3(maxMesh.localBounds.max.x, maxMesh.localBounds.min.y, maxMesh.localBounds.min.z);
+            vertices[5] = new Vector3(maxMesh.localBounds.max.x, maxMesh.localBounds.min.y, maxMesh.localBounds.max.z);
+            vertices[6] = new Vector3(maxMesh.localBounds.max.x, maxMesh.localBounds.max.y, maxMesh.localBounds.min.z);
+            vertices[7] = new Vector3(maxMesh.localBounds.max.x, maxMesh.localBounds.max.y, maxMesh.localBounds.max.z);
 
             for (int i = 0; i < vertices.Length; i++)
             {
@@ -937,7 +933,19 @@ namespace VRtist
                 if (vertices[i].z > maxBound.z) { maxBound.z = vertices[i].z; }
             }
             hasBounds = true;
-            planeContainerMatrix = SceneManager.RightHanded.worldToLocalMatrix * obj.transform.localToWorldMatrix;
+            if (selectionCount == 1 && !foundHierarchicalObject)
+            {
+                //postest = maxMesh.bounds.center;
+                maxMesh.transform.position = maxMesh.rootBone.position;
+                planeContainerMatrix = SceneManager.RightHanded.worldToLocalMatrix * maxMesh.localToWorldMatrix;
+                //Vector3 meshPosition = planeContainerMatrix.GetColumn(3);
+                //meshPosition += (maxMesh.bounds.center - maxMesh.transform.position);
+                //planeContainerMatrix.SetColumn(3, meshPosition);
+            }
+            else
+            {
+                planeContainerMatrix = maxMesh.localToWorldMatrix;
+            }
         }
 
         private void GetMeshFilterBounds(int selectionCount, bool foundHierarchicalObject, GameObject obj, MeshFilter meshFilter)
@@ -995,38 +1003,23 @@ namespace VRtist
             }
         }
 
-        public void OnDrawGizmos()
-        {
-            if (planePositions != null)
-            {
-                for (int i = 0; i < planePositions.Length; i++)
-                {
-                    Color bl = Color.blue;
-                    bl.a = 0.25f;
-                    Gizmos.color = bl;
-
-                    Gizmos.DrawCube(planePositions[i], Vector3.one * 0.1f);
-                    bl = Color.red;
-                    bl.a = 0.25f;
-                    Gizmos.color = bl;
-                    Gizmos.DrawCube(boundingBox.transform.position, boundingBox.transform.localScale);
-                }
-            }
-        }
-
         public void UpdateSelectionPlanes()
         {
-            Maths.DecomposeMatrix(planeContainerMatrix, out Vector3 planePosition, out Quaternion planeRotation, out Vector3 planeScale);
-            boundingBox.transform.localPosition = planePosition;
-            boundingBox.transform.localRotation = planeRotation;
-            boundingBox.transform.localScale = planeScale;
-
             if (!hasBounds)
             {
                 snapUIContainer.SetActive(false);
                 boundingBox.SetActive(false);
                 return;
             }
+
+
+            Maths.DecomposeMatrix(planeContainerMatrix, out Vector3 planePosition, out Quaternion planeRotation, out Vector3 planeScale);
+            boundingBox.transform.localPosition = planePosition;
+            boundingBox.transform.localRotation = planeRotation;
+            boundingBox.transform.localScale = planeScale;
+
+            postest = planePosition;
+
 
             Vector3 bs = boundingBox.transform.localScale; // boundsScale
 
@@ -1108,6 +1101,8 @@ namespace VRtist
             snapRays[5] = new Ray(mouthpieces.transform.InverseTransformPoint(worldPlanePosition), mouthpieces.transform.InverseTransformDirection(boundingBox.transform.forward));
         }
 
+
+
         protected void Snap(ref Matrix4x4 currentMouthPieceLocalToWorld)
         {
             foreach (Transform snapUI in snapTargets)
@@ -1171,6 +1166,15 @@ namespace VRtist
                     break;
             }
             return -1;
+        }
+
+        Vector3 postest;
+
+        public void OnDrawGizmos()
+        {
+            if (!hasBounds) return;
+
+            Gizmos.DrawCube(postest, Vector3.one * 0.1f);
         }
 
         protected bool SnapPlane(ref Matrix4x4 currentMouthPieceLocalToWorld, int planeIndex)
