@@ -52,6 +52,11 @@ namespace VRtist
         private SkinnedMeshRenderer bodyMesh;
         private int importCount;
 
+        private List<string> GoalNames = new List<string>()
+        {
+            "LeftLeg","LeftFoot","RightLeg","RightFoot","LeftForeArm","LeftHand","RightForeArm","RightHand","Head"
+        };
+
         // We consider that half of the total time is spent inside the assimp engine
         // A quarter of the total time is necessary to create meshes
         // The remaining quarter is for hierarchy creation
@@ -645,7 +650,7 @@ namespace VRtist
             Quaternion rotation;
             Maths.DecomposeMatrix(mat, out position, out rotation, out scale);
 
-            node.Transform.Decompose(out Assimp.Vector3D scale1,out Assimp.Quaternion rot, out Assimp.Vector3D trans);
+            node.Transform.Decompose(out Assimp.Vector3D scale1, out Assimp.Quaternion rot, out Assimp.Vector3D trans);
 
             AssignMeshes(node, go);
 
@@ -681,7 +686,6 @@ namespace VRtist
                 else
                     yield return StartCoroutine(ImportHierarchy(assimpChild, go.transform, child));
             }
-
         }
 
         private void ImportAnimation(Assimp.Node node, GameObject go)
@@ -754,9 +758,9 @@ namespace VRtist
             else
                 yield return StartCoroutine(ImportHierarchy(scene.RootNode, root, objectRoot));
 
-            if(null == rootBone)
+            if (null == rootBone)
             {
-                foreach(Transform child in objectRoot.transform)
+                foreach (Transform child in objectRoot.transform)
                 {
                     if (child.childCount > 0) rootBone = child;
                 }
@@ -779,10 +783,44 @@ namespace VRtist
                 skinMesh.SkinMesh = bodyMesh;
                 skinMesh.Collider = objectCollider;
                 skinMesh.RootObject = rootBone;
-                
+
+                GenerateSkeleton(rootBone);
             }
 
         }
+
+        private void GenerateSkeleton(Transform root)
+        {
+            root.gameObject.AddComponent<HumanGoalController>();
+            foreach (Transform child in root)
+            {
+                GenerateSkeletonRec(child, new List<Transform>() { root });
+            }
+        }
+
+        private void GenerateSkeletonRec(Transform transform, List<Transform> path)
+        {
+            string foundName = "";
+            GoalNames.ForEach(x =>
+            {
+                if (transform.name.Contains(x)) foundName = x;
+            });
+            if (foundName != "")
+            {
+                HumanGoalController controller = transform.gameObject.AddComponent<HumanGoalController>();
+                controller.SetPathToRoot(path);
+            }
+            path.Add(transform);
+            if (transform.childCount > 0)
+            {
+                foreach (Transform child in transform)
+                {
+                    GenerateSkeletonRec(child, new List<Transform>(path));
+                }
+            }
+
+        }
+
 
         private async Task<Assimp.Scene> ImportAssimpFile(string fileName)
         {
