@@ -30,25 +30,36 @@ namespace VRtist
 
         public void Update()
         {
+            if (hoveredCurves.Count > 0 && hoveredCurves[0] == null)
+            {
+                hoveredCurves.RemoveAt(0);
+                animator.HideGhost();
+            }
             if (hoveredCurves.Count > 0)
             {
-                if (!isGrip) animator.DrawCurveGhost(hoveredCurves[0], GetCollisionPoint(hoveredCurves[0], transform.position));
+                if (!isGrip) animator.DrawCurveGhost(hoveredCurves[0], transform.position);
                 else animator.DrawCurveGhost();
             }
-            bool triggerState = VRInput.GetValue(VRInput.primaryController, CommonUsages.gripButton);
-            if (triggerState && hoveredCurves.Count > 0)
-            {
-                animator.DragCurve(hoveredCurves[0], transform.position, transform.rotation);
-                isGrip = true;  
-            }
-            else if (isGrip)
-            {
-                animator.ReleaseCurve(transform.position, transform.eulerAngles);
-                hoveredCurves.Clear();
-                animator.HideGhost();
-                isGrip = false;
-            }
-
+            VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.grip,
+                () =>
+                {
+                    if (hoveredCurves.Count > 0)
+                    {
+                        animator.StartDrag(hoveredCurves[0], transform);
+                        isGrip = true;
+                    }
+                },
+                () =>
+                {
+                    if (isGrip)
+                    {
+                        animator.ReleaseCurve(transform);
+                        hoveredCurves.Clear();
+                        animator.HideGhost();
+                        isGrip = false;
+                    }
+                });
+            if (isGrip) animator.DragCurve(transform);
         }
 
         public Vector3 GetCollisionPoint(GameObject gameObject, Vector3 position)
