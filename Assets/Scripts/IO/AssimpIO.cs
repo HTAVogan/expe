@@ -791,7 +791,8 @@ namespace VRtist
 
         private void GenerateSkeleton(Transform root)
         {
-            root.gameObject.AddComponent<HumanGoalController>();
+            HumanGoalController controller = root.gameObject.AddComponent<HumanGoalController>();
+            controller.SetPathToRoot(new List<Transform>() { root });
             foreach (Transform child in root)
             {
                 GenerateSkeletonRec(child, new List<Transform>() { root });

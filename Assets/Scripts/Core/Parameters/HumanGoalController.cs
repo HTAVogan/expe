@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace VRtist
             {
                 AnimationSet anim = GlobalState.Animation.GetObjectAnimation(x.gameObject);
                 PathToRoot.Add(x);
+
                 AnimToRoot.Add(anim);
             });
             Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
@@ -23,61 +25,90 @@ namespace VRtist
 
         public Vector3 FramePosition(int frame)
         {
-            if (null == Animation) GlobalState.Animation.GetObjectAnimation(this.gameObject);
+            if (null == Animation) Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
             if (null == Animation) return Vector3.zero;
 
-            Vector3 parentPosition = GetBonePosition(0, frame);
+            Matrix4x4 trsMatrix = PathToRoot[0].parent.localToWorldMatrix;
 
-            for (int i = 1; i < PathToRoot.Count; i++)
+            for (int i = 0; i < PathToRoot.Count; i++)
             {
-                Vector3 position = GetBonePosition(i, frame);
-                if(position != Vector3.zero)
-                {
-                    parentPosition = position;
-                    continue;
-                }
-
+                trsMatrix = trsMatrix * GetBoneMatrix(AnimToRoot[i], frame);
             }
-            return transform.InverseTransformPoint(Vector3.zero);
+            trsMatrix = trsMatrix * GetBoneMatrix(Animation, frame);
+
+            Maths.DecomposeMatrix(trsMatrix, out Vector3 parentPosition, out Quaternion quaternion, out Vector3 scale);
+            return parentPosition;
         }
 
-        public Vector3 GetBonePosition(int index, int frame)
+        private Matrix4x4 GetBoneMatrix(AnimationSet anim, int frame)
         {
-            if (null == AnimToRoot[index]) AnimToRoot[index] = GlobalState.Animation.GetObjectAnimation(PathToRoot[index].gameObject);
-            if (null == AnimToRoot[index]) return Vector3.zero;
-            Curve posx = AnimToRoot[index].GetCurve(AnimatableProperty.PositionX);
-            Curve posy = AnimToRoot[index].GetCurve(AnimatableProperty.PositionY);
-            Curve posz = AnimToRoot[index].GetCurve(AnimatableProperty.PositionZ);
+            if (null == anim) return Matrix4x4.identity;
+
+            Vector3 position = Vector3.zero;
+            Curve posx = anim.GetCurve(AnimatableProperty.PositionX);
+            Curve posy = anim.GetCurve(AnimatableProperty.PositionY);
+            Curve posz = anim.GetCurve(AnimatableProperty.PositionZ);
             if (null != posx && null != posy && null != posz)
             {
-                if (posx.Evaluate(frame, out float px) &&
-                    posy.Evaluate(frame, out float py) &&
-                    posz.Evaluate(frame, out float pz))
+                if (posx.Evaluate(frame, out float px) && posy.Evaluate(frame, out float py) && posz.Evaluate(frame, out float pz))
                 {
-                    return PathToRoot[index].TransformPoint(new Vector3(px, py, pz));
+                    position = new Vector3(px, py, pz);
                 }
             }
-            return Vector3.zero;
+            Quaternion rotation = Quaternion.identity;
+            Curve rotx = anim.GetCurve(AnimatableProperty.RotationX);
+            Curve roty = anim.GetCurve(AnimatableProperty.RotationY);
+            Curve rotz = anim.GetCurve(AnimatableProperty.RotationZ);
+            if (null != posx && null != roty && null != rotz)
+            {
+                if (rotx.Evaluate(frame, out float rx) && roty.Evaluate(frame, out float ry) && rotz.Evaluate(frame, out float rz))
+                {
+                    rotation = Quaternion.Euler(rx, ry, rz);
+                }
+            }
+            Vector3 scale = Vector3.one;
+            Curve scalex = anim.GetCurve(AnimatableProperty.ScaleX);
+            Curve scaley = anim.GetCurve(AnimatableProperty.ScaleY);
+            Curve scalez = anim.GetCurve(AnimatableProperty.ScaleZ);
+            if (null != scalex && null != scaley && null != scalez)
+            {
+                if (scalex.Evaluate(frame, out float sx) && scaley.Evaluate(frame, out float sy) && scalez.Evaluate(frame, out float sz))
+                {
+                    position = new Vector3(sx, sy, sz);
+                }
+            }
+            return Matrix4x4.TRS(position, rotation, scale);
         }
 
-        //public Quaternion GetBoneRotation(int index, int frame)
-        //{
-        //    if (null == AnimToRoot[index]) AnimToRoot[index] = GlobalState.Animation.GetObjectAnimation(PathToRoot[index].gameObject);
-        //    if (null == AnimToRoot[index]) return Quaternion.identity;
-        //    Curve rotx = AnimToRoot[index].GetCurve(AnimatableProperty.PositionX);
-        //    Curve roty = AnimToRoot[index].GetCurve(AnimatableProperty.PositionY);
-        //    Curve rotz = AnimToRoot[index].GetCurve(AnimatableProperty.PositionZ);
-        //    if (null != rotx && null != roty && null != rotz)
-        //    {
-        //        if (rotx.Evaluate(frame, out float rx) &&
-        //            roty.Evaluate(frame, out float ry) &&
-        //            rotz.Evaluate(frame, out float rz))
-        //        {
-        //            return PathToRoot[index].TransformPoint(new Vector3(px, py, pz));
-        //        }
-        //    }
-        //    return Quaternion.identity;
-        //}
+        [ContextMenu("test curve")]
+        public void TestAddCurve()
+        {
+            if (AnimToRoot.Count == 0) CheckAnimations();
+            Anim3DCurveManager curveManager = FindObjectOfType<Anim3DCurveManager>();
+            GameObject line = Instantiate(curveManager.curvePrefab, curveManager.curvesParent);
 
+            LineRenderer lineRenderer = line.GetComponent<LineRenderer>();
+            lineRenderer.positionCount = 0;
+            lineRenderer.useWorldSpace = true;
+
+            for (int i = 1; i < 60; i++)
+            {
+                lineRenderer.positionCount++;
+                lineRenderer.SetPosition(i - 1, FramePosition(i));
+            }
+        }
+        [ContextMenu("test selection")]
+        public void SelectionTest()
+        {
+            Selection.AddToSelection(this.gameObject);
+        }
+
+        private void CheckAnimations()
+        {
+            PathToRoot.ForEach(x =>
+            {
+                AnimToRoot.Add(GlobalState.Animation.GetObjectAnimation(x.gameObject));
+            });
+        }
     }
 }
