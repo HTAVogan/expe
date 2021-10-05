@@ -21,6 +21,7 @@
  * SOFTWARE.
  */
 
+using System;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -39,12 +40,15 @@ namespace VRtist
 
         private readonly float lineWidth = 0.001f;
 
+        private bool isAnimTool = false;
+
         void Start()
         {
             Selection.onSelectionChanged.AddListener(OnSelectionChanged);
             GlobalState.Animation.onAddAnimation.AddListener(OnAnimationAdded);
             GlobalState.Animation.onRemoveAnimation.AddListener(OnAnimationRemoved);
             GlobalState.Animation.onChangeCurve.AddListener(OnCurveChanged);
+            ToolsUIManager.Instance.OnToolChangedEvent += OnToolChanged;
         }
 
         void Update()
@@ -110,6 +114,14 @@ namespace VRtist
             DeleteCurve(gObject);
         }
 
+        void OnToolChanged(object sender, ToolChangedArgs args)
+        {
+            bool switchToAnim = args.toolName == "Animation";
+            if (!switchToAnim && !isAnimTool) return;
+            UpdateFromSelection();
+            isAnimTool = switchToAnim;
+        }
+
         void ClearCurves()
         {
             foreach (GameObject curve in curves.Values)
@@ -136,7 +148,13 @@ namespace VRtist
         {
             AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(gObject);
             if (null == animationSet)
+            {
+                if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+                {
+                    AddHumanCurve(gObject, controller);
+                }
                 return;
+            }
 
             Curve positionX = animationSet.GetCurve(AnimatableProperty.PositionX);
             Curve positionY = animationSet.GetCurve(AnimatableProperty.PositionY);
@@ -194,9 +212,60 @@ namespace VRtist
             curves.Add(gObject, curve);
         }
 
+        private void AddHumanCurve(GameObject gObject, SkinMeshController controller)
+        {
+            if (!controller.RootObject.TryGetComponent<HumanGoalController>(out HumanGoalController goalController))
+            {
+                return;
+            }
+            if (ToolsManager.CurrentToolName() == "Animation")
+            {
+                HumanGoalController[] controllers = goalController.GetComponentsInChildren<HumanGoalController>();
+                foreach (HumanGoalController ctrl in controllers)
+                {
+                    GetAHumanAnimationCurve(ctrl);
+                }
+            }
+            else
+            {
+                GetAHumanAnimationCurve(goalController);
+            }
+        }
+
+        private void GetAHumanAnimationCurve(HumanGoalController goalController)
+        {
+            AnimationSet rootAnimation = GlobalState.Animation.GetObjectAnimation(goalController.gameObject);
+            if (null == rootAnimation) return;
+            Curve positionX = rootAnimation.GetCurve(AnimatableProperty.PositionX);
+            int frameStart = Mathf.Clamp(positionX.keys[0].frame, GlobalState.Animation.StartFrame, GlobalState.Animation.EndFrame);
+            int frameEnd = Mathf.Clamp(positionX.keys[positionX.keys.Count - 1].frame, GlobalState.Animation.StartFrame, GlobalState.Animation.EndFrame);
+
+            List<Vector3> positions = new List<Vector3>();
+
+            for (int i = frameStart; i <= frameEnd; i++)
+            {
+                Vector3 position = goalController.FramePosition(i);
+                positions.Add(position);
+            }
+            GameObject curve = Instantiate(curvePrefab, curvesParent);
+            LineRenderer line = curve.GetComponent<LineRenderer>();
+            line.useWorldSpace = true;
+            line.positionCount = positions.Count;
+            line.SetPositions(positions.ToArray());
+
+            line.startWidth = lineWidth / GlobalState.WorldScale;
+            line.endWidth = line.startWidth;
+
+            MeshCollider collider = curve.GetComponent<MeshCollider>();
+            Mesh lineMesh = new Mesh();
+            line.BakeMesh(lineMesh);
+            collider.sharedMesh = lineMesh;
+            curves.Add(goalController.gameObject, curve);
+        }
+
         public GameObject GetObjectFromCurve(GameObject curve)
         {
-            foreach(KeyValuePair<GameObject,GameObject> pair in curves)
+            foreach (KeyValuePair<GameObject, GameObject> pair in curves)
             {
                 if (pair.Value == curve) return pair.Key;
             }

@@ -27,12 +27,16 @@ namespace VRtist
         {
             if (null == Animation) Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
             if (null == Animation) return Vector3.zero;
+            if (AnimToRoot.Count == 0) CheckAnimations();
 
             Matrix4x4 trsMatrix = PathToRoot[0].parent.localToWorldMatrix;
 
-            for (int i = 0; i < PathToRoot.Count; i++)
+            if (PathToRoot.Count > 1)
             {
-                trsMatrix = trsMatrix * GetBoneMatrix(AnimToRoot[i], frame);
+                for (int i = 0; i < PathToRoot.Count; i++)
+                {
+                    trsMatrix = trsMatrix * GetBoneMatrix(AnimToRoot[i], frame);
+                }
             }
             trsMatrix = trsMatrix * GetBoneMatrix(Animation, frame);
 

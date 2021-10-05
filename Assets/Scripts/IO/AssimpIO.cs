@@ -791,6 +791,9 @@ namespace VRtist
 
         private void GenerateSkeleton(Transform root)
         {
+            GoalNames = new List<string>()
+            {"LeftLeg","LeftFoot","RightLeg","RightFoot","LeftForeArm","LeftHand","RightForeArm","RightHand","Head"};
+
             HumanGoalController controller = root.gameObject.AddComponent<HumanGoalController>();
             controller.SetPathToRoot(new List<Transform>() { root });
             foreach (Transform child in root)
@@ -804,11 +807,15 @@ namespace VRtist
             string foundName = "";
             GoalNames.ForEach(x =>
             {
-                if (transform.name.Contains(x)) foundName = x;
+                if (transform.name.Contains(x))
+                {
+                    foundName = x;
+                }
             });
             if (foundName != "")
             {
                 HumanGoalController controller = transform.gameObject.AddComponent<HumanGoalController>();
+                GoalNames.Remove(foundName);
                 controller.SetPathToRoot(path);
             }
             path.Add(transform);
