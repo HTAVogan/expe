@@ -234,6 +234,34 @@ namespace VRtist
             }
         }
 
+        public void AddZoneKey(AnimationKey key, int zoneSize)
+        {
+            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame - 1, key.frame - zoneSize);
+            int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
+
+            int firstKeyIndex = cachedKeysIndices[startFrame - (GlobalState.Animation.StartFrame - 1)];
+            int lastKeyIndex = cachedKeysIndices[endFrame - (GlobalState.Animation.StartFrame - 1)];
+
+            if (!Evaluate(key.frame, out float value)) return;
+
+            for (int i = firstKeyIndex; i < lastKeyIndex; i++)
+            {
+                int deltaFrame = Mathf.Abs(key.frame - keys[i].frame);
+                float deltaTime = deltaFrame / (float)zoneSize;
+
+                if (property == AnimatableProperty.RotationX || property == AnimatableProperty.RotationY || property == AnimatableProperty.RotationZ)
+                {
+                    keys[i].value = Mathf.LerpAngle(keys[i].value, key.value, deltaTime);
+                }
+                else
+                {
+                    keys[i].value = Mathf.Lerp(keys[i].value, key.value, deltaTime);
+                }
+            }
+
+            AddKey(key);
+        }
+
         public void MoveKey(int oldFrame, int newFrame)
         {
             if (GetKeyIndex(oldFrame, out int index))

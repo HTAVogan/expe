@@ -176,20 +176,15 @@ namespace VRtist
             Matrix4x4 matrix = curves3DTransform.worldToLocalMatrix * gObject.transform.parent.localToWorldMatrix;
 
             List<Vector3> positions = new List<Vector3>();
-            Vector3 previousPosition = Vector3.positiveInfinity;
             for (int i = frameStart; i <= frameEnd; i++)
             {
                 positionX.Evaluate(i, out float x);
                 positionY.Evaluate(i, out float y);
                 positionZ.Evaluate(i, out float z);
                 Vector3 position = new Vector3(x, y, z);
-                if (previousPosition != position)
-                {
-                    position = matrix.MultiplyPoint(position);
+                position = matrix.MultiplyPoint(position);
 
-                    positions.Add(position);
-                    previousPosition = position;
-                }
+                positions.Add(position);
             }
 
             int count = positions.Count;
@@ -272,6 +267,14 @@ namespace VRtist
             return null;
         }
 
-
+        public bool TryGetLine(GameObject gobject, out LineRenderer line)
+        {
+            if (!curves.TryGetValue(gobject, out GameObject value))
+            {
+                line = null;
+                return false;
+            }
+            return (value.TryGetComponent<LineRenderer>(out line));
+        }
     }
 }

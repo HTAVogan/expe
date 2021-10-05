@@ -84,29 +84,6 @@ namespace VRtist
             return Matrix4x4.TRS(position, rotation, scale);
         }
 
-        [ContextMenu("test curve")]
-        public void TestAddCurve()
-        {
-            if (AnimToRoot.Count == 0) CheckAnimations();
-            Anim3DCurveManager curveManager = FindObjectOfType<Anim3DCurveManager>();
-            GameObject line = Instantiate(curveManager.curvePrefab, curveManager.curvesParent);
-
-            LineRenderer lineRenderer = line.GetComponent<LineRenderer>();
-            lineRenderer.positionCount = 0;
-            lineRenderer.useWorldSpace = true;
-
-            for (int i = 1; i < 60; i++)
-            {
-                lineRenderer.positionCount++;
-                lineRenderer.SetPosition(i - 1, FramePosition(i));
-            }
-        }
-        [ContextMenu("test selection")]
-        public void SelectionTest()
-        {
-            Selection.AddToSelection(this.gameObject);
-        }
-
         private void CheckAnimations()
         {
             PathToRoot.ForEach(x =>

@@ -454,6 +454,31 @@ namespace VRtist
             onChangeCurve.Invoke(gobject, property);
         }
 
+        public void AddFilteredKeyframeZone(GameObject gobject, AnimatableProperty property, AnimationKey key, int zoneSize)
+        {
+            AnimationSet animationSet = GetObjectAnimation(gobject);
+            if (null == animationSet)
+            {
+                animationSet = new AnimationSet(gobject);
+                animations.Add(gobject, animationSet);
+            }
+            Curve curve = animationSet.GetCurve(property);
+
+            // Filter rotation
+            if (property == AnimatableProperty.RotationX || property == AnimatableProperty.RotationY || property == AnimatableProperty.RotationZ)
+            {
+                AnimationKey previousKey = curve.GetPreviousKey(key.frame);
+                if (null != previousKey)
+                {
+                    float delta = Mathf.DeltaAngle(previousKey.value, key.value);
+                    key.value = previousKey.value + delta;
+                }
+            }
+
+            curve.AddZoneKey(key, zoneSize);
+            onChangeCurve.Invoke(gobject, property);
+        }
+
         private void RemoveEmptyAnimationSet(GameObject gobject)
         {
             AnimationSet animationSet = GetObjectAnimation(gobject);

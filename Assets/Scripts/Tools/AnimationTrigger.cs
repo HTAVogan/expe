@@ -25,21 +25,11 @@ namespace VRtist
         {
             if (other.tag != "Curve" || !hoveredCurves.Contains(other.gameObject) || isGrip) return;
             hoveredCurves.Remove(other.gameObject);
-            if (hoveredCurves.Count == 0) animator.HideGhost();
+            if (hoveredCurves.Count == 0) animator.ShowGhost(false);
         }
 
         public void Update()
         {
-            if (hoveredCurves.Count > 0 && hoveredCurves[0] == null)
-            {
-                hoveredCurves.RemoveAt(0);
-                animator.HideGhost();
-            }
-            if (hoveredCurves.Count > 0)
-            {
-                if (!isGrip) animator.DrawCurveGhost(hoveredCurves[0], transform.position);
-                else animator.DrawCurveGhost();
-            }
             VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.grip,
                 () =>
                 {
@@ -55,11 +45,22 @@ namespace VRtist
                     {
                         animator.ReleaseCurve(transform);
                         hoveredCurves.Clear();
-                        animator.HideGhost();
+                        animator.ShowGhost(false);
                         isGrip = false;
                     }
                 });
             if (isGrip) animator.DragCurve(transform);
+
+            if (hoveredCurves.Count > 0 && hoveredCurves[0] == null)
+            {
+                hoveredCurves.RemoveAt(0);
+                animator.ShowGhost(false);
+            }
+            if (hoveredCurves.Count > 0)
+            {
+                if (!isGrip) animator.DrawCurveGhost(hoveredCurves[0], transform.position);
+                else animator.DrawCurveGhost();
+            }
         }
 
         public Vector3 GetCollisionPoint(GameObject gameObject, Vector3 position)

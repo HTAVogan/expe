@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -23,6 +24,33 @@ namespace VRtist
         private Vector3 initialScale;
         private float scaleIndice;
 
+        private Transform AddKeyModeButton;
+        private Transform ZoneModeButton;
+        private Transform ZoneSlider;
+
+        public enum EditMode { AddKeyframe, Zone }
+        private EditMode currentMode;
+
+        private int zoneSize;
+
+        private LineRenderer lastLine;
+        private Texture2D lastTexture;
+
+        public Color DefaultColor;
+        public Color ZoneColor;
+
+        public EditMode CurrentMode
+        {
+            set
+            {
+                if (value == currentMode) return;
+                GetModeButton(currentMode).Selected = false;
+                currentMode = value;
+                GetModeButton(currentMode).Selected = true;
+                Debug.Log(currentMode);
+            }
+            get { return currentMode; }
+        }
 
         public struct DraggedCurveData
         {
@@ -32,6 +60,44 @@ namespace VRtist
         }
 
         private DraggedCurveData dragData = new DraggedCurveData() { Frame = -1 };
+
+        public void SetAddKeyMode()
+        {
+            CurrentMode = EditMode.AddKeyframe;
+        }
+        public void SetZoneMode()
+        {
+            CurrentMode = EditMode.Zone;
+        }
+
+        public void SetZoneSize(float value)
+        {
+            zoneSize = Mathf.RoundToInt(value);
+            ZoneSlider.GetComponent<UISlider>().Value = zoneSize;
+
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+
+            AddKeyModeButton = panel.Find("AddKey");
+            ZoneModeButton = panel.Find("Zone");
+            ZoneSlider = panel.Find("ZoneSize");
+
+            zoneSize = Mathf.RoundToInt(ZoneSlider.GetComponent<UISlider>().Value);
+            CurrentMode = EditMode.AddKeyframe;
+        }
+
+        private UIButton GetModeButton(EditMode mode)
+        {
+            switch (mode)
+            {
+                case EditMode.AddKeyframe: return AddKeyModeButton.GetComponent<UIButton>();
+                case EditMode.Zone: return ZoneModeButton.GetComponent<UIButton>();
+                default: return null;
+            }
+        }
 
         protected override void DoUpdate()
         {
@@ -65,13 +131,14 @@ namespace VRtist
             int frame = GetFrameFromPoint(line, point);
             GameObject gobject = CurveManager.GetObjectFromCurve(curveObject);
             DrawCurveGhost(gobject, frame);
+            if (currentMode == EditMode.Zone) DrawZone(line, frame);
         }
 
         public void DrawCurveGhost(GameObject gobject, int frame)
         {
             if (gobject == null) return;
             if (null == ghost) CreateGhost();
-            ghost.SetActive(true);
+            ShowGhost(true);
             MeshFilter ghostFilter = ghost.GetComponent<MeshFilter>();
             if (gobject.TryGetComponent<MeshFilter>(out MeshFilter objectMesh))
             {
@@ -88,6 +155,50 @@ namespace VRtist
         internal void DrawCurveGhost()
         {
             DrawCurveGhost(dragData.target, dragData.Frame);
+            if (currentMode == EditMode.Zone) DrawZoneDrag();
+        }
+
+        public void DrawZone(LineRenderer line, int frame)
+        {
+            lastTexture = (Texture2D)line.material.mainTexture;
+            if (lastTexture == null)
+            {
+                lastTexture = new Texture2D(line.positionCount, 1, TextureFormat.RGBA32, false);
+                line.material.mainTexture = lastTexture;
+            }
+
+            ApplyTexture(frame);
+            lastLine = line;
+        }
+        public void DrawZoneDrag()
+        {
+            if (CurveManager.TryGetLine(dragData.target, out LineRenderer line))
+            {
+                line.material.mainTexture = lastTexture;
+            }
+        }
+
+        private void ApplyTexture(int frame)
+        {
+            NativeArray<Color32> colors = lastTexture.GetRawTextureData<Color32>();
+            for (int i = 0; i < colors.Length; i++)
+            {
+                if (i < (frame - zoneSize) || i > frame + zoneSize)
+                {
+                    colors[i] = DefaultColor;
+                }
+                else
+                {
+                    colors[i] = ZoneColor;
+                }
+            }
+            lastTexture.Apply();
+        }
+
+        public void ResetColor()
+        {
+            if (null == lastLine) return;
+            lastLine.material.mainTexture = null;
         }
 
         public void ReleaseCurve(Transform mouthpiece)
@@ -131,15 +242,31 @@ namespace VRtist
             AnimationKey scaley = new AnimationKey(frame, scale.z, interpolation);
             AnimationKey scalez = new AnimationKey(frame, scale.z, interpolation);
 
-            GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.PositionX, posX);
-            GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.PositionY, posY);
-            GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.PositionZ, posZ);
-            GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.RotationX, rotX);
-            GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.RotationY, rotY);
-            GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.RotationZ, rotZ);
-            GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.ScaleX, scalex);
-            GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.ScaleY, scaley);
-            GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.ScaleZ, scalez);
+            if (currentMode == EditMode.AddKeyframe)
+            {
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.PositionX, posX);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.PositionY, posY);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.PositionZ, posZ);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.RotationX, rotX);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.RotationY, rotY);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.RotationZ, rotZ);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.ScaleX, scalex);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.ScaleY, scaley);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.ScaleZ, scalez);
+            }
+            if (currentMode == EditMode.Zone)
+            {
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.PositionX, posX, zoneSize);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.PositionY, posY, zoneSize);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.PositionZ, posZ, zoneSize);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.RotationX, rotX, zoneSize);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.RotationY, rotY, zoneSize);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.RotationZ, rotZ, zoneSize);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.ScaleX, scalex, zoneSize);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.ScaleY, scaley, zoneSize);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.ScaleZ, scalez, zoneSize);
+            }
+
         }
 
         public void StartDrag(GameObject gameObject, Transform mouthpiece)
@@ -158,9 +285,14 @@ namespace VRtist
             scaleIndice = 1f;
         }
 
-        internal void HideGhost()
+        internal void ShowGhost(bool state)
         {
-            ghost.SetActive(false);
+            ghost.SetActive(state);
+            foreach (Transform child in mouthpiece)
+            {
+                child.gameObject.SetActive(!state);
+            }
+            if (!state) ResetColor();
         }
 
         private int GetFrameFromPoint(LineRenderer line, Vector3 point)
