@@ -215,6 +215,8 @@ namespace VRtist
             foreach (Curve curve in curves.Values)
                 curve.ClearCache();
         }
+
+
     }
 
 }

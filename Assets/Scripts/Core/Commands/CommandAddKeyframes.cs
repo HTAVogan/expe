@@ -87,6 +87,23 @@ namespace VRtist
             new CommandAddKeyframe(gObject, AnimatableProperty.ScaleX, frame, scale.x, interpolation).Submit();
             new CommandAddKeyframe(gObject, AnimatableProperty.ScaleY, frame, scale.y, interpolation).Submit();
             new CommandAddKeyframe(gObject, AnimatableProperty.ScaleZ, frame, scale.z, interpolation).Submit();
+        }
+
+        public CommandAddKeyframes(GameObject obj, int frame, int zoneSize, Vector3 position, Vector3 rotation, Vector3 scale) : base("Add Keyframes")
+        {
+            gObject = obj;
+            Interpolation interpolation = GlobalState.Settings.interpolation;
+
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.PositionX, frame, position.x, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.PositionY, frame, position.y, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.PositionZ, frame, position.z, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.RotationX, frame, rotation.x, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.RotationY, frame, rotation.y, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.RotationZ, frame, rotation.z, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.ScaleX, frame, scale.x, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.ScaleY, frame, scale.y, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.ScaleZ, frame, scale.z, zoneSize, interpolation).Submit();
+
 
         }
 

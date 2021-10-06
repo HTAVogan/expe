@@ -213,7 +213,8 @@ namespace VRtist
             scale *= scaleIndice;
             GlobalState.Animation.SetObjectAnimations(dragData.target, dragData.Animation);
             CommandGroup group = new CommandGroup("Add Keyframe");
-            new CommandAddKeyframes(dragData.target, dragData.Frame, position, rotation, scale).Submit();
+            if (currentMode == EditMode.AddKeyframe) new CommandAddKeyframes(dragData.target, dragData.Frame, position, rotation, scale).Submit();
+            if (currentMode == EditMode.Zone) new CommandAddKeyframes(dragData.target, dragData.Frame, zoneSize, position, rotation, scale).Submit();
             group.Submit();
 
             dragData.Frame = -1;

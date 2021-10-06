@@ -177,7 +177,8 @@ namespace VRtist
 
         public void SetKeys(List<AnimationKey> k)
         {
-            keys = new List<AnimationKey>(k);
+            //keys = new List<AnimationKey>(k);
+            k.ForEach(x => keys.Add(new AnimationKey(x.frame, x.value, x.interpolation)));
             ComputeCache();
         }
 
@@ -241,25 +242,76 @@ namespace VRtist
 
             int firstKeyIndex = cachedKeysIndices[startFrame - (GlobalState.Animation.StartFrame - 1)];
             int lastKeyIndex = cachedKeysIndices[endFrame - (GlobalState.Animation.StartFrame - 1)];
+            //if (property == AnimatableProperty.PositionX) Debug.Log("add " + firstKeyIndex + " / " + lastKeyIndex);
 
             if (!Evaluate(key.frame, out float value)) return;
+            if (keys[firstKeyIndex].frame != startFrame && Evaluate(startFrame, out float prevValue))
+            {
+                AddKey(new AnimationKey(startFrame, prevValue, key.interpolation));
+            }
+            if (keys[lastKeyIndex].frame != endFrame && Evaluate(endFrame, out float nextValue))
+            {
+                AddKey(new AnimationKey(endFrame, nextValue, key.interpolation));
+            }
 
-            for (int i = firstKeyIndex; i < lastKeyIndex; i++)
+            float deltaValue = key.value - value;
+            for (int i = firstKeyIndex; i <= lastKeyIndex; i++)
             {
                 int deltaFrame = Mathf.Abs(key.frame - keys[i].frame);
-                float deltaTime = deltaFrame / (float)zoneSize;
+                float deltaTime = 1 - (deltaFrame / (float)zoneSize);
 
                 if (property == AnimatableProperty.RotationX || property == AnimatableProperty.RotationY || property == AnimatableProperty.RotationZ)
                 {
-                    keys[i].value = Mathf.LerpAngle(keys[i].value, key.value, deltaTime);
+                    keys[i].value = Mathf.LerpAngle(keys[i].value, keys[i].value + deltaValue, deltaTime);
                 }
                 else
                 {
-                    keys[i].value = Mathf.Lerp(keys[i].value, key.value, deltaTime);
+                    keys[i].value = Mathf.Lerp(keys[i].value, keys[i].value + deltaValue, deltaTime);
                 }
             }
-
             AddKey(key);
+        }
+
+        public void GetZoneKeyChanges(AnimationKey key, int zoneSize, List<AnimationKey> oldKeys, List<AnimationKey> newKeys)
+        {
+            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame - 1, key.frame - zoneSize);
+            int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
+
+            int firstKeyIndex = cachedKeysIndices[startFrame - (GlobalState.Animation.StartFrame - 1)];
+            int lastKeyIndex = cachedKeysIndices[endFrame - (GlobalState.Animation.StartFrame - 1)];
+            //if (property == AnimatableProperty.PositionX) Debug.Log("get " + firstKeyIndex + " / " + lastKeyIndex);
+
+            if (!Evaluate(key.frame, out float value)) return;
+            if (keys[firstKeyIndex].frame != startFrame && Evaluate(startFrame, out float prevValue))
+            {
+                newKeys.Add(new AnimationKey(startFrame, prevValue, key.interpolation));
+            }
+            if (keys[lastKeyIndex].frame != endFrame && Evaluate(endFrame, out float nextValue))
+            {
+                newKeys.Add(new AnimationKey(endFrame, nextValue, key.interpolation));
+            }
+
+            float deltaValue = key.value - value;
+            for (int i = firstKeyIndex; i <= lastKeyIndex; i++)
+            {
+                int deltaFrame = Mathf.Abs(key.frame - keys[i].frame);
+                float deltaTime = 1 - (deltaFrame / (float)zoneSize);
+
+                if (property == AnimatableProperty.RotationX || property == AnimatableProperty.RotationY || property == AnimatableProperty.RotationZ)
+                {
+                    oldKeys.Add(new AnimationKey(keys[i].frame, keys[i].value, keys[i].interpolation));
+                    float newValue = Mathf.LerpAngle(keys[i].value, keys[i].value + deltaValue, deltaTime);
+                    newKeys.Add(new AnimationKey(keys[i].frame, newValue, key.interpolation));
+                }
+                else
+                {
+                    oldKeys.Add(new AnimationKey(keys[i].frame, keys[i].value, keys[i].interpolation));
+                    float newValue = Mathf.Lerp(keys[i].value, keys[i].value + deltaValue, deltaTime);
+                    newKeys.Add(new AnimationKey(keys[i].frame, newValue, key.interpolation));
+                }
+            }
+            if (TryFindKey(key.frame, out AnimationKey oldKey)) oldKeys.Add(new AnimationKey(oldKey.frame, oldKey.value, oldKey.interpolation));
+            newKeys.Add(new AnimationKey(key.frame, key.value, key.interpolation));
         }
 
         public void MoveKey(int oldFrame, int newFrame)
@@ -443,5 +495,6 @@ namespace VRtist
             value = float.NaN;
             return false;
         }
+
     }
 }

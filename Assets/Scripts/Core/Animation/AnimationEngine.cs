@@ -457,11 +457,6 @@ namespace VRtist
         public void AddFilteredKeyframeZone(GameObject gobject, AnimatableProperty property, AnimationKey key, int zoneSize)
         {
             AnimationSet animationSet = GetObjectAnimation(gobject);
-            if (null == animationSet)
-            {
-                animationSet = new AnimationSet(gobject);
-                animations.Add(gobject, animationSet);
-            }
             Curve curve = animationSet.GetCurve(property);
 
             // Filter rotation
