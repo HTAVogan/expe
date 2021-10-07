@@ -59,14 +59,19 @@ namespace VRtist
 
     public class AnimationKey
     {
-        public AnimationKey(int frame, float value, Interpolation? interpolation = null)
+        public AnimationKey(int frame, float value, Interpolation? interpolation = null, Vector2 inTangent = new Vector2(), Vector2 outTangent = new Vector2())
         {
             this.frame = frame;
             this.value = value;
             this.interpolation = interpolation ?? GlobalState.Settings.interpolation;
+            this.inTangent = inTangent;
+            this.outTangent = outTangent;
         }
+
         public int frame;
         public float value;
+        public Vector2 inTangent;
+        public Vector2 outTangent;
         public Interpolation interpolation;
     }
 
@@ -277,7 +282,7 @@ namespace VRtist
                 }
                 SetObjectAnimations(target, targetAnim);
             }
-            for(int i = 0; i < source.transform.childCount; i++)
+            for (int i = 0; i < source.transform.childCount; i++)
             {
                 CopyAnimation(source.transform.GetChild(i).gameObject, target.transform.GetChild(i).gameObject);
             }
@@ -469,8 +474,8 @@ namespace VRtist
                     key.value = previousKey.value + delta;
                 }
             }
-
-            curve.AddZoneKey(key, zoneSize);
+            // Reset to zone after test
+            curve.AddKeySegment(key, zoneSize);
             onChangeCurve.Invoke(gobject, property);
         }
 

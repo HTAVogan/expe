@@ -28,7 +28,7 @@ namespace VRtist
 
         public override void Redo()
         {
-            newKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation)));
+            newKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation, x.inTangent, x.outTangent)));
         }
 
         public override void Submit()
@@ -39,8 +39,8 @@ namespace VRtist
 
         public override void Undo()
         {
-            newKeys.ForEach(x => SceneManager.RemoveKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation)));
-            oldKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation)));
+            newKeys.ForEach(x => SceneManager.RemoveKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation, x.inTangent, x.outTangent)));
+            oldKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation, x.inTangent, x.outTangent)));
         }
     }
 

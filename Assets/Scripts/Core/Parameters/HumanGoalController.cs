@@ -27,7 +27,6 @@ namespace VRtist
         {
             if (null == Animation) Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
             if (null == Animation) return Vector3.zero;
-            if (AnimToRoot.Count == 0) CheckAnimations();
 
             Matrix4x4 trsMatrix = PathToRoot[0].parent.localToWorldMatrix;
 
@@ -84,8 +83,9 @@ namespace VRtist
             return Matrix4x4.TRS(position, rotation, scale);
         }
 
-        private void CheckAnimations()
+        public void CheckAnimations()
         {
+            AnimToRoot.Clear();
             PathToRoot.ForEach(x =>
             {
                 AnimToRoot.Add(GlobalState.Animation.GetObjectAnimation(x.gameObject));

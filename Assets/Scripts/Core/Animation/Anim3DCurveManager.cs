@@ -92,6 +92,11 @@ namespace VRtist
 
         void OnCurveChanged(GameObject gObject, AnimatableProperty property)
         {
+            HumanGoalController[] controllers = gObject.GetComponentsInChildren<HumanGoalController>();
+            if (controllers.Length > 0)
+            {
+                UpdateHumanCurve(controllers);
+            }
             if (property != AnimatableProperty.PositionX && property != AnimatableProperty.PositionY && property != AnimatableProperty.PositionZ)
                 return;
 
@@ -100,6 +105,7 @@ namespace VRtist
 
             UpdateCurve(gObject);
         }
+
 
         void OnAnimationAdded(GameObject gObject)
         {
@@ -143,6 +149,16 @@ namespace VRtist
             DeleteCurve(gObject);
             AddCurve(gObject);
         }
+
+        private void UpdateHumanCurve(HumanGoalController[] controllers)
+        {
+            for (int i = 0; i < controllers.Length; i++)
+            {
+                DeleteCurve(controllers[i].gameObject);
+                GetAHumanAnimationCurve(controllers[i]);
+            }
+        }
+
 
         void AddCurve(GameObject gObject)
         {
@@ -231,13 +247,14 @@ namespace VRtist
         {
             AnimationSet rootAnimation = GlobalState.Animation.GetObjectAnimation(goalController.gameObject);
             if (null == rootAnimation) return;
-            Curve positionX = rootAnimation.GetCurve(AnimatableProperty.PositionX);
+            Curve positionX = rootAnimation.GetCurve(AnimatableProperty.RotationX);
             int frameStart = Mathf.Clamp(positionX.keys[0].frame, GlobalState.Animation.StartFrame, GlobalState.Animation.EndFrame);
             int frameEnd = Mathf.Clamp(positionX.keys[positionX.keys.Count - 1].frame, GlobalState.Animation.StartFrame, GlobalState.Animation.EndFrame);
 
             List<Vector3> positions = new List<Vector3>();
             GameObject curve = Instantiate(curvePrefab, curvesParent);
 
+            goalController.CheckAnimations();
             for (int i = frameStart; i <= frameEnd; i++)
             {
                 Vector3 position = curve.transform.InverseTransformDirection(goalController.FramePosition(i));
@@ -256,6 +273,7 @@ namespace VRtist
             line.BakeMesh(lineMesh);
             collider.sharedMesh = lineMesh;
             curves.Add(goalController.gameObject, curve);
+            Debug.Log("updated " + rootAnimation.transform + " anim");
         }
 
         public GameObject GetObjectFromCurve(GameObject curve)
