@@ -236,15 +236,15 @@ namespace VRtist
             int frameEnd = Mathf.Clamp(positionX.keys[positionX.keys.Count - 1].frame, GlobalState.Animation.StartFrame, GlobalState.Animation.EndFrame);
 
             List<Vector3> positions = new List<Vector3>();
+            GameObject curve = Instantiate(curvePrefab, curvesParent);
 
             for (int i = frameStart; i <= frameEnd; i++)
             {
-                Vector3 position = goalController.FramePosition(i);
+                Vector3 position = curve.transform.InverseTransformDirection(goalController.FramePosition(i));
                 positions.Add(position);
             }
-            GameObject curve = Instantiate(curvePrefab, curvesParent);
             LineRenderer line = curve.GetComponent<LineRenderer>();
-            line.useWorldSpace = true;
+            //line.useWorldSpace = true;
             line.positionCount = positions.Count;
             line.SetPositions(positions.ToArray());
 

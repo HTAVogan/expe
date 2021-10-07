@@ -47,7 +47,6 @@ namespace VRtist
                 GetModeButton(currentMode).Selected = false;
                 currentMode = value;
                 GetModeButton(currentMode).Selected = true;
-                Debug.Log(currentMode);
             }
             get { return currentMode; }
         }
@@ -146,7 +145,7 @@ namespace VRtist
             }
             else
             {
-                Debug.Log("Implement default ghost mesh");
+                //Debug.Log("Implement default ghost mesh");
             }
             AnimationSet set = GlobalState.Animation.GetObjectAnimation(gobject);
             set.EvaluateTransform(frame, ghost.transform);

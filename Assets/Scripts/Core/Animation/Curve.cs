@@ -237,12 +237,11 @@ namespace VRtist
 
         public void AddZoneKey(AnimationKey key, int zoneSize)
         {
-            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame - 1, key.frame - zoneSize);
+            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, key.frame - zoneSize);
             int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
 
             int firstKeyIndex = cachedKeysIndices[startFrame - (GlobalState.Animation.StartFrame - 1)];
             int lastKeyIndex = cachedKeysIndices[endFrame - (GlobalState.Animation.StartFrame - 1)];
-            //if (property == AnimatableProperty.PositionX) Debug.Log("add " + firstKeyIndex + " / " + lastKeyIndex);
 
             if (!Evaluate(key.frame, out float value)) return;
             if (keys[firstKeyIndex].frame != startFrame && Evaluate(startFrame, out float prevValue))
@@ -263,10 +262,12 @@ namespace VRtist
                 if (property == AnimatableProperty.RotationX || property == AnimatableProperty.RotationY || property == AnimatableProperty.RotationZ)
                 {
                     keys[i].value = Mathf.LerpAngle(keys[i].value, keys[i].value + deltaValue, deltaTime);
+                    ComputeCacheValuesAt(i);
                 }
                 else
                 {
                     keys[i].value = Mathf.Lerp(keys[i].value, keys[i].value + deltaValue, deltaTime);
+                    ComputeCacheValuesAt(i);
                 }
             }
             AddKey(key);
@@ -274,7 +275,7 @@ namespace VRtist
 
         public void GetZoneKeyChanges(AnimationKey key, int zoneSize, List<AnimationKey> oldKeys, List<AnimationKey> newKeys)
         {
-            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame - 1, key.frame - zoneSize);
+            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, key.frame - zoneSize);
             int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
 
             int firstKeyIndex = cachedKeysIndices[startFrame - (GlobalState.Animation.StartFrame - 1)];
