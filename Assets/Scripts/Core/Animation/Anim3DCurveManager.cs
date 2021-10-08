@@ -261,7 +261,6 @@ namespace VRtist
                 positions.Add(position);
             }
             LineRenderer line = curve.GetComponent<LineRenderer>();
-            //line.useWorldSpace = true;
             line.positionCount = positions.Count;
             line.SetPositions(positions.ToArray());
 
@@ -273,7 +272,6 @@ namespace VRtist
             line.BakeMesh(lineMesh);
             collider.sharedMesh = lineMesh;
             curves.Add(goalController.gameObject, curve);
-            Debug.Log("updated " + rootAnimation.transform + " anim");
         }
 
         public GameObject GetObjectFromCurve(GameObject curve)

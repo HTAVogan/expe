@@ -236,15 +236,15 @@ namespace VRtist
             Instance.scene.SetObjectAnimations(gobject, animationSet);
         }
 
-        public static void AddObjectKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key)
+        public static void AddObjectKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true)
         {
-            GlobalState.Animation.AddFilteredKeyframe(gobject, property, key);
+            GlobalState.Animation.AddFilteredKeyframe(gobject, property, key, updateCurves);
             Instance.scene.AddKeyframe(gobject, property, key);
         }
 
-        public static void RemoveKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key)
+        public static void RemoveKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true)
         {
-            GlobalState.Animation.RemoveKeyframe(gobject, property, key.frame);
+            GlobalState.Animation.RemoveKeyframe(gobject, property, key.frame, updateCurves);
             Instance.scene.RemoveKeyframe(gobject, property, key);
         }
 

@@ -19,9 +19,7 @@ namespace VRtist
 
         private Matrix4x4 initialMouthMatrix;
         private Matrix4x4 initialParentMatrix;
-        private Vector3 initialPosition;
-        private Quaternion initialRotation;
-        private Vector3 initialScale;
+        private Matrix4x4 initialTRS;
         private float scaleIndice;
 
         private Transform AddKeyModeButton;
@@ -142,13 +140,15 @@ namespace VRtist
             if (gobject.TryGetComponent<MeshFilter>(out MeshFilter objectMesh))
             {
                 ghostFilter.mesh = objectMesh.mesh;
+                AnimationSet set = GlobalState.Animation.GetObjectAnimation(gobject);
+                set.EvaluateTransform(frame, ghost.transform);
             }
-            else
+            else if (gobject.TryGetComponent<HumanGoalController>(out HumanGoalController controller))
             {
-                //Debug.Log("Implement default ghost mesh");
+                Matrix4x4 matrix = controller.FrameMatrix(frame);
+                Maths.DecomposeMatrix(matrix, out Vector3 position, out Quaternion rotation, out Vector3 scale);
+                ghost.transform.SetPositionAndRotation(position, rotation);
             }
-            AnimationSet set = GlobalState.Animation.GetObjectAnimation(gobject);
-            set.EvaluateTransform(frame, ghost.transform);
         }
 
         internal void DrawCurveGhost()
@@ -205,7 +205,7 @@ namespace VRtist
             Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initialMouthMatrix;
             Matrix4x4 transformed = ghost.transform.parent.worldToLocalMatrix *
                 transformation * initialParentMatrix *
-                Matrix4x4.TRS(initialPosition, initialRotation, initialScale);
+                initialTRS;
 
             Maths.DecomposeMatrix(transformed, out Vector3 position, out Quaternion qrotation, out Vector3 scale);
             Vector3 rotation = qrotation.eulerAngles;
@@ -223,13 +223,17 @@ namespace VRtist
         {
             int frame = dragData.Frame;
             Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initialMouthMatrix;
-            Matrix4x4 transformed = ghost.transform.parent.worldToLocalMatrix *
+            Matrix4x4 transformed = dragData.target.transform.parent.worldToLocalMatrix *
                 transformation * initialParentMatrix *
-                Matrix4x4.TRS(initialPosition, initialRotation, initialScale);
+                initialTRS;
+
+
 
             Maths.DecomposeMatrix(transformed, out Vector3 position, out Quaternion qrotation, out Vector3 scale);
             Vector3 rotation = qrotation.eulerAngles;
             scale *= scaleIndice;
+
+            Debug.Log(position);
 
             Interpolation interpolation = GlobalState.Settings.interpolation;
             AnimationKey posX = new AnimationKey(frame, position.x, interpolation);
@@ -244,29 +248,28 @@ namespace VRtist
 
             if (currentMode == EditMode.AddKeyframe)
             {
-                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.PositionX, posX);
-                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.PositionY, posY);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.RotationX, rotX, false);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.RotationY, rotY, false);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.RotationZ, rotZ, false);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.ScaleX, scalex, false);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.ScaleY, scaley, false);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.ScaleZ, scalez, false);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.PositionX, posX, false);
+                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.PositionY, posY, false);
                 GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.PositionZ, posZ);
-                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.RotationX, rotX);
-                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.RotationY, rotY);
-                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.RotationZ, rotZ);
-                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.ScaleX, scalex);
-                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.ScaleY, scaley);
-                GlobalState.Animation.AddFilteredKeyframe(dragData.target, AnimatableProperty.ScaleZ, scalez);
             }
             if (currentMode == EditMode.Zone)
             {
-                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.PositionX, posX, zoneSize);
-                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.PositionY, posY, zoneSize);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.RotationX, rotX, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.RotationY, rotY, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.RotationZ, rotZ, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.ScaleX, scalex, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.ScaleY, scaley, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.ScaleZ, scalez, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.PositionX, posX, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.PositionY, posY, zoneSize, false);
                 GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.PositionZ, posZ, zoneSize);
-                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.RotationX, rotX, zoneSize);
-                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.RotationY, rotY, zoneSize);
-                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.RotationZ, rotZ, zoneSize);
-                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.ScaleX, scalex, zoneSize);
-                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.ScaleY, scaley, zoneSize);
-                GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.ScaleZ, scalez, zoneSize);
             }
-
         }
 
         public void StartDrag(GameObject gameObject, Transform mouthpiece)
@@ -277,11 +280,19 @@ namespace VRtist
             AnimationSet previousSet = GlobalState.Animation.GetObjectAnimation(target);
             dragData = new DraggedCurveData() { Animation = new AnimationSet(previousSet), target = target, Frame = frame };
 
+            previousSet.GetCurve(AnimatableProperty.PositionX).Evaluate(frame, out float posx);
+            previousSet.GetCurve(AnimatableProperty.PositionY).Evaluate(frame, out float posy);
+            previousSet.GetCurve(AnimatableProperty.PositionZ).Evaluate(frame, out float posz);
+            previousSet.GetCurve(AnimatableProperty.RotationX).Evaluate(frame, out float rotx);
+            previousSet.GetCurve(AnimatableProperty.RotationY).Evaluate(frame, out float roty);
+            previousSet.GetCurve(AnimatableProperty.RotationZ).Evaluate(frame, out float rotz);
+
             initialMouthMatrix = mouthpiece.worldToLocalMatrix;
-            initialParentMatrix = ghost.transform.parent.localToWorldMatrix;
-            initialPosition = ghost.transform.localPosition;
-            initialRotation = ghost.transform.localRotation;
-            initialScale = ghost.transform.localScale;
+            initialParentMatrix = target.transform.localToWorldMatrix;
+            Vector3 initialPosition = new Vector3(posx, posy, posz);
+            Quaternion initialRotation = Quaternion.Euler(rotx, roty, rotz);
+            Vector3 initialScale = target.transform.localScale;
+            initialTRS = Matrix4x4.TRS(initialPosition, initialRotation, initialScale);
             scaleIndice = 1f;
         }
 

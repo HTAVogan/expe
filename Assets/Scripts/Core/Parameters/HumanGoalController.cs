@@ -43,6 +43,24 @@ namespace VRtist
             return parentPosition;
         }
 
+        public Matrix4x4 FrameMatrix(int frame)
+        {
+            if (null == Animation) Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
+            if (null == Animation) return Matrix4x4.identity;
+
+            Matrix4x4 trsMatrix = PathToRoot[0].parent.localToWorldMatrix;
+
+            if (PathToRoot.Count > 1)
+            {
+                for (int i = 0; i < PathToRoot.Count; i++)
+                {
+                    trsMatrix = trsMatrix * GetBoneMatrix(AnimToRoot[i], frame);
+                }
+            }
+            trsMatrix = trsMatrix * GetBoneMatrix(Animation, frame);
+            return trsMatrix;
+        }
+
         private Matrix4x4 GetBoneMatrix(AnimationSet anim, int frame)
         {
             if (null == anim) return Matrix4x4.identity;
@@ -90,6 +108,7 @@ namespace VRtist
             {
                 AnimToRoot.Add(GlobalState.Animation.GetObjectAnimation(x.gameObject));
             });
+            Animation = GlobalState.Animation.GetObjectAnimation(gameObject);
         }
     }
 }

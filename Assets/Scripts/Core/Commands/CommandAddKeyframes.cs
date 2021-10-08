@@ -78,15 +78,15 @@ namespace VRtist
             gObject = obj;
             Interpolation interpolation = GlobalState.Settings.interpolation;
 
-            new CommandAddKeyframe(gObject, AnimatableProperty.PositionX, frame, position.x, interpolation).Submit();
-            new CommandAddKeyframe(gObject, AnimatableProperty.PositionY, frame, position.y, interpolation).Submit();
-            new CommandAddKeyframe(gObject, AnimatableProperty.PositionZ, frame, position.z, interpolation).Submit();
             new CommandAddKeyframe(gObject, AnimatableProperty.RotationX, frame, rotation.x, interpolation).Submit();
             new CommandAddKeyframe(gObject, AnimatableProperty.RotationY, frame, rotation.y, interpolation).Submit();
             new CommandAddKeyframe(gObject, AnimatableProperty.RotationZ, frame, rotation.z, interpolation).Submit();
             new CommandAddKeyframe(gObject, AnimatableProperty.ScaleX, frame, scale.x, interpolation).Submit();
             new CommandAddKeyframe(gObject, AnimatableProperty.ScaleY, frame, scale.y, interpolation).Submit();
             new CommandAddKeyframe(gObject, AnimatableProperty.ScaleZ, frame, scale.z, interpolation).Submit();
+            new CommandAddKeyframe(gObject, AnimatableProperty.PositionX, frame, position.x, interpolation).Submit();
+            new CommandAddKeyframe(gObject, AnimatableProperty.PositionY, frame, position.y, interpolation).Submit();
+            new CommandAddKeyframe(gObject, AnimatableProperty.PositionZ, frame, position.z, interpolation).Submit();
         }
 
         public CommandAddKeyframes(GameObject obj, int frame, int zoneSize, Vector3 position, Vector3 rotation, Vector3 scale) : base("Add Keyframes")
@@ -94,27 +94,27 @@ namespace VRtist
             gObject = obj;
             Interpolation interpolation = GlobalState.Settings.interpolation;
 
-            new CommandAddKeyframeZone(gObject, AnimatableProperty.PositionX, frame, position.x, zoneSize, interpolation).Submit();
-            new CommandAddKeyframeZone(gObject, AnimatableProperty.PositionY, frame, position.y, zoneSize, interpolation).Submit();
-            new CommandAddKeyframeZone(gObject, AnimatableProperty.PositionZ, frame, position.z, zoneSize, interpolation).Submit();
             new CommandAddKeyframeZone(gObject, AnimatableProperty.RotationX, frame, rotation.x, zoneSize, interpolation).Submit();
             new CommandAddKeyframeZone(gObject, AnimatableProperty.RotationY, frame, rotation.y, zoneSize, interpolation).Submit();
             new CommandAddKeyframeZone(gObject, AnimatableProperty.RotationZ, frame, rotation.z, zoneSize, interpolation).Submit();
             new CommandAddKeyframeZone(gObject, AnimatableProperty.ScaleX, frame, scale.x, zoneSize, interpolation).Submit();
             new CommandAddKeyframeZone(gObject, AnimatableProperty.ScaleY, frame, scale.y, zoneSize, interpolation).Submit();
             new CommandAddKeyframeZone(gObject, AnimatableProperty.ScaleZ, frame, scale.z, zoneSize, interpolation).Submit();
-
-
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.PositionX, frame, position.x, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.PositionY, frame, position.y, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.PositionZ, frame, position.z, zoneSize, interpolation).Submit();
         }
 
         public override void Undo()
         {
             base.Undo();
+            GlobalState.Animation.onChangeCurve.Invoke(gObject, AnimatableProperty.PositionX);
         }
 
         public override void Redo()
         {
             base.Redo();
+            GlobalState.Animation.onChangeCurve.Invoke(gObject, AnimatableProperty.PositionX);
         }
         public override void Submit()
         {

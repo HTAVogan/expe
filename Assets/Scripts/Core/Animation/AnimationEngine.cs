@@ -434,7 +434,7 @@ namespace VRtist
         }
 
         // To be used by in-app add key (not from networked keys)
-        public void AddFilteredKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key)
+        public void AddFilteredKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true)
         {
             AnimationSet animationSet = GetObjectAnimation(gobject);
             if (null == animationSet)
@@ -454,12 +454,11 @@ namespace VRtist
                     key.value = previousKey.value + delta;
                 }
             }
-
             curve.AddKey(key);
-            onChangeCurve.Invoke(gobject, property);
+            if (updateCurves) onChangeCurve.Invoke(gobject, property);
         }
 
-        public void AddFilteredKeyframeZone(GameObject gobject, AnimatableProperty property, AnimationKey key, int zoneSize)
+        public void AddFilteredKeyframeZone(GameObject gobject, AnimatableProperty property, AnimationKey key, int zoneSize, bool updateCurves = true)
         {
             AnimationSet animationSet = GetObjectAnimation(gobject);
             Curve curve = animationSet.GetCurve(property);
@@ -475,8 +474,8 @@ namespace VRtist
                 }
             }
             // Reset to zone after test
-            curve.AddKeySegment(key, zoneSize);
-            onChangeCurve.Invoke(gobject, property);
+            curve.AddZoneKey(key, zoneSize);
+            if (updateCurves) onChangeCurve.Invoke(gobject, property);
         }
 
         private void RemoveEmptyAnimationSet(GameObject gobject)
@@ -493,7 +492,7 @@ namespace VRtist
             animations.Remove(gobject);
         }
 
-        public void RemoveKeyframe(GameObject gobject, AnimatableProperty property, int frame)
+        public void RemoveKeyframe(GameObject gobject, AnimatableProperty property, int frame, bool updateCurves = true)
         {
             AnimationSet animationSet = GetObjectAnimation(gobject);
             if (null == animationSet)
@@ -505,7 +504,7 @@ namespace VRtist
 
             if (!IsAnimating())
                 EvaluateAnimations();
-            onChangeCurve.Invoke(gobject, property);
+            if(updateCurves) onChangeCurve.Invoke(gobject, property);
         }
 
         public void Record()
