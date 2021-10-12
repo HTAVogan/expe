@@ -19,6 +19,7 @@ namespace VRtist
 
         private Matrix4x4 initialMouthMatrix;
         private Matrix4x4 initialParentMatrix;
+        private Matrix4x4 initialparentMatrixWtL;
         private Matrix4x4 initialTRS;
         private float scaleIndice;
 
@@ -203,7 +204,7 @@ namespace VRtist
         public void ReleaseCurve(Transform mouthpiece)
         {
             Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initialMouthMatrix;
-            Matrix4x4 transformed = ghost.transform.parent.worldToLocalMatrix *
+            Matrix4x4 transformed = initialparentMatrixWtL *
                 transformation * initialParentMatrix *
                 initialTRS;
 
@@ -216,6 +217,7 @@ namespace VRtist
             if (currentMode == EditMode.Zone) new CommandAddKeyframes(dragData.target, dragData.Frame, zoneSize, position, rotation, scale).Submit();
             group.Submit();
 
+            Debug.Log(GlobalState.Animation.GetObjectAnimation(dragData.target).curves[AnimatableProperty.PositionX].keys.Count);
             dragData.Frame = -1;
         }
 
@@ -223,17 +225,15 @@ namespace VRtist
         {
             int frame = dragData.Frame;
             Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initialMouthMatrix;
-            Matrix4x4 transformed = dragData.target.transform.parent.worldToLocalMatrix *
+            Matrix4x4 transformed = initialparentMatrixWtL *
                 transformation * initialParentMatrix *
                 initialTRS;
-
-
 
             Maths.DecomposeMatrix(transformed, out Vector3 position, out Quaternion qrotation, out Vector3 scale);
             Vector3 rotation = qrotation.eulerAngles;
             scale *= scaleIndice;
 
-            Debug.Log(position);
+            Debug.Log(position + " / " + rotation + " / " + scale);
 
             Interpolation interpolation = GlobalState.Settings.interpolation;
             AnimationKey posX = new AnimationKey(frame, position.x, interpolation);
@@ -280,18 +280,22 @@ namespace VRtist
             AnimationSet previousSet = GlobalState.Animation.GetObjectAnimation(target);
             dragData = new DraggedCurveData() { Animation = new AnimationSet(previousSet), target = target, Frame = frame };
 
-            previousSet.GetCurve(AnimatableProperty.PositionX).Evaluate(frame, out float posx);
-            previousSet.GetCurve(AnimatableProperty.PositionY).Evaluate(frame, out float posy);
-            previousSet.GetCurve(AnimatableProperty.PositionZ).Evaluate(frame, out float posz);
-            previousSet.GetCurve(AnimatableProperty.RotationX).Evaluate(frame, out float rotx);
-            previousSet.GetCurve(AnimatableProperty.RotationY).Evaluate(frame, out float roty);
-            previousSet.GetCurve(AnimatableProperty.RotationZ).Evaluate(frame, out float rotz);
+            if (!previousSet.GetCurve(AnimatableProperty.PositionX).Evaluate(frame, out float posx)) posx = target.transform.localPosition.x;
+            if (!previousSet.GetCurve(AnimatableProperty.PositionY).Evaluate(frame, out float posy)) posy = target.transform.localPosition.y;
+            if (!previousSet.GetCurve(AnimatableProperty.PositionZ).Evaluate(frame, out float posz)) posz = target.transform.localPosition.z;
+            if (!previousSet.GetCurve(AnimatableProperty.RotationX).Evaluate(frame, out float rotx)) rotx = target.transform.localEulerAngles.x;
+            if (!previousSet.GetCurve(AnimatableProperty.RotationY).Evaluate(frame, out float roty)) roty = target.transform.localEulerAngles.y;
+            if (!previousSet.GetCurve(AnimatableProperty.RotationZ).Evaluate(frame, out float rotz)) rotz = target.transform.localEulerAngles.z;
+            if (!previousSet.GetCurve(AnimatableProperty.ScaleX).Evaluate(frame, out float scax)) scax = target.transform.localScale.x;
+            if (!previousSet.GetCurve(AnimatableProperty.ScaleY).Evaluate(frame, out float scay)) scay = target.transform.localScale.y;
+            if (!previousSet.GetCurve(AnimatableProperty.ScaleZ).Evaluate(frame, out float scaz)) scaz = target.transform.localScale.z;
 
             initialMouthMatrix = mouthpiece.worldToLocalMatrix;
-            initialParentMatrix = target.transform.localToWorldMatrix;
+            initialParentMatrix = target.transform.parent.localToWorldMatrix;
+            initialparentMatrixWtL = target.transform.parent.worldToLocalMatrix;
             Vector3 initialPosition = new Vector3(posx, posy, posz);
             Quaternion initialRotation = Quaternion.Euler(rotx, roty, rotz);
-            Vector3 initialScale = target.transform.localScale;
+            Vector3 initialScale = new Vector3(scax, scay, scaz);
             initialTRS = Matrix4x4.TRS(initialPosition, initialRotation, initialScale);
             scaleIndice = 1f;
         }

@@ -165,7 +165,7 @@ namespace VRtist
             }
         }
 
-        private bool GetKeyIndex(int frame, out int index)
+        public bool GetKeyIndex(int frame, out int index)
         {
             index = cachedKeysIndices[frame - GlobalState.Animation.StartFrame];
             if (index == -1)
@@ -381,6 +381,28 @@ namespace VRtist
             AddKey(key);
         }
 
+        public void GetSegmentKeyChanges(AnimationKey key, int zoneSize, List<AnimationKey> oldKeys, List<AnimationKey> newKeys)
+        {
+            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, key.frame - zoneSize);
+            int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
+
+            int firstKeyIndex = cachedKeysIndices[startFrame - (GlobalState.Animation.StartFrame - 1)];
+            int lastKeyIndex = cachedKeysIndices[endFrame - (GlobalState.Animation.StartFrame - 1)];
+
+            if (keys.Count == 0) return;
+
+            keys.FindAll(x => x.frame > startFrame && x.frame < endFrame).ForEach(x => oldKeys.Add(new AnimationKey(x.frame,x.value,x.interpolation,x.inTangent, x.outTangent)));
+            if (keys[firstKeyIndex].frame != startFrame && Evaluate(startFrame, out float prevValue))
+            {
+                newKeys.Add(new AnimationKey(startFrame, prevValue, key.interpolation));
+            }
+            if (keys[lastKeyIndex].frame != endFrame && Evaluate(endFrame, out float nextValue))
+            {
+                newKeys.Add(new AnimationKey(endFrame, nextValue, key.interpolation));
+            }
+            newKeys.Add(key);
+        }
+
         public void MoveKey(int oldFrame, int newFrame)
         {
             if (GetKeyIndex(oldFrame, out int index))
@@ -539,6 +561,13 @@ namespace VRtist
             }
             value = float.NaN;
             return false;
+        }
+
+        public void SetTangents(int index,Vector2 inTangent, Vector2 outTangent)
+        {
+            keys[index].inTangent = inTangent;
+            keys[index].outTangent = outTangent;
+            ComputeCacheValuesAt(index);
         }
 
     }

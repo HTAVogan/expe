@@ -474,7 +474,7 @@ namespace VRtist
                 }
             }
             // Reset to zone after test
-            curve.AddZoneKey(key, zoneSize);
+            curve.AddKeySegment(key, zoneSize);
             if (updateCurves) onChangeCurve.Invoke(gobject, property);
         }
 
