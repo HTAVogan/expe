@@ -25,9 +25,10 @@ namespace VRtist
 
         private Transform AddKeyModeButton;
         private Transform ZoneModeButton;
+        private Transform SegmentModeButton;
         private Transform ZoneSlider;
 
-        public enum EditMode { AddKeyframe, Zone }
+        public enum EditMode { AddKeyframe, Zone, Segment }
         private EditMode currentMode;
 
         private int zoneSize;
@@ -81,6 +82,7 @@ namespace VRtist
 
             AddKeyModeButton = panel.Find("AddKey");
             ZoneModeButton = panel.Find("Zone");
+            SegmentModeButton = panel.Find("Segment");
             ZoneSlider = panel.Find("ZoneSize");
 
             zoneSize = Mathf.RoundToInt(ZoneSlider.GetComponent<UISlider>().Value);
@@ -93,6 +95,7 @@ namespace VRtist
             {
                 case EditMode.AddKeyframe: return AddKeyModeButton.GetComponent<UIButton>();
                 case EditMode.Zone: return ZoneModeButton.GetComponent<UIButton>();
+                case EditMode.Segment: return SegmentModeButton.GetComponent<UIButton>();
                 default: return null;
             }
         }
@@ -215,6 +218,7 @@ namespace VRtist
             CommandGroup group = new CommandGroup("Add Keyframe");
             if (currentMode == EditMode.AddKeyframe) new CommandAddKeyframes(dragData.target, dragData.Frame, position, rotation, scale).Submit();
             if (currentMode == EditMode.Zone) new CommandAddKeyframes(dragData.target, dragData.Frame, zoneSize, position, rotation, scale).Submit();
+            if (currentMode == EditMode.Segment) new CommandAddKeyframes(dragData.target, dragData.Frame, zoneSize, position, rotation, scale, true).Submit();
             group.Submit();
 
             Debug.Log(GlobalState.Animation.GetObjectAnimation(dragData.target).curves[AnimatableProperty.PositionX].keys.Count);
@@ -269,6 +273,18 @@ namespace VRtist
                 GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.PositionX, posX, zoneSize, false);
                 GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.PositionY, posY, zoneSize, false);
                 GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.PositionZ, posZ, zoneSize);
+            }
+            if(currentMode == EditMode.Segment)
+            {
+                GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.RotationX, rotX, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.RotationY, rotY, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.RotationZ, rotZ, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.ScaleX, scalex, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.ScaleY, scaley, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.ScaleZ, scalez, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.PositionX, posX, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.PositionY, posY, zoneSize, false);
+                GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.PositionZ, posZ, zoneSize);
             }
         }
 

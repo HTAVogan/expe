@@ -94,6 +94,22 @@ namespace VRtist
             gObject = obj;
             Interpolation interpolation = GlobalState.Settings.interpolation;
 
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.RotationX, frame, rotation.x, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.RotationY, frame, rotation.y, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.RotationZ, frame, rotation.z, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.ScaleX, frame, scale.x, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.ScaleY, frame, scale.y, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.ScaleZ, frame, scale.z, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.PositionX, frame, position.x, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.PositionY, frame, position.y, zoneSize, interpolation).Submit();
+            new CommandAddKeyframeZone(gObject, AnimatableProperty.PositionZ, frame, position.z, zoneSize, interpolation).Submit();
+        }
+
+        public CommandAddKeyframes(GameObject obj, int frame, int zoneSize, Vector3 position, Vector3 rotation, Vector3 scale, bool zone)
+        {
+            gObject = obj;
+            Interpolation interpolation = GlobalState.Settings.interpolation;
+
             new CommandAddKeyframeSegment(gObject, AnimatableProperty.RotationX, frame, rotation.x, zoneSize, interpolation).Submit();
             new CommandAddKeyframeSegment(gObject, AnimatableProperty.RotationY, frame, rotation.y, zoneSize, interpolation).Submit();
             new CommandAddKeyframeSegment(gObject, AnimatableProperty.RotationZ, frame, rotation.z, zoneSize, interpolation).Submit();
@@ -119,6 +135,7 @@ namespace VRtist
         public override void Submit()
         {
             base.Submit();
+            GlobalState.Animation.onChangeCurve.Invoke(gObject, AnimatableProperty.PositionX);
         }
     }
 }

@@ -473,9 +473,26 @@ namespace VRtist
                     key.value = previousKey.value + delta;
                 }
             }
-            // Reset to zone after test
-            curve.AddKeySegment(key, zoneSize);
+            curve.AddZoneKey(key, zoneSize);
             if (updateCurves) onChangeCurve.Invoke(gobject, property);
+        }
+
+        public void AddFilteredKeyframeSegment(GameObject gobjet, AnimatableProperty property, AnimationKey key, int zoneSize, bool updateCurves = true)
+        {
+            AnimationSet animationSet = GetObjectAnimation(gobjet);
+            Curve curve = animationSet.GetCurve(property);
+            // Filter rotation
+            if (property == AnimatableProperty.RotationX || property == AnimatableProperty.RotationY || property == AnimatableProperty.RotationZ)
+            {
+                AnimationKey previousKey = curve.GetPreviousKey(key.frame);
+                if (null != previousKey)
+                {
+                    float delta = Mathf.DeltaAngle(previousKey.value, key.value);
+                    key.value = previousKey.value + delta;
+                }
+            }
+            curve.AddKeySegment(key, zoneSize);
+            if (updateCurves) onChangeCurve.Invoke(gobjet, property);
         }
 
         private void RemoveEmptyAnimationSet(GameObject gobject)
