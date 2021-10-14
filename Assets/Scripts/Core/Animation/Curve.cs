@@ -565,6 +565,7 @@ namespace VRtist
 
         public void SetTangents(int index,Vector2 inTangent, Vector2 outTangent)
         {
+            index--;
             keys[index].inTangent = inTangent;
             keys[index].outTangent = outTangent;
             ComputeCacheValuesAt(index);

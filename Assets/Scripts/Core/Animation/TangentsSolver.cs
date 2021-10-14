@@ -42,7 +42,7 @@ namespace VRtist
         public bool TrySolver()
         {
             int firstFrame = objectHierarchy[0].curves[AnimatableProperty.PositionX].keys[0].frame;
-            int lastFrame = objectHierarchy[0].curves[AnimatableProperty.PositionX].keys[objectHierarchy[0].curves[AnimatableProperty.PositionX].keys.Count].frame;
+            int lastFrame = objectHierarchy[0].curves[AnimatableProperty.PositionX].keys[objectHierarchy[0].curves[AnimatableProperty.PositionX].keys.Count - 1].frame;
 
             if (frame < firstFrame) return false;
             if (frame > lastFrame) return false;
@@ -56,7 +56,7 @@ namespace VRtist
             }
 
             List<int> requiredKeyFrames = FindRequieredTangents(firstFrame, lastFrame, objectHierarchy[0].curves[AnimatableProperty.PositionX]);
-            int keyCount = requiredKeyFrames.Count;
+            int keyCount = requiredKeyFrames.Count - 1;
             int totalKeyframeNB = objectHierarchy[0].curves[AnimatableProperty.PositionX].keys.Count;
 
             int n = 3 * objectHierarchy.Count + 3;
@@ -191,10 +191,10 @@ namespace VRtist
             //Rotation curves
             for (int l = 0; l < objectHierarchy.Count; l++)
             {
-                for (int i = 3; i < 6; i++)
+                for (int i = 0; i < 3; i++)
                 {
                     AnimationSet anim = objectHierarchy[l];
-                    AnimatableProperty property = (AnimatableProperty)i;
+                    AnimatableProperty property = (AnimatableProperty)i + 3;
                     Curve curve = anim.GetCurve(property);
 
                     for (int k = 0; k < K; k++)
@@ -223,7 +223,7 @@ namespace VRtist
 
             }
 
-            return false;
+            return true;
         }
 
         public double[] GetAllTangents(int p, int K, List<AnimationSet> animations, List<int> RequieredKeys)

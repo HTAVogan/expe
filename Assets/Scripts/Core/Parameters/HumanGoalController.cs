@@ -110,5 +110,17 @@ namespace VRtist
             });
             Animation = GlobalState.Animation.GetObjectAnimation(gameObject);
         }
+
+        [ContextMenu("try solver")]
+        public void TestSolver()
+        {
+            CheckAnimations();
+            int currentFrame = 20;
+
+
+            TangentsSolver solver = new TangentsSolver(transform.localPosition + transform.forward, transform.rotation, AnimToRoot, currentFrame,
+                new TangentsSolver.Constraint() { startFrames = new List<int>(), properties = new List<int>(), endFrames = new List<int>(), gameObjectIndices = new List<int>(), values = new List<float>() });
+            Debug.Log(solver.TrySolver());
+        }
     }
 }
