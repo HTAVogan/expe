@@ -122,5 +122,13 @@ namespace VRtist
                 new TangentsSolver.Constraint() { startFrames = new List<int>(), properties = new List<int>(), endFrames = new List<int>(), gameObjectIndices = new List<int>(), values = new List<float>() });
             Debug.Log(solver.TrySolver());
         }
+
+        public void TestSolver(Vector3 position, Quaternion rotation, int frame)
+        {
+            CheckAnimations();
+            TangentsSolver solver = new TangentsSolver(position, rotation, AnimToRoot, frame,
+                new TangentsSolver.Constraint() { startFrames = new List<int>(), properties = new List<int>(), endFrames = new List<int>(), gameObjectIndices = new List<int>(), values = new List<float>() });
+            Debug.Log(solver.TrySolver());
+        }
     }
 }

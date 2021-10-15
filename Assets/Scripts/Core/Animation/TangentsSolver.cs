@@ -41,6 +41,7 @@ namespace VRtist
 
         public bool TrySolver()
         {
+            UnityEngine.Profiling.Profiler.BeginSample("setup");
             int firstFrame = objectHierarchy[0].curves[AnimatableProperty.PositionX].keys[0].frame;
             int lastFrame = objectHierarchy[0].curves[AnimatableProperty.PositionX].keys[objectHierarchy[0].curves[AnimatableProperty.PositionX].keys.Count - 1].frame;
 
@@ -69,7 +70,12 @@ namespace VRtist
             State currentState = GetCurrentState(objectHierarchy[objectHierarchy.Count - 1], frame);
             State desiredState = new State() { position = targetPosition, rotation = targetRotation, frame = frame };
 
+            UnityEngine.Profiling.Profiler.EndSample();
+            UnityEngine.Profiling.Profiler.BeginSample("ds theta");
+
             double[,] Js = ds_dtheta(objectHierarchy, frame, p, objectHierarchy.Count, keyCount, requiredKeyFrames);
+            UnityEngine.Profiling.Profiler.EndSample();
+            UnityEngine.Profiling.Profiler.BeginSample("maths");
 
             double[,] DT_D = new double[p, p];
             //Root rotation tangents
@@ -177,6 +183,8 @@ namespace VRtist
             {
                 new_theta[i] = delta_theta[i] + theta[i];
             }
+            UnityEngine.Profiling.Profiler.EndSample();
+            UnityEngine.Profiling.Profiler.BeginSample("ending");
 
             //Check if the optimization found real solutions
             for (int i = 0; i < p; i++)
@@ -187,7 +195,6 @@ namespace VRtist
                 }
             }
 
-            int K = requiredKeyFrames.Count;
             //Rotation curves
             for (int l = 0; l < objectHierarchy.Count; l++)
             {
@@ -197,10 +204,10 @@ namespace VRtist
                     AnimatableProperty property = (AnimatableProperty)i + 3;
                     Curve curve = anim.GetCurve(property);
 
-                    for (int k = 0; k < K; k++)
+                    for (int k = 0; k < keyCount; k++)
                     {
-                        Vector2 inTangent = new Vector2((float)new_theta[12 * K * l + 4 * (i * K + k) + 0], (float)new_theta[12 * K * l + 4 * (i * K + k) + 1]);
-                        Vector2 outTangent = new Vector2((float)new_theta[12 * K * l + 4 * (i * K + k) + 2], (float)new_theta[12 * K * l + 4 * (i * K + k) + 3]);
+                        Vector2 inTangent = new Vector2((float)new_theta[12 * keyCount * l + 4 * (i * keyCount + k) + 0], (float)new_theta[12 * keyCount * l + 4 * (i * keyCount + k) + 1]);
+                        Vector2 outTangent = new Vector2((float)new_theta[12 * keyCount * l + 4 * (i * keyCount + k) + 2], (float)new_theta[12 * keyCount * l + 4 * (i * keyCount + k) + 3]);
                         curve.SetTangents(requiredKeyFrames[k], inTangent, outTangent);
                     }
                 }
@@ -213,16 +220,17 @@ namespace VRtist
                 AnimatableProperty property = (AnimatableProperty)i;
                 Curve curve = rootAnim.GetCurve(property);
 
-                for (int k = 0; k < K; k++)
+                for (int k = 0; k < keyCount; k++)
                 {
-                    Vector2 inTangent = new Vector2((float)new_theta[12 * K * objectHierarchy.Count + 4 * ((i - 3) * K + k) + 0], (float)new_theta[12 * K * objectHierarchy.Count + 4 * ((i - 3) * K + k) + 1]);
-                    Vector2 outTangent = new Vector2((float)new_theta[12 * K * objectHierarchy.Count + 4 * ((i - 3) * K + k) + 2], (float)new_theta[12 * K * objectHierarchy.Count + 4 * ((i - 3) * K + k) + 3]);
+                    Vector2 inTangent = new Vector2((float)new_theta[12 * keyCount * objectHierarchy.Count + 4 * ((i - 3) * keyCount + k) + 0], (float)new_theta[12 * keyCount * objectHierarchy.Count + 4 * ((i - 3) * keyCount + k) + 1]);
+                    Vector2 outTangent = new Vector2((float)new_theta[12 * keyCount * objectHierarchy.Count + 4 * ((i - 3) * keyCount + k) + 2], (float)new_theta[12 * keyCount * objectHierarchy.Count + 4 * ((i - 3) * keyCount + k) + 3]);
                     curve.SetTangents(requiredKeyFrames[k], inTangent, outTangent);
                 }
 
 
             }
 
+            UnityEngine.Profiling.Profiler.EndSample();
             return true;
         }
 
@@ -301,7 +309,7 @@ namespace VRtist
             curve.GetKeyIndex(lastFrame, out int lastKeyIndex);
             lastKeyIndex++;
 
-            for (int i = firstFrame; i <= lastFrame; i++)
+            for (int i = firstKeyIndex; i <= lastKeyIndex; i++)
             {
                 keys.Add(i);
             }

@@ -41,6 +41,8 @@ namespace VRtist
 
         private bool movingHuman = false;
 
+
+
         public EditMode CurrentMode
         {
             set
@@ -59,8 +61,16 @@ namespace VRtist
             public AnimationSet Animation;
             public int Frame;
         }
+        public struct DraggedHumanData
+        {
+            public GameObject target;
+            public HumanGoalController controller;
+            public int frame;
+            public List<AnimationSet> animations;
+        }
 
         private DraggedCurveData dragData = new DraggedCurveData() { Frame = -1 };
+        private DraggedHumanData humanDragData = new DraggedHumanData();
 
         public void SetAddKeyMode()
         {
@@ -221,19 +231,25 @@ namespace VRtist
             Maths.DecomposeMatrix(transformed, out Vector3 position, out Quaternion qrotation, out Vector3 scale);
             Vector3 rotation = qrotation.eulerAngles;
             scale *= scaleIndice;
-            GlobalState.Animation.SetObjectAnimations(dragData.target, dragData.Animation);
             if (!movingHuman)
             {
-
+                GlobalState.Animation.SetObjectAnimations(dragData.target, dragData.Animation);
                 CommandGroup group = new CommandGroup("Add Keyframe");
                 if (currentMode == EditMode.AddKeyframe) new CommandAddKeyframes(dragData.target, dragData.Frame, position, rotation, scale).Submit();
                 if (currentMode == EditMode.Zone) new CommandAddKeyframes(dragData.target, dragData.Frame, zoneSize, position, rotation, scale).Submit();
                 if (currentMode == EditMode.Segment) new CommandAddKeyframes(dragData.target, dragData.Frame, zoneSize, position, rotation, scale, true).Submit();
                 group.Submit();
             }
+            else
+            {
+                for (int i = 0; i < humanDragData.controller.AnimToRoot.Count; i++)
+                {
+                    GlobalState.Animation.SetObjectAnimations(humanDragData.controller.PathToRoot[i].gameObject, humanDragData.animations[i]);
+                }
+                GlobalState.Animation.onChangeCurve.Invoke(humanDragData.animations[0].transform.gameObject, AnimatableProperty.PositionX);
+            }
 
             movingHuman = false;
-            Debug.Log(GlobalState.Animation.GetObjectAnimation(dragData.target).curves[AnimatableProperty.PositionX].keys.Count);
             dragData.Frame = -1;
         }
 
@@ -249,7 +265,11 @@ namespace VRtist
             Vector3 rotation = qrotation.eulerAngles;
             scale *= scaleIndice;
 
-            if (movingHuman) return;
+            if (movingHuman)
+            {
+                humanDragData.controller.TestSolver(position, qrotation, frame);
+                return;
+            }
 
             Interpolation interpolation = GlobalState.Settings.interpolation;
             AnimationKey posX = new AnimationKey(frame, position.x, interpolation);
@@ -272,7 +292,7 @@ namespace VRtist
             }
             if (currentMode == EditMode.Segment)
             {
-                AddFilteredKeyframeSegment(posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
+                AddFilteredKeyframeSegment(dragData.target, posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
             }
         }
 
@@ -302,17 +322,17 @@ namespace VRtist
             GlobalState.Animation.AddFilteredKeyframeZone(dragData.target, AnimatableProperty.PositionZ, posZ, zoneSize);
         }
 
-        private void AddFilteredKeyframeSegment(AnimationKey posX, AnimationKey posY, AnimationKey posZ, AnimationKey rotX, AnimationKey rotY, AnimationKey rotZ, AnimationKey scalex, AnimationKey scaley, AnimationKey scalez)
+        private void AddFilteredKeyframeSegment(GameObject target, AnimationKey posX, AnimationKey posY, AnimationKey posZ, AnimationKey rotX, AnimationKey rotY, AnimationKey rotZ, AnimationKey scalex, AnimationKey scaley, AnimationKey scalez)
         {
-            GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.RotationX, rotX, zoneSize, false);
-            GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.RotationY, rotY, zoneSize, false);
-            GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.RotationZ, rotZ, zoneSize, false);
-            GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.ScaleX, scalex, zoneSize, false);
-            GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.ScaleY, scaley, zoneSize, false);
-            GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.ScaleZ, scalez, zoneSize, false);
-            GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.PositionX, posX, zoneSize, false);
-            GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.PositionY, posY, zoneSize, false);
-            GlobalState.Animation.AddFilteredKeyframeSegment(dragData.target, AnimatableProperty.PositionZ, posZ, zoneSize);
+            GlobalState.Animation.AddFilteredKeyframeSegment(target, AnimatableProperty.RotationX, rotX, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeSegment(target, AnimatableProperty.RotationY, rotY, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeSegment(target, AnimatableProperty.RotationZ, rotZ, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeSegment(target, AnimatableProperty.ScaleX, scalex, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeSegment(target, AnimatableProperty.ScaleY, scaley, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeSegment(target, AnimatableProperty.ScaleZ, scalez, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeSegment(target, AnimatableProperty.PositionX, posX, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeSegment(target, AnimatableProperty.PositionY, posY, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeSegment(target, AnimatableProperty.PositionZ, posZ, zoneSize);
         }
 
         public void StartDrag(GameObject gameObject, Transform mouthpiece)
@@ -345,7 +365,35 @@ namespace VRtist
             if (target.TryGetComponent<HumanGoalController>(out HumanGoalController controller))
             {
                 movingHuman = true;
-                AddFilteredKeyframeSegment(
+                List<AnimationSet> previousSets = new List<AnimationSet>();
+                controller.AnimToRoot.ForEach(x => previousSets.Add(new AnimationSet(x)));
+                humanDragData = new DraggedHumanData()
+                {
+                    animations = previousSets,
+                    controller = controller,
+                    frame = frame,
+                    target = target
+                };
+                AddSegmentHierarchy(controller, frame);
+            }
+        }
+
+        public void AddSegmentHierarchy(HumanGoalController controller, int frame)
+        {
+            for (int i = 0; i < controller.AnimToRoot.Count; i++)
+            {
+                AnimationSet anim = controller.AnimToRoot[i];
+                if (!anim.GetCurve(AnimatableProperty.PositionX).Evaluate(frame, out float posx)) posx = anim.transform.localPosition.x;
+                if (!anim.GetCurve(AnimatableProperty.PositionY).Evaluate(frame, out float posy)) posy = anim.transform.localPosition.y;
+                if (!anim.GetCurve(AnimatableProperty.PositionZ).Evaluate(frame, out float posz)) posz = anim.transform.localPosition.z;
+                if (!anim.GetCurve(AnimatableProperty.RotationX).Evaluate(frame, out float rotx)) rotx = anim.transform.localEulerAngles.x;
+                if (!anim.GetCurve(AnimatableProperty.RotationY).Evaluate(frame, out float roty)) roty = anim.transform.localEulerAngles.y;
+                if (!anim.GetCurve(AnimatableProperty.RotationZ).Evaluate(frame, out float rotz)) rotz = anim.transform.localEulerAngles.z;
+                if (!anim.GetCurve(AnimatableProperty.ScaleX).Evaluate(frame, out float scax)) scax = anim.transform.localScale.x;
+                if (!anim.GetCurve(AnimatableProperty.ScaleY).Evaluate(frame, out float scay)) scay = anim.transform.localScale.y;
+                if (!anim.GetCurve(AnimatableProperty.ScaleZ).Evaluate(frame, out float scaz)) scaz = anim.transform.localScale.z;
+
+                AddFilteredKeyframeSegment(anim.transform.gameObject,
                     new AnimationKey(frame, posx),
                     new AnimationKey(frame, posy),
                     new AnimationKey(frame, posz),
