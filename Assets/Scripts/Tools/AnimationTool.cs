@@ -41,6 +41,8 @@ namespace VRtist
 
         private bool movingHuman = false;
 
+        private IEnumerator coroutine;
+
 
 
         public EditMode CurrentMode
@@ -267,7 +269,8 @@ namespace VRtist
 
             if (movingHuman)
             {
-                humanDragData.controller.TestSolver(position, qrotation, frame);
+                if (coroutine == null) coroutine = humanDragData.controller.TestSolver(position, qrotation, frame, zoneSize);
+                if (!coroutine.MoveNext()) coroutine = null;
                 return;
             }
 

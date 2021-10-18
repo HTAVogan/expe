@@ -118,17 +118,23 @@ namespace VRtist
             int currentFrame = 20;
 
 
-            TangentsSolver solver = new TangentsSolver(transform.localPosition + transform.forward, transform.rotation, AnimToRoot, currentFrame,
+            TangentsSolver solver = new TangentsSolver(transform.localPosition + transform.forward, transform.rotation, AnimToRoot, currentFrame, 5,
                 new TangentsSolver.Constraint() { startFrames = new List<int>(), properties = new List<int>(), endFrames = new List<int>(), gameObjectIndices = new List<int>(), values = new List<float>() });
-            Debug.Log(solver.TrySolver());
         }
 
-        public void TestSolver(Vector3 position, Quaternion rotation, int frame)
+        public IEnumerator TestSolver(Vector3 position, Quaternion rotation, int frame, int zoneSize)
         {
             CheckAnimations();
-            TangentsSolver solver = new TangentsSolver(position, rotation, AnimToRoot, frame,
+            TangentsSolver solver = new TangentsSolver(position, rotation, AnimToRoot, frame, zoneSize,
                 new TangentsSolver.Constraint() { startFrames = new List<int>(), properties = new List<int>(), endFrames = new List<int>(), gameObjectIndices = new List<int>(), values = new List<float>() });
-            Debug.Log(solver.TrySolver());
+            yield return false;
+            solver.StepOne();
+            yield return false;
+            solver.StepThree();
+            yield return false;
+            solver.StepFive();
+            GlobalState.Animation.onChangeCurve.Invoke(PathToRoot[0].gameObject, AnimatableProperty.PositionX);
+
         }
     }
 }

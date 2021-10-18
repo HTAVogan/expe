@@ -376,9 +376,9 @@ namespace VRtist
             {
                 AddKey(new AnimationKey(endFrame, nextValue, key.interpolation));
             }
-            List<AnimationKey> toRemove = keys.FindAll(x => x.frame > startFrame && x.frame < endFrame && x.frame != key.frame);
+            List<AnimationKey> toRemove = keys.FindAll(x => x.frame > startFrame && x.frame < endFrame);
             toRemove.ForEach(x => RemoveKey(x.frame));
-            AddKey(key);
+            //AddKey(key);
         }
 
         public void GetSegmentKeyChanges(AnimationKey key, int zoneSize, List<AnimationKey> oldKeys, List<AnimationKey> newKeys)
@@ -400,7 +400,7 @@ namespace VRtist
             {
                 newKeys.Add(new AnimationKey(endFrame, nextValue, key.interpolation));
             }
-            newKeys.Add(key);
+            //newKeys.Add(key);
         }
 
         public void MoveKey(int oldFrame, int newFrame)
