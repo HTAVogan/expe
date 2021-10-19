@@ -26,9 +26,10 @@ namespace VRtist
         private Transform AddKeyModeButton;
         private Transform ZoneModeButton;
         private Transform SegmentModeButton;
+        private Transform TangentModeButton;
         private Transform ZoneSlider;
 
-        public enum EditMode { AddKeyframe, Zone, Segment }
+        public enum EditMode { AddKeyframe, Zone, Segment, Tangents }
         private EditMode currentMode;
 
         private int zoneSize;
@@ -88,11 +89,15 @@ namespace VRtist
             currentMode = EditMode.Segment;
         }
 
+        public void SetTangentMode()
+        {
+            currentMode = EditMode.Tangents;
+        }
+
         public void SetZoneSize(float value)
         {
             zoneSize = Mathf.RoundToInt(value);
             ZoneSlider.GetComponent<UISlider>().Value = zoneSize;
-
         }
 
         protected override void Awake()
@@ -102,6 +107,7 @@ namespace VRtist
             AddKeyModeButton = panel.Find("AddKey");
             ZoneModeButton = panel.Find("Zone");
             SegmentModeButton = panel.Find("Segment");
+            TangentModeButton = panel.Find("Tangent");
             ZoneSlider = panel.Find("ZoneSize");
 
             zoneSize = Mathf.RoundToInt(ZoneSlider.GetComponent<UISlider>().Value);
@@ -115,6 +121,7 @@ namespace VRtist
                 case EditMode.AddKeyframe: return AddKeyModeButton.GetComponent<UIButton>();
                 case EditMode.Zone: return ZoneModeButton.GetComponent<UIButton>();
                 case EditMode.Segment: return SegmentModeButton.GetComponent<UIButton>();
+                case EditMode.Tangents: return TangentModeButton.GetComponent<UIButton>();
                 default: return null;
             }
         }
@@ -151,7 +158,7 @@ namespace VRtist
             int frame = GetFrameFromPoint(line, point);
             GameObject gobject = CurveManager.GetObjectFromCurve(curveObject);
             DrawCurveGhost(gobject, frame);
-            if (currentMode == EditMode.Zone || currentMode == EditMode.Segment) DrawZone(line, frame);
+            if (currentMode == EditMode.Zone || currentMode == EditMode.Segment || currentMode == EditMode.Tangents) DrawZone(line, frame);
         }
 
         public void DrawCurveGhost(GameObject gobject, int frame)
@@ -177,7 +184,7 @@ namespace VRtist
         internal void DrawCurveGhost()
         {
             DrawCurveGhost(dragData.target, dragData.Frame);
-            if (currentMode == EditMode.Zone || currentMode == EditMode.Segment) DrawZoneDrag();
+            if (currentMode == EditMode.Zone || currentMode == EditMode.Segment || currentMode == EditMode.Tangents) DrawZoneDrag();
         }
 
         public void DrawZone(LineRenderer line, int frame)
@@ -297,6 +304,12 @@ namespace VRtist
             {
                 AddFilteredKeyframeSegment(dragData.target, posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
             }
+            if (currentMode == EditMode.Tangents)
+            {
+                TangentSimpleSolver solver = new TangentSimpleSolver(position, qrotation, GlobalState.Animation.GetObjectAnimation(dragData.target), dragData.Frame, zoneSize);
+                Debug.Log(position + " / " + qrotation + " / " + solver.TrySolver());
+                GlobalState.Animation.onChangeCurve.Invoke(dragData.target, AnimatableProperty.PositionX);
+            }
         }
 
         private void AddFilteredKeyframe(AnimationKey posX, AnimationKey posY, AnimationKey posZ, AnimationKey rotX, AnimationKey rotY, AnimationKey rotZ, AnimationKey scalex, AnimationKey scaley, AnimationKey scalez)
@@ -379,6 +392,8 @@ namespace VRtist
                 };
                 AddSegmentHierarchy(controller, frame);
             }
+
+            if (currentMode == EditMode.Tangents) AddSegmentKeyframes(frame, previousSet);
         }
 
         public void AddSegmentHierarchy(HumanGoalController controller, int frame)
@@ -386,27 +401,32 @@ namespace VRtist
             for (int i = 0; i < controller.AnimToRoot.Count; i++)
             {
                 AnimationSet anim = controller.AnimToRoot[i];
-                if (!anim.GetCurve(AnimatableProperty.PositionX).Evaluate(frame, out float posx)) posx = anim.transform.localPosition.x;
-                if (!anim.GetCurve(AnimatableProperty.PositionY).Evaluate(frame, out float posy)) posy = anim.transform.localPosition.y;
-                if (!anim.GetCurve(AnimatableProperty.PositionZ).Evaluate(frame, out float posz)) posz = anim.transform.localPosition.z;
-                if (!anim.GetCurve(AnimatableProperty.RotationX).Evaluate(frame, out float rotx)) rotx = anim.transform.localEulerAngles.x;
-                if (!anim.GetCurve(AnimatableProperty.RotationY).Evaluate(frame, out float roty)) roty = anim.transform.localEulerAngles.y;
-                if (!anim.GetCurve(AnimatableProperty.RotationZ).Evaluate(frame, out float rotz)) rotz = anim.transform.localEulerAngles.z;
-                if (!anim.GetCurve(AnimatableProperty.ScaleX).Evaluate(frame, out float scax)) scax = anim.transform.localScale.x;
-                if (!anim.GetCurve(AnimatableProperty.ScaleY).Evaluate(frame, out float scay)) scay = anim.transform.localScale.y;
-                if (!anim.GetCurve(AnimatableProperty.ScaleZ).Evaluate(frame, out float scaz)) scaz = anim.transform.localScale.z;
-
-                AddFilteredKeyframeSegment(anim.transform.gameObject,
-                    new AnimationKey(frame, posx),
-                    new AnimationKey(frame, posy),
-                    new AnimationKey(frame, posz),
-                    new AnimationKey(frame, rotx),
-                    new AnimationKey(frame, roty),
-                    new AnimationKey(frame, rotz),
-                    new AnimationKey(frame, scax),
-                    new AnimationKey(frame, scay),
-                    new AnimationKey(frame, scaz));
+                AddSegmentKeyframes(frame, anim);
             }
+        }
+
+        private void AddSegmentKeyframes(int frame, AnimationSet anim)
+        {
+            if (!anim.GetCurve(AnimatableProperty.PositionX).Evaluate(frame, out float posx)) posx = anim.transform.localPosition.x;
+            if (!anim.GetCurve(AnimatableProperty.PositionY).Evaluate(frame, out float posy)) posy = anim.transform.localPosition.y;
+            if (!anim.GetCurve(AnimatableProperty.PositionZ).Evaluate(frame, out float posz)) posz = anim.transform.localPosition.z;
+            if (!anim.GetCurve(AnimatableProperty.RotationX).Evaluate(frame, out float rotx)) rotx = anim.transform.localEulerAngles.x;
+            if (!anim.GetCurve(AnimatableProperty.RotationY).Evaluate(frame, out float roty)) roty = anim.transform.localEulerAngles.y;
+            if (!anim.GetCurve(AnimatableProperty.RotationZ).Evaluate(frame, out float rotz)) rotz = anim.transform.localEulerAngles.z;
+            if (!anim.GetCurve(AnimatableProperty.ScaleX).Evaluate(frame, out float scax)) scax = anim.transform.localScale.x;
+            if (!anim.GetCurve(AnimatableProperty.ScaleY).Evaluate(frame, out float scay)) scay = anim.transform.localScale.y;
+            if (!anim.GetCurve(AnimatableProperty.ScaleZ).Evaluate(frame, out float scaz)) scaz = anim.transform.localScale.z;
+
+            AddFilteredKeyframeSegment(anim.transform.gameObject,
+                new AnimationKey(frame, posx),
+                new AnimationKey(frame, posy),
+                new AnimationKey(frame, posz),
+                new AnimationKey(frame, rotx),
+                new AnimationKey(frame, roty),
+                new AnimationKey(frame, rotz),
+                new AnimationKey(frame, scax),
+                new AnimationKey(frame, scay),
+                new AnimationKey(frame, scaz));
         }
 
         internal void ShowGhost(bool state)

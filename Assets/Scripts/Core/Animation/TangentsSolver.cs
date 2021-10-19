@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -267,7 +268,7 @@ namespace VRtist
             for (int i = 3; i < 6; i++)
             {
                 AnimationSet anim = animations[0];
-                AnimatableProperty property = (AnimatableProperty)i-3;
+                AnimatableProperty property = (AnimatableProperty)i - 3;
                 Curve curve = anim.GetCurve(property);
 
                 for (int k = 0; k < K; k++)
@@ -285,7 +286,7 @@ namespace VRtist
                 for (int i = 0; i < 3; i++)
                 {
                     AnimationSet anim = animations[l];
-                    AnimatableProperty property = (AnimatableProperty)i+3;
+                    AnimatableProperty property = (AnimatableProperty)i + 3;
                     Curve curve = anim.GetCurve(property);
                     for (int k = 0; k < K; k++)
                     {
@@ -1002,5 +1003,6 @@ namespace VRtist
 
         #endregion
     }
+
 
 }
