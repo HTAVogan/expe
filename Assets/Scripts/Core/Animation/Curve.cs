@@ -417,7 +417,7 @@ namespace VRtist
             {
                 AddKey(new AnimationKey(startFrame, prevValue, Interpolation.Bezier));
             }
-            if(keys[lastKeyIndex].frame != endFrame && Evaluate(endFrame, out float nextValue))
+            if (keys[lastKeyIndex].frame != endFrame && Evaluate(endFrame, out float nextValue))
             {
                 AddKey(new AnimationKey(endFrame, nextValue, Interpolation.Bezier));
             }
@@ -577,6 +577,11 @@ namespace VRtist
                         Vector2 C = D - nextKey.inTangent;
 
                         value = EvaluateBezier(A, B, C, D, frame);
+                        if(property == AnimatableProperty.RotationX || property == AnimatableProperty.RotationY || property == AnimatableProperty.RotationZ)
+                        {
+                            value = Mathf.DeltaAngle(0, value);
+                        }
+
                         return true;
                     }
 

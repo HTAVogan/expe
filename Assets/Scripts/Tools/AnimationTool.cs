@@ -307,7 +307,7 @@ namespace VRtist
             if (currentMode == EditMode.Tangents)
             {
                 TangentSimpleSolver solver = new TangentSimpleSolver(position, qrotation, GlobalState.Animation.GetObjectAnimation(dragData.target), dragData.Frame, zoneSize);
-                Debug.Log(position + " / " + qrotation + " / " + solver.TrySolver());
+                solver.TrySolver();
                 GlobalState.Animation.onChangeCurve.Invoke(dragData.target, AnimatableProperty.PositionX);
             }
         }
