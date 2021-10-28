@@ -46,7 +46,8 @@ namespace VRtist
         public Transform paletteController;
         public GameObject colorPanel = null;
         public GameObject cameraFeedback = null;
-
+        public static Dictionary<GameObject, List<Vector3>> translations;
+        private static Dictionary<GameObject, List<Quaternion>> rotations;
         public static Settings Settings { get { return Instance.settings; } }
         public static AnimationEngine Animation { get { return AnimationEngine.Instance; } }
 
@@ -161,7 +162,19 @@ namespace VRtist
 
         public static void FireObjectMoving(GameObject gobject)
         {
+            Vector3 previous = gobject.transform.position;
+            Quaternion quaternion = gobject.transform.rotation;
             ObjectMovingEvent.Invoke(gobject);
+            Vector3 diff = gobject.transform.position - previous;
+            if (translations.TryGetValue(gobject, out List<Vector3> list))
+            {
+                list.Add(diff);
+            }
+            else
+            {
+                translations.Add(gobject, new List<Vector3> { diff });
+            }
+
         }
 
         public static void FireObjectConstraint(GameObject gobject)
@@ -227,6 +240,7 @@ namespace VRtist
 
             avatarPrefab = Resources.Load<GameObject>("Prefabs/VR Avatar");
             avatarsContainer = world.Find("Avatars");
+            translations = new Dictionary<GameObject, List<Vector3>>();
         }
 
         private void UpdateFps()
