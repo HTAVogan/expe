@@ -70,6 +70,9 @@ namespace VRtist
             public HumanGoalController controller;
             public int frame;
             public List<AnimationSet> animations;
+            public AnimationSet objectAnimation;
+            public Matrix4x4 initFrameMatrix;
+            public TangentHumanSolver solver;
         }
 
         private DraggedCurveData dragData = new DraggedCurveData() { Frame = -1 };
@@ -251,13 +254,51 @@ namespace VRtist
             }
             else
             {
-                for (int i = 0; i < humanDragData.controller.AnimToRoot.Count; i++)
+                List<GameObject> objectList = new List<GameObject>();
+                List<Dictionary<AnimatableProperty, List<AnimationKey>>> keyframesLists = new List<Dictionary<AnimatableProperty, List<AnimationKey>>>();
+
+                int index = 0;
+                for (int i = 0; i < humanDragData.controller.PathToRoot.Count; i++)
                 {
-                    GlobalState.Animation.SetObjectAnimations(humanDragData.controller.PathToRoot[i].gameObject, humanDragData.animations[i]);
+                    if (humanDragData.controller.AnimToRoot[i] == null) continue;
+                    keyframesLists.Add(new Dictionary<AnimatableProperty, List<AnimationKey>>());
+                    for (int prop = 0; prop < 6; prop++)
+                    {
+                        AnimatableProperty property = (AnimatableProperty)prop;
+                        List<AnimationKey> keys = new List<AnimationKey>();
+                        for (int k = 0; k < humanDragData.solver.requiredKeyframeIndices.Count; k++)
+                        {
+                            int kk = humanDragData.solver.requiredKeyframeIndices[k];
+                            keys.Add(humanDragData.controller.AnimToRoot[i].GetCurve(property).keys[humanDragData.solver.requiredKeyframeIndices[k]]);
+                        }
+                        keyframesLists[keyframesLists.Count - 1].Add(property, keys);
+                    }
+                    GlobalState.Animation.SetObjectAnimations(humanDragData.animations[index].transform.gameObject, humanDragData.animations[index]);
+                    objectList.Add(humanDragData.animations[index].transform.gameObject);
+                    index++;
                 }
+
+                keyframesLists.Add(new Dictionary<AnimatableProperty, List<AnimationKey>>());
+                for (int prop = 0; prop < 6; prop++)
+                {
+                    AnimatableProperty property = (AnimatableProperty)prop;
+                    List<AnimationKey> keys = new List<AnimationKey>();
+                    for (int k = 0; k < humanDragData.solver.requiredKeyframeIndices.Count; k++)
+                    {
+                        keys.Add(humanDragData.controller.Animation.GetCurve(property).keys[humanDragData.solver.requiredKeyframeIndices[k]]);
+                    }
+                    keyframesLists[keyframesLists.Count - 1].Add(property, keys);
+                }
+                GlobalState.Animation.SetObjectAnimations(humanDragData.target, humanDragData.objectAnimation);
+                objectList.Add(humanDragData.target);
+
+                GlobalState.Animation.onChangeCurve.Invoke(humanDragData.animations[0].transform.gameObject, AnimatableProperty.PositionX);
+                CommandGroup group = new CommandGroup("Add Keyframe");
+                new CommandAddKeyframes(humanDragData.target, objectList, humanDragData.frame, zoneSize, keyframesLists).Submit();
+                group.Submit();
+
                 GlobalState.Animation.onChangeCurve.Invoke(humanDragData.animations[0].transform.gameObject, AnimatableProperty.PositionX);
             }
-
             movingHuman = false;
             dragData.Frame = -1;
         }
@@ -276,8 +317,20 @@ namespace VRtist
 
             if (movingHuman)
             {
-                if (coroutine == null) coroutine = humanDragData.controller.TestSolver(position, qrotation, frame, zoneSize);
-                if (!coroutine.MoveNext()) coroutine = null;
+                Matrix4x4 target = transformation * humanDragData.initFrameMatrix;
+                Maths.DecomposeMatrix(target, out Vector3 targetPos, out Quaternion targetRot, out Vector3 targetScale);
+                TangentHumanSolver solver = new TangentHumanSolver(targetPos, targetRot, humanDragData.controller.Animation, humanDragData.controller.AnimToRoot, frame, zoneSize);
+                solver.TrySolver();
+                GlobalState.Animation.onChangeCurve.Invoke(humanDragData.target.gameObject, AnimatableProperty.PositionX);
+                humanDragData.solver = solver;
+                //if (coroutine == null)
+                //{
+                //    coroutine = solver.TrySolver();
+                //};
+                //if (!coroutine.MoveNext())
+                //{
+                //    coroutine = null;
+                //}
                 return;
             }
 
@@ -351,6 +404,19 @@ namespace VRtist
             GlobalState.Animation.AddFilteredKeyframeSegment(target, AnimatableProperty.PositionZ, posZ, zoneSize);
         }
 
+        private void AddFilteredKeyframeTangent(GameObject target, AnimationKey posX, AnimationKey posY, AnimationKey posZ, AnimationKey rotX, AnimationKey rotY, AnimationKey rotZ, AnimationKey scalex, AnimationKey scaley, AnimationKey scalez)
+        {
+            GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.RotationX, rotX, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.RotationY, rotY, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.RotationZ, rotZ, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.ScaleX, scalex, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.ScaleY, scaley, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.ScaleZ, scalez, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.PositionX, posX, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.PositionY, posY, zoneSize, false);
+            GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.PositionZ, posZ, zoneSize);
+        }
+
         public void StartDrag(GameObject gameObject, Transform mouthpiece)
         {
             LineRenderer line = gameObject.GetComponent<LineRenderer>();
@@ -382,17 +448,18 @@ namespace VRtist
             {
                 movingHuman = true;
                 List<AnimationSet> previousSets = new List<AnimationSet>();
-                controller.AnimToRoot.ForEach(x => previousSets.Add(new AnimationSet(x)));
+                controller.AnimToRoot.ForEach(x => { if (null != x) previousSets.Add(new AnimationSet(x)); });
                 humanDragData = new DraggedHumanData()
                 {
                     animations = previousSets,
                     controller = controller,
                     frame = frame,
-                    target = target
+                    target = target,
+                    objectAnimation = new AnimationSet(controller.Animation),
+                    initFrameMatrix = controller.FrameMatrix(frame)
                 };
                 AddSegmentHierarchy(controller, frame);
             }
-
             if (currentMode == EditMode.Tangents) AddSegmentKeyframes(frame, previousSet);
         }
 
@@ -401,7 +468,8 @@ namespace VRtist
             for (int i = 0; i < controller.AnimToRoot.Count; i++)
             {
                 AnimationSet anim = controller.AnimToRoot[i];
-                AddSegmentKeyframes(frame, anim);
+                if (null != anim)
+                    AddSegmentKeyframes(frame, anim);
             }
         }
 
@@ -417,7 +485,7 @@ namespace VRtist
             if (!anim.GetCurve(AnimatableProperty.ScaleY).Evaluate(frame, out float scay)) scay = anim.transform.localScale.y;
             if (!anim.GetCurve(AnimatableProperty.ScaleZ).Evaluate(frame, out float scaz)) scaz = anim.transform.localScale.z;
 
-            AddFilteredKeyframeSegment(anim.transform.gameObject,
+            AddFilteredKeyframeTangent(anim.transform.gameObject,
                 new AnimationKey(frame, posx),
                 new AnimationKey(frame, posy),
                 new AnimationKey(frame, posz),

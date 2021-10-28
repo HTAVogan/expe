@@ -98,9 +98,8 @@ namespace VRtist
             }
             for (int i = 3; i <= 5; i++)
             {
-                Delta_s_prime[i, 0] = Mathf.DeltaAngle(desiredState.euler_orientation[i - 3], currentState.euler_orientation[i - 3]);
+                Delta_s_prime[i, 0] = -Mathf.DeltaAngle(desiredState.euler_orientation[i - 3], currentState.euler_orientation[i - 3]);
             }
-            Debug.Log(desiredState.euler_orientation + " / " + currentState.euler_orientation + " / " + new Vector3((float)Delta_s_prime[3, 0], (float)Delta_s_prime[4, 0], (float)Delta_s_prime[5, 0]));
 
             double[,] TT_T = new double[p, p];
             for (int j = 0; j < p; j++)
@@ -200,9 +199,11 @@ namespace VRtist
                     Vector2 inTangent = new Vector2((float)new_theta[4 * (i * K + k) + 0], (float)new_theta[4 * (i * K + k) + 1]);
                     Vector2 outTangent = new Vector2((float)new_theta[4 * (i * K + k) + 2], (float)new_theta[4 * (i * K + k) + 3]);
                     ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
-                    if (k == 0) Debug.Log(property + " / " + inTangent + " / " + outTangent);
+                    //if (k == 0) Debug.Log(property + " / " + inTangent + " / " + outTangent);
                 }
             }
+
+            State newState = GetCurrentState(currentFrame);
 
             return true;
         }
@@ -317,7 +318,7 @@ namespace VRtist
         {
 
             double[,] Js2 = new double[n, p];
-            float dtheta = Mathf.Pow(10, -5);
+            float dtheta = Mathf.Pow(10, -4);
 
             for (int i = 0; i < 6; i++)
             {
@@ -377,7 +378,6 @@ namespace VRtist
                     ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
                 }
             }
-
 
             return Js2;
         }

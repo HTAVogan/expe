@@ -21,6 +21,7 @@
  * SOFTWARE.
  */
 
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace VRtist
@@ -119,6 +120,21 @@ namespace VRtist
             new CommandAddKeyframeSegment(gObject, AnimatableProperty.PositionX, frame, position.x, zoneSize, interpolation).Submit();
             new CommandAddKeyframeSegment(gObject, AnimatableProperty.PositionY, frame, position.y, zoneSize, interpolation).Submit();
             new CommandAddKeyframeSegment(gObject, AnimatableProperty.PositionZ, frame, position.z, zoneSize, interpolation).Submit();
+        }
+
+        public CommandAddKeyframes(GameObject obj, List<GameObject> objs, int frame, int zoneSize, List<Dictionary<AnimatableProperty, List<AnimationKey>>> newKeys)
+        {
+            gObject = obj;
+            for (int l = 0; l < objs.Count; l++)
+            {
+                GameObject go = objs[l];
+                for (int i = 0; i < 6; i++)
+                {
+                    AnimatableProperty property = (AnimatableProperty)i;
+                    new CommandAddKeyframeTangent(go, property, frame, zoneSize, newKeys[l][property]).Submit();
+                }
+            }
+
         }
 
         public override void Undo()
