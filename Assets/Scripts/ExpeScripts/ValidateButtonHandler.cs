@@ -25,22 +25,26 @@ public class ValidateButtonHandler : MonoBehaviour
 
     public void OnValidate()
     {
-        finished = false;
+        finished = true;
 
-        string line = evalMode + ";" + time.ToString() + ";" + gostManager.GetComponent<GostManager>().GetPercent().ToString() + ";" + global.GetComponent<ActionVRCount>().numberOfAction.ToString() +";" ;
-        foreach (var item in GlobalState.translations)
+        if(GlobalState.translations != null)
         {
-            line += item.Key.name + ":";
-            foreach (var vec in item.Value)
+            string line = evalMode + ";" + time.ToString() + ";" + gostManager.GetComponent<GostManager>().GetPercent().ToString() + ";" + global.GetComponent<ActionVRCount>().numberOfAction.ToString() + ";";
+            foreach (var item in GlobalState.translations)
             {
-                line += vec.ToString() +"|";
+                line += item.Key.name + ":";
+                foreach (var vec in item.Value)
+                {
+                    line += vec.ToString() + "|";
+                }
+                line += ";";
             }
-            line += ";";
-        }
 
-        StreamWriter writer = new StreamWriter(path,true);
-        writer.WriteLine(line);
-        writer.Close();
+            StreamWriter writer = new StreamWriter(path, true);
+            writer.WriteLine(line);
+            writer.Close();
+        }
+        
 
 
     }

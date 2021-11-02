@@ -90,42 +90,47 @@ public class GostManager : MonoBehaviour
     /// <returns>% of similtaries</returns>
    public float GetPercent()
     {
-        Vector3 unitAlpha = Vector3.one * delta;
-        float ret = 0f;
-        var tempGostAbe = gostAbe.GetComponentsInChildren<HumanGoalController>();
-        var tempOriginalAbe = abe.GetComponentsInChildren<HumanGoalController>();
-        var tempGostJoleen = gostJoleen.GetComponentsInChildren<HumanGoalController>();
-        var tempOriginalJoleen = joleen.GetComponentsInChildren<HumanGoalController>();
-        float percentAbePerFrame = 0f;
-        float percentAbeGlobal = 0f;
-        float percentJoleenPerFrame = 0f;
-        float percentJoleenGlobal = 0f;
-        for (int i = GlobalState.Animation.StartFrame; i <= GlobalState.Animation.EndFrame; i++)
+        if(abe != null && joleen != null)
         {
-            int counterAbe = 0;
-            int counterJoleen = 0;
-            float percentAbeSum = 0f;
-            float percentJoleenSum = 0f;
-            foreach (var item in tempGostAbe)
+            Vector3 unitAlpha = Vector3.one * delta;
+            float ret = 0f;
+            var tempGostAbe = gostAbe.GetComponentsInChildren<HumanGoalController>();
+            var tempOriginalAbe = abe.GetComponentsInChildren<HumanGoalController>();
+            var tempGostJoleen = gostJoleen.GetComponentsInChildren<HumanGoalController>();
+            var tempOriginalJoleen = joleen.GetComponentsInChildren<HumanGoalController>();
+            float percentAbePerFrame = 0f;
+            float percentAbeGlobal = 0f;
+            float percentJoleenPerFrame = 0f;
+            float percentJoleenGlobal = 0f;
+            for (int i = GlobalState.Animation.StartFrame; i <= GlobalState.Animation.EndFrame; i++)
             {
-                counterAbe++;
-                Vector3 diff = item.FramePosition(i) -  tempOriginalAbe[counterAbe].FramePosition(i);
-                percentAbeSum = (100 * (diff.x / unitAlpha.x) + 100 * (diff.y / unitAlpha.y) + 100 * (diff.z / unitAlpha.z)) / 3;
+                int counterAbe = 0;
+                int counterJoleen = 0;
+                float percentAbeSum = 0f;
+                float percentJoleenSum = 0f;
+                foreach (var item in tempGostAbe)
+                {
+                    counterAbe++;
+                    Vector3 diff = item.FramePosition(i) - tempOriginalAbe[counterAbe].FramePosition(i);
+                    percentAbeSum = (100 * (diff.x / unitAlpha.x) + 100 * (diff.y / unitAlpha.y) + 100 * (diff.z / unitAlpha.z)) / 3;
+                }
+                percentAbePerFrame += percentAbeSum / counterAbe;
+                foreach (var item in tempGostJoleen)
+                {
+                    counterJoleen++;
+                    Vector3 diff = item.FramePosition(i) - tempOriginalJoleen[counterJoleen].FramePosition(i);
+                    percentJoleenSum = (100 * (diff.x / unitAlpha.x) + 100 * (diff.y / unitAlpha.y) + 100 * (diff.z / unitAlpha.z)) / 3;
+                }
+                percentJoleenPerFrame += percentJoleenSum / counterJoleen;
             }
-            percentAbePerFrame += percentAbeSum / counterAbe;
-            foreach (var item in tempGostJoleen)
-            {
-                counterJoleen++;
-                Vector3 diff = item.FramePosition(i) - tempOriginalJoleen[counterJoleen].FramePosition(i);
-                percentJoleenSum = (100 * (diff.x / unitAlpha.x) + 100 * (diff.y / unitAlpha.y) + 100 * (diff.z / unitAlpha.z)) / 3;
-            }
-            percentJoleenPerFrame += percentJoleenSum / counterJoleen;
+            percentAbeGlobal = percentAbePerFrame;
+            percentAbeGlobal /= GlobalState.Animation.EndFrame;
+            percentJoleenGlobal = percentJoleenPerFrame;
+            percentJoleenGlobal /= GlobalState.Animation.EndFrame;
+            ret = (percentJoleenGlobal + percentAbeGlobal) / 2;
+            return ret;
         }
-        percentAbeGlobal = percentAbePerFrame;
-        percentAbeGlobal /= GlobalState.Animation.EndFrame;
-        percentJoleenGlobal = percentJoleenPerFrame;
-        percentJoleenGlobal /= GlobalState.Animation.EndFrame;
-        ret = (percentJoleenGlobal + percentAbeGlobal) / 2;
-        return ret;
+        return 0;
+   
     }
 }
