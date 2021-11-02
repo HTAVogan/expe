@@ -8,8 +8,9 @@ public class ActionVRCount : MonoBehaviour
 
     public int numberOfAction;
     private string previousButton = "";
+    private int previousActionsNumber = 0;
 
-
+   
 
 
     // Update is called once per frame
@@ -19,11 +20,13 @@ public class ActionVRCount : MonoBehaviour
         {
             previousButton = "gripP";
             numberOfAction++;
+            Debug.Log("primary grip pressed");
         }
-        if (VRInput.primaryControllerValues.triggerButtonPressed && !previousButton.Contains("triggerP"))
+        if (VRInput.primaryControllerValues.triggerButtonPressed)
         {
             previousButton = "triggerP";
             numberOfAction++;
+            Debug.Log("trigger pressed");
         }
         if (VRInput.primaryControllerValues.primary2DAxisClickState && !previousButton.Contains("AxisP"))
         {
@@ -65,7 +68,11 @@ public class ActionVRCount : MonoBehaviour
             previousButton = "secondaryBS";
             numberOfAction++;
         }
+        if(previousActionsNumber != numberOfAction)
+        {
+            Debug.Log(previousActionsNumber + "and now : " + numberOfAction);
+            previousActionsNumber = numberOfAction;
 
-        //VRINPUT GET INPUT STATE ! record which one was press and check if it is not the same : if not : ++
+        }
     }
 }

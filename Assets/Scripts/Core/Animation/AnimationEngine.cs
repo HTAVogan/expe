@@ -22,7 +22,7 @@
  */
 
 using System.Collections.Generic;
-
+using System.Linq;
 using UnityEngine;
 
 namespace VRtist
@@ -94,6 +94,8 @@ namespace VRtist
         readonly Dictionary<GameObject, AnimationSet> disabledAnimations = new Dictionary<GameObject, AnimationSet>();
         readonly Dictionary<GameObject, AnimationSet> recordingObjects = new Dictionary<GameObject, AnimationSet>();
         readonly Dictionary<GameObject, AnimationSet> oldAnimations = new Dictionary<GameObject, AnimationSet>();
+
+        public GameObject UIDopeSheetExpe;
 
         readonly List<TimeHook> timeHooks = new List<TimeHook>();
         public bool timeHooksEnabled = true;
@@ -559,7 +561,8 @@ namespace VRtist
         {
             animationState = AnimationState.Playing;
             onAnimationStateEvent.Invoke(animationState);
-
+            UIDopeSheetExpe.SetActive(true);
+            UIDopeSheetExpe.transform.position = gameObject.GetComponent<ToolsManager>().Tools.Values.FirstOrDefault().transform.position;
             playStartFrame = currentFrame;
             playStartTime = Time.time;
         }
@@ -579,6 +582,7 @@ namespace VRtist
                     Selection.enabled = true;
                     break;
             }
+            UIDopeSheetExpe.SetActive(false);
             animationState = AnimationState.Stopped;
             onAnimationStateEvent.Invoke(animationState);
         }

@@ -35,6 +35,7 @@ public class GostManager : MonoBehaviour
                 }
                 GlobalState.Animation.CopyAnimation(joleen, gostJoleen);
                 gostJoleen.transform.position += Vector3.forward;
+                checkAnimationsOfGosts(gostJoleen);
             }
 
 
@@ -53,7 +54,9 @@ public class GostManager : MonoBehaviour
                     item.material.SetTexture("_ColorMap", texture);
                 }
                 GlobalState.Animation.CopyAnimation(abe, gostAbe);
+
                 gostAbe.transform.position += Vector3.forward;
+                checkAnimationsOfGosts(gostAbe);
 
             }
         }
@@ -73,7 +76,7 @@ public class GostManager : MonoBehaviour
                 }
                 GlobalState.Animation.CopyAnimation(bottleInit, bottle);
                 bottle.transform.position += Vector3.forward;
-
+                checkAnimationsOfGosts(bottle);
             }
         }
         time += Time.deltaTime;
@@ -110,16 +113,18 @@ public class GostManager : MonoBehaviour
                 float percentJoleenSum = 0f;
                 foreach (var item in tempGostAbe)
                 {
-                    counterAbe++;
                     Vector3 diff = item.FramePosition(i) - tempOriginalAbe[counterAbe].FramePosition(i);
                     percentAbeSum = (100 * (diff.x / unitAlpha.x) + 100 * (diff.y / unitAlpha.y) + 100 * (diff.z / unitAlpha.z)) / 3;
+                    counterAbe++;
                 }
                 percentAbePerFrame += percentAbeSum / counterAbe;
+               // Debug.Log("percent abe on this "+i +" is : " + percentJoleenPerFrame + "because sub diff was : "+ percentAbeSum + " and counter was " + counterAbe);
                 foreach (var item in tempGostJoleen)
                 {
-                    counterJoleen++;
+                   
                     Vector3 diff = item.FramePosition(i) - tempOriginalJoleen[counterJoleen].FramePosition(i);
                     percentJoleenSum = (100 * (diff.x / unitAlpha.x) + 100 * (diff.y / unitAlpha.y) + 100 * (diff.z / unitAlpha.z)) / 3;
+                    counterJoleen++;
                 }
                 percentJoleenPerFrame += percentJoleenSum / counterJoleen;
             }
@@ -128,9 +133,18 @@ public class GostManager : MonoBehaviour
             percentJoleenGlobal = percentJoleenPerFrame;
             percentJoleenGlobal /= GlobalState.Animation.EndFrame;
             ret = (percentJoleenGlobal + percentAbeGlobal) / 2;
-            return ret;
+            return 100-ret;
         }
         return 0;
    
+    }
+
+    private void checkAnimationsOfGosts(GameObject go)
+    {
+         var goGoal = go.GetComponentsInChildren<HumanGoalController>();
+        foreach (var item in goGoal)
+        {
+            item.CheckAnimations();
+        }
     }
 }

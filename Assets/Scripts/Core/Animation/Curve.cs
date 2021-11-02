@@ -49,6 +49,8 @@ namespace VRtist
             cachedValues = new float[GlobalState.Animation.EndFrame - GlobalState.Animation.StartFrame + 1];
         }
 
+  
+
         public void ClearCache()
         {
             cachedKeysIndices = null;
@@ -461,9 +463,16 @@ namespace VRtist
                 value = float.NaN;
                 return false;
             }
-
-            value = cachedValues[frame - GlobalState.Animation.StartFrame];
-            return value != float.NaN;
+            if (frame < cachedValues.Length)
+            {
+                value = cachedValues[frame - GlobalState.Animation.StartFrame];
+                return value != float.NaN;
+            }
+            else
+            {
+                value = float.NaN;
+                return false;
+            }
         }
 
         private Vector2 CubicBezier(Vector2 A, Vector2 B, Vector2 C, Vector2 D, float t)
