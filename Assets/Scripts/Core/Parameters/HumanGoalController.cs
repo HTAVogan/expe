@@ -25,6 +25,7 @@ namespace VRtist
 
         public Vector3 FramePosition(int frame)
         {
+         
             if (null == Animation) Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
             if (null == Animation) return Vector3.zero;
 
@@ -69,7 +70,7 @@ namespace VRtist
             Curve posx = anim.GetCurve(AnimatableProperty.PositionX);
             Curve posy = anim.GetCurve(AnimatableProperty.PositionY);
             Curve posz = anim.GetCurve(AnimatableProperty.PositionZ);
-            if (null != posx && null != posy && null != posz)
+            if (null != posx && null != posy && null != posz )
             {
                 if (posx.Evaluate(frame, out float px) && posy.Evaluate(frame, out float py) && posz.Evaluate(frame, out float pz))
                 {

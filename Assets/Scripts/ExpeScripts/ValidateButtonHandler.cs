@@ -14,7 +14,11 @@ public class ValidateButtonHandler : MonoBehaviour
     public GameObject gostManager;
     public GameObject global;
     public string path = "Assets/Resources/results.txt";
-
+    private void Start()
+    {
+        time = 0;
+        finished = false;
+    }
     // Update is called once per frame
     void Update()
     {
@@ -26,8 +30,9 @@ public class ValidateButtonHandler : MonoBehaviour
     public void OnValidate()
     {
         finished = true;
-
-        if(GlobalState.translations != null)
+        StreamWriter writer = new StreamWriter(path, true);
+        writer.WriteLine("Eval mode;Time spent; Percent of similitudes; Actions done; Translation for each animated GO ");
+        if (GlobalState.translations != null)
         {
             string line = evalMode + ";" + time.ToString() + ";" + gostManager.GetComponent<GostManager>().GetPercent().ToString() + ";" + global.GetComponent<ActionVRCount>().numberOfAction.ToString() + ";";
             foreach (var item in GlobalState.translations)
@@ -40,7 +45,7 @@ public class ValidateButtonHandler : MonoBehaviour
                 line += ";";
             }
 
-            StreamWriter writer = new StreamWriter(path, true);
+        
             writer.WriteLine(line);
             writer.Close();
         }

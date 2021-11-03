@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+
 
 
 public class textManage : MonoBehaviour
@@ -14,6 +15,6 @@ public class textManage : MonoBehaviour
         {
             Text = gostManager.GetComponent<GostManager>().GetPercent().ToString();
         }
-        gameObject.GetComponent<Text>().text = Text;
+        gameObject.GetComponent<TextMeshProUGUI>().text = Text;
     }
 }
