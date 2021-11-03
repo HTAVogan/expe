@@ -42,9 +42,6 @@ namespace VRtist
 
         private bool movingHuman = false;
 
-        private IEnumerator coroutine;
-
-
 
         public EditMode CurrentMode
         {
@@ -189,6 +186,26 @@ namespace VRtist
             DrawCurveGhost(dragData.target, dragData.Frame);
             if (currentMode == EditMode.Zone || currentMode == EditMode.Segment || currentMode == EditMode.Tangents) DrawZoneDrag();
         }
+        internal void ShowGhost(bool state)
+        {
+            ghost.SetActive(state);
+            foreach (Transform child in mouthpiece)
+            {
+                child.gameObject.SetActive(!state);
+            }
+            if (!state) ResetColor();
+        }
+
+        private void CreateGhost()
+        {
+            ghost = new GameObject();
+            ghost.name = "AnimationGhost";
+            ghost.transform.parent = CurveManager.curvesParent;
+            ghost.AddComponent<MeshRenderer>();
+            ghost.AddComponent<MeshFilter>();
+
+            ghost.GetComponent<MeshRenderer>().material = GhostMaterial;
+        }
 
         public void DrawZone(LineRenderer line, int frame)
         {
@@ -231,6 +248,106 @@ namespace VRtist
         {
             if (null == lastLine) return;
             lastLine.material.mainTexture = null;
+        }
+
+        public void StartDrag(GameObject gameObject, Transform mouthpiece)
+        {
+            LineRenderer line = gameObject.GetComponent<LineRenderer>();
+            GameObject target = CurveManager.GetObjectFromCurve(gameObject);
+            int frame = GetFrameFromPoint(line, mouthpiece.position);
+            AnimationSet previousSet = GlobalState.Animation.GetObjectAnimation(target);
+            dragData = new DraggedCurveData() { Animation = new AnimationSet(previousSet), target = target, Frame = frame };
+
+            if (!previousSet.GetCurve(AnimatableProperty.PositionX).Evaluate(frame, out float posx)) posx = target.transform.localPosition.x;
+            if (!previousSet.GetCurve(AnimatableProperty.PositionY).Evaluate(frame, out float posy)) posy = target.transform.localPosition.y;
+            if (!previousSet.GetCurve(AnimatableProperty.PositionZ).Evaluate(frame, out float posz)) posz = target.transform.localPosition.z;
+            if (!previousSet.GetCurve(AnimatableProperty.RotationX).Evaluate(frame, out float rotx)) rotx = target.transform.localEulerAngles.x;
+            if (!previousSet.GetCurve(AnimatableProperty.RotationY).Evaluate(frame, out float roty)) roty = target.transform.localEulerAngles.y;
+            if (!previousSet.GetCurve(AnimatableProperty.RotationZ).Evaluate(frame, out float rotz)) rotz = target.transform.localEulerAngles.z;
+            if (!previousSet.GetCurve(AnimatableProperty.ScaleX).Evaluate(frame, out float scax)) scax = target.transform.localScale.x;
+            if (!previousSet.GetCurve(AnimatableProperty.ScaleY).Evaluate(frame, out float scay)) scay = target.transform.localScale.y;
+            if (!previousSet.GetCurve(AnimatableProperty.ScaleZ).Evaluate(frame, out float scaz)) scaz = target.transform.localScale.z;
+
+            initialMouthMatrix = mouthpiece.worldToLocalMatrix;
+            initialParentMatrix = target.transform.parent.localToWorldMatrix;
+            initialparentMatrixWtL = target.transform.parent.worldToLocalMatrix;
+            Vector3 initialPosition = new Vector3(posx, posy, posz);
+            Quaternion initialRotation = Quaternion.Euler(rotx, roty, rotz);
+            Vector3 initialScale = new Vector3(scax, scay, scaz);
+            initialTRS = Matrix4x4.TRS(initialPosition, initialRotation, initialScale);
+            scaleIndice = 1f;
+
+            if (target.TryGetComponent<HumanGoalController>(out HumanGoalController controller))
+            {
+                movingHuman = true;
+                List<AnimationSet> previousSets = new List<AnimationSet>();
+                controller.AnimToRoot.ForEach(x => { if (null != x) previousSets.Add(new AnimationSet(x)); });
+                humanDragData = new DraggedHumanData()
+                {
+                    animations = previousSets,
+                    controller = controller,
+                    frame = frame,
+                    target = target,
+                    objectAnimation = new AnimationSet(controller.Animation),
+                    initFrameMatrix = controller.FrameMatrix(frame)
+                };
+                AddSegmentHierarchy(controller, frame);
+            }
+            if (currentMode == EditMode.Tangents) AddSegmentKeyframes(frame, previousSet);
+        }
+
+        internal void DragCurve(Transform mouthpiece)
+        {
+            int frame = dragData.Frame;
+            Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initialMouthMatrix;
+            Matrix4x4 transformed = initialparentMatrixWtL *
+                transformation * initialParentMatrix *
+                initialTRS;
+
+            Maths.DecomposeMatrix(transformed, out Vector3 position, out Quaternion qrotation, out Vector3 scale);
+            Vector3 rotation = qrotation.eulerAngles;
+            scale *= scaleIndice;
+
+            if (movingHuman)
+            {
+                Matrix4x4 target = transformation * humanDragData.initFrameMatrix;
+                Maths.DecomposeMatrix(target, out Vector3 targetPos, out Quaternion targetRot, out Vector3 targetScale);
+                TangentHumanSolver solver = new TangentHumanSolver(targetPos, targetRot, humanDragData.controller.Animation, humanDragData.controller.AnimToRoot, frame, zoneSize);
+                solver.TrySolver();
+                GlobalState.Animation.onChangeCurve.Invoke(humanDragData.target.gameObject, AnimatableProperty.PositionX);
+                humanDragData.solver = solver;
+                return;
+            }
+
+            Interpolation interpolation = GlobalState.Settings.interpolation;
+            AnimationKey posX = new AnimationKey(frame, position.x, interpolation);
+            AnimationKey posY = new AnimationKey(frame, position.y, interpolation);
+            AnimationKey posZ = new AnimationKey(frame, position.z, interpolation);
+            AnimationKey rotX = new AnimationKey(frame, rotation.x, interpolation);
+            AnimationKey rotY = new AnimationKey(frame, rotation.y, interpolation);
+            AnimationKey rotZ = new AnimationKey(frame, rotation.z, interpolation);
+            AnimationKey scalex = new AnimationKey(frame, scale.z, interpolation);
+            AnimationKey scaley = new AnimationKey(frame, scale.z, interpolation);
+            AnimationKey scalez = new AnimationKey(frame, scale.z, interpolation);
+
+            if (currentMode == EditMode.AddKeyframe)
+            {
+                AddFilteredKeyframe(posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
+            }
+            if (currentMode == EditMode.Zone)
+            {
+                AddFilteredKeyframeZone(posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
+            }
+            if (currentMode == EditMode.Segment)
+            {
+                AddFilteredKeyframeSegment(dragData.target, posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
+            }
+            if (currentMode == EditMode.Tangents)
+            {
+                TangentSimpleSolver solver = new TangentSimpleSolver(position, qrotation, GlobalState.Animation.GetObjectAnimation(dragData.target), dragData.Frame, zoneSize);
+                solver.TrySolver();
+                GlobalState.Animation.onChangeCurve.Invoke(dragData.target, AnimatableProperty.PositionX);
+            }
         }
 
         public void ReleaseCurve(Transform mouthpiece)
@@ -303,67 +420,7 @@ namespace VRtist
             dragData.Frame = -1;
         }
 
-        internal void DragCurve(Transform mouthpiece)
-        {
-            int frame = dragData.Frame;
-            Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initialMouthMatrix;
-            Matrix4x4 transformed = initialparentMatrixWtL *
-                transformation * initialParentMatrix *
-                initialTRS;
-
-            Maths.DecomposeMatrix(transformed, out Vector3 position, out Quaternion qrotation, out Vector3 scale);
-            Vector3 rotation = qrotation.eulerAngles;
-            scale *= scaleIndice;
-
-            if (movingHuman)
-            {
-                Matrix4x4 target = transformation * humanDragData.initFrameMatrix;
-                Maths.DecomposeMatrix(target, out Vector3 targetPos, out Quaternion targetRot, out Vector3 targetScale);
-                TangentHumanSolver solver = new TangentHumanSolver(targetPos, targetRot, humanDragData.controller.Animation, humanDragData.controller.AnimToRoot, frame, zoneSize);
-                solver.TrySolver();
-                GlobalState.Animation.onChangeCurve.Invoke(humanDragData.target.gameObject, AnimatableProperty.PositionX);
-                humanDragData.solver = solver;
-                //if (coroutine == null)
-                //{
-                //    coroutine = solver.TrySolver();
-                //};
-                //if (!coroutine.MoveNext())
-                //{
-                //    coroutine = null;
-                //}
-                return;
-            }
-
-            Interpolation interpolation = GlobalState.Settings.interpolation;
-            AnimationKey posX = new AnimationKey(frame, position.x, interpolation);
-            AnimationKey posY = new AnimationKey(frame, position.y, interpolation);
-            AnimationKey posZ = new AnimationKey(frame, position.z, interpolation);
-            AnimationKey rotX = new AnimationKey(frame, rotation.x, interpolation);
-            AnimationKey rotY = new AnimationKey(frame, rotation.y, interpolation);
-            AnimationKey rotZ = new AnimationKey(frame, rotation.z, interpolation);
-            AnimationKey scalex = new AnimationKey(frame, scale.z, interpolation);
-            AnimationKey scaley = new AnimationKey(frame, scale.z, interpolation);
-            AnimationKey scalez = new AnimationKey(frame, scale.z, interpolation);
-
-            if (currentMode == EditMode.AddKeyframe)
-            {
-                AddFilteredKeyframe(posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
-            }
-            if (currentMode == EditMode.Zone)
-            {
-                AddFilteredKeyframeZone(posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
-            }
-            if (currentMode == EditMode.Segment)
-            {
-                AddFilteredKeyframeSegment(dragData.target, posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
-            }
-            if (currentMode == EditMode.Tangents)
-            {
-                TangentSimpleSolver solver = new TangentSimpleSolver(position, qrotation, GlobalState.Animation.GetObjectAnimation(dragData.target), dragData.Frame, zoneSize);
-                solver.TrySolver();
-                GlobalState.Animation.onChangeCurve.Invoke(dragData.target, AnimatableProperty.PositionX);
-            }
-        }
+        
 
         private void AddFilteredKeyframe(AnimationKey posX, AnimationKey posY, AnimationKey posZ, AnimationKey rotX, AnimationKey rotY, AnimationKey rotZ, AnimationKey scalex, AnimationKey scaley, AnimationKey scalez)
         {
@@ -417,52 +474,6 @@ namespace VRtist
             GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.PositionZ, posZ, zoneSize);
         }
 
-        public void StartDrag(GameObject gameObject, Transform mouthpiece)
-        {
-            LineRenderer line = gameObject.GetComponent<LineRenderer>();
-            GameObject target = CurveManager.GetObjectFromCurve(gameObject);
-            int frame = GetFrameFromPoint(line, mouthpiece.position);
-            AnimationSet previousSet = GlobalState.Animation.GetObjectAnimation(target);
-            dragData = new DraggedCurveData() { Animation = new AnimationSet(previousSet), target = target, Frame = frame };
-
-            if (!previousSet.GetCurve(AnimatableProperty.PositionX).Evaluate(frame, out float posx)) posx = target.transform.localPosition.x;
-            if (!previousSet.GetCurve(AnimatableProperty.PositionY).Evaluate(frame, out float posy)) posy = target.transform.localPosition.y;
-            if (!previousSet.GetCurve(AnimatableProperty.PositionZ).Evaluate(frame, out float posz)) posz = target.transform.localPosition.z;
-            if (!previousSet.GetCurve(AnimatableProperty.RotationX).Evaluate(frame, out float rotx)) rotx = target.transform.localEulerAngles.x;
-            if (!previousSet.GetCurve(AnimatableProperty.RotationY).Evaluate(frame, out float roty)) roty = target.transform.localEulerAngles.y;
-            if (!previousSet.GetCurve(AnimatableProperty.RotationZ).Evaluate(frame, out float rotz)) rotz = target.transform.localEulerAngles.z;
-            if (!previousSet.GetCurve(AnimatableProperty.ScaleX).Evaluate(frame, out float scax)) scax = target.transform.localScale.x;
-            if (!previousSet.GetCurve(AnimatableProperty.ScaleY).Evaluate(frame, out float scay)) scay = target.transform.localScale.y;
-            if (!previousSet.GetCurve(AnimatableProperty.ScaleZ).Evaluate(frame, out float scaz)) scaz = target.transform.localScale.z;
-
-            initialMouthMatrix = mouthpiece.worldToLocalMatrix;
-            initialParentMatrix = target.transform.parent.localToWorldMatrix;
-            initialparentMatrixWtL = target.transform.parent.worldToLocalMatrix;
-            Vector3 initialPosition = new Vector3(posx, posy, posz);
-            Quaternion initialRotation = Quaternion.Euler(rotx, roty, rotz);
-            Vector3 initialScale = new Vector3(scax, scay, scaz);
-            initialTRS = Matrix4x4.TRS(initialPosition, initialRotation, initialScale);
-            scaleIndice = 1f;
-
-            if (target.TryGetComponent<HumanGoalController>(out HumanGoalController controller))
-            {
-                movingHuman = true;
-                List<AnimationSet> previousSets = new List<AnimationSet>();
-                controller.AnimToRoot.ForEach(x => { if (null != x) previousSets.Add(new AnimationSet(x)); });
-                humanDragData = new DraggedHumanData()
-                {
-                    animations = previousSets,
-                    controller = controller,
-                    frame = frame,
-                    target = target,
-                    objectAnimation = new AnimationSet(controller.Animation),
-                    initFrameMatrix = controller.FrameMatrix(frame)
-                };
-                AddSegmentHierarchy(controller, frame);
-            }
-            if (currentMode == EditMode.Tangents) AddSegmentKeyframes(frame, previousSet);
-        }
-
         public void AddSegmentHierarchy(HumanGoalController controller, int frame)
         {
             for (int i = 0; i < controller.AnimToRoot.Count; i++)
@@ -497,15 +508,6 @@ namespace VRtist
                 new AnimationKey(frame, scaz));
         }
 
-        internal void ShowGhost(bool state)
-        {
-            ghost.SetActive(state);
-            foreach (Transform child in mouthpiece)
-            {
-                child.gameObject.SetActive(!state);
-            }
-            if (!state) ResetColor();
-        }
 
         private int GetFrameFromPoint(LineRenderer line, Vector3 point)
         {
@@ -526,16 +528,7 @@ namespace VRtist
             return closestPoint + GlobalState.Animation.StartFrame;
         }
 
-        private void CreateGhost()
-        {
-            ghost = new GameObject();
-            ghost.name = "AnimationGhost";
-            ghost.transform.parent = CurveManager.curvesParent;
-            ghost.AddComponent<MeshRenderer>();
-            ghost.AddComponent<MeshFilter>();
-
-            ghost.GetComponent<MeshRenderer>().material = GhostMaterial;
-        }
+        
     }
 
 }

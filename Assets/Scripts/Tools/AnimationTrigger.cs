@@ -8,7 +8,6 @@ namespace VRtist
     public class AnimationTrigger : MonoBehaviour
     {
         [SerializeField] private AnimationTool animator;
-        // Start is called before the first frame update
 
 
         private List<GameObject> hoveredCurves = new List<GameObject>();
