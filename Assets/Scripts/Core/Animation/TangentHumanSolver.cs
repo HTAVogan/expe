@@ -280,7 +280,7 @@ namespace VRtist
                 }
             }
 
-            State finalState = GetCurrentState(currentFrame);
+            //State finalState = GetCurrentState(currentFrame);
             //Debug.Log("result " + finalState.position.x + " , " + finalState.position.y + " , " + finalState.position.z + " - " + finalState.rotation);
 
             return true;
@@ -732,7 +732,6 @@ namespace VRtist
 
         double[] UpperBoundConstraints(double[] theta, double[] u, double[] v, int p, int K, List<int> requiredKeyframeIndices, int globalKeyframes)
         {
-            //TODO : THIS
             double[] upperBound = new double[p];
 
             //Rotation curves

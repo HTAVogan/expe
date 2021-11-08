@@ -680,7 +680,7 @@ namespace VRtist
             foreach (Assimp.Node assimpChild in node.Children)
             {
                 GameObject child = new GameObject();
-                child.tag = "PhysicObject";
+                child.tag = "Goal";
                 if (blocking)
                     ImportHierarchy(assimpChild, go.transform, child).MoveNext();
                 else
@@ -795,6 +795,8 @@ namespace VRtist
             {"LeftLeg","LeftFoot","RightLeg","RightFoot","LeftForeArm","LeftHand","RightForeArm","RightHand","Head"};
 
             HumanGoalController controller = root.gameObject.AddComponent<HumanGoalController>();
+            SphereCollider collider = root.gameObject.AddComponent<SphereCollider>();
+            collider.isTrigger = true;
             controller.SetPathToRoot(new List<Transform>() { root });
             foreach (Transform child in root)
             {
@@ -815,6 +817,8 @@ namespace VRtist
             if (foundName != "")
             {
                 HumanGoalController controller = transform.gameObject.AddComponent<HumanGoalController>();
+                SphereCollider collider = transform.gameObject.AddComponent<SphereCollider>();
+                collider.isTrigger = true;
                 GoalNames.Remove(foundName);
                 controller.SetPathToRoot(path);
             }
