@@ -110,7 +110,7 @@ namespace VRtist
 
         private void DragHuman(Matrix4x4 transformation)
         {
-            Matrix4x4 target = transformation * humanData.InitFrameMatrix;
+            Matrix4x4 target = humanData.InitFrameMatrix * transformation;
             Maths.DecomposeMatrix(target, out Vector3 targetPos, out Quaternion targetRot, out Vector3 targetScale);
             TangentHumanSolver solver = new TangentHumanSolver(targetPos, targetRot, humanData.Controller.Animation, humanData.Controller.AnimToRoot, Frame, zoneSize);
             solver.TrySolver();

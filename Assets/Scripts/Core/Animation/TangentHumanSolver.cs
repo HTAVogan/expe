@@ -183,6 +183,8 @@ namespace VRtist
             double wb = 1d;
             double wd = 1d;
 
+
+
             Q_opt = Add(Add(Multiply(2d * wm, Multiply(Transpose(Js), Js)), Add(Multiply(2d * wd, DT_D), Multiply(2d * wb, TT_T))), Multiply((double)Mathf.Pow(10, -6), Identity(p)));
 
             double[,] B_opt = Add(Multiply(-2d * wm, Multiply(Transpose(Js), Delta_s_prime)), Multiply(2d * wb, Multiply(TT_T, Theta)));

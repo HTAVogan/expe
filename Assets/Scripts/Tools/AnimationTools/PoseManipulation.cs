@@ -58,17 +58,26 @@ namespace VRtist
             InitialTRS = Matrix4x4.TRS(oTransform.localPosition, oTransform.localRotation, oTransform.localScale);
             initialTransformMatrix = oTransform.localToWorldMatrix;
 
+
             fromRotation = Quaternion.FromToRotation(Vector3.forward, oTransform.localPosition) * Vector3.forward;
             initialRotation = fullHierarchy[hierarchySize - 2].localRotation;
 
 
 
-            debugCurrent = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            debugCurrent = GameObject.CreatePrimitive(PrimitiveType.Plane);
             debugCurrent.transform.localScale = Vector3.one * 0.05f;
             debugCurrent.GetComponent<MeshRenderer>().material.color = Color.red;
 
-            debugTarget = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            debugTarget = GameObject.CreatePrimitive(PrimitiveType.Plane);
             debugTarget.transform.localScale = Vector3.one * 0.05f;
+
+            debugCurrent.transform.position = oTransform.position;
+            debugCurrent.transform.rotation = oTransform.rotation;
+            Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initialMouthMatrix;
+            Matrix4x4 target = transformation * initialTransformMatrix;
+            Maths.DecomposeMatrix(target, out Vector3 position, out Quaternion rotation, out Vector3 scale);
+            debugTarget.transform.position = position;
+            debugTarget.transform.rotation = rotation * Quaternion.Euler(180, 0, 0);
 
         }
 
@@ -83,7 +92,7 @@ namespace VRtist
                     InitialTRS;
                 Maths.DecomposeMatrix(transformed, out Vector3 position, out Quaternion rotation, out Vector3 scale);
                 targetPosition = position;
-                targetRotation = rotation;
+                targetRotation = rotation * Quaternion.Euler(180, 0, 0);
             }
             else
             {
@@ -127,22 +136,20 @@ namespace VRtist
             p = 3 * hierarchySize + 3;
             theta = GetAllValues(p);
 
-            double[,] Theta = ColumnArrayToArray(theta);
 
             State currentState = new State()
             {
                 position = oTransform.position,
                 rotation = oTransform.rotation
             };
-            Debug.Log("current : " + currentState.position + " / " + currentState.rotation);
+            Debug.Log("current : " + currentState.position + " / " + currentState.rotation + " // " + oTransform.eulerAngles);
             State desiredState = new State()
             {
                 position = targetPosition,
                 rotation = targetRotation
             };
             Debug.Log("target : " + desiredState.position + " / " + desiredState.rotation);
-            debugCurrent.transform.position = currentState.position;
-            debugTarget.transform.position = desiredState.position;
+
 
             double[,] Js = ds_dtheta(p);
 
@@ -150,7 +157,7 @@ namespace VRtist
             //Root rotation
             for (int i = 0; i < 3; i++)
             {
-                DT_D[i, i] = 0d;
+                DT_D[i, i] = 1d;
             }
             //nonRoot rotation
             for (int i = 3; i < hierarchySize * 3; i++)
@@ -161,7 +168,7 @@ namespace VRtist
             for (int i = 0; i < 3; i++)
             {
                 int j = 3 * hierarchySize + i;
-                DT_D[j, j] = 1000d;
+                DT_D[j, j] = 1d;
             }
 
             double[,] Delta_s_prime = new double[7, 1];
@@ -173,20 +180,6 @@ namespace VRtist
             {
                 Delta_s_prime[i + 3, 0] = desiredState.rotation[i] - currentState.rotation[i];
             }
-
-            //double[,] TT_T = new double[p, p];
-            //for (int j = 0; j < p; j++)
-            //{
-            //    TT_T[j, j] = 1d;
-            //    //if (j % 4 == 0 || j % 4 == 1)
-            //    //{
-            //    //    TT_T[j + 2, j] = -1d;
-            //    //}
-            //    //else
-            //    //{
-            //    //    TT_T[j - 2, j] = -1d;
-            //    //}
-            //}
 
             double wm = 100f;
             double wd = 1f;
@@ -242,12 +235,11 @@ namespace VRtist
             {
                 Transform currentTransform = fullHierarchy[l];
                 int i = l * 3;
-
-                currentTransform.eulerAngles = new Vector3((float)new_theta[i], (float)new_theta[i + 1], (float)new_theta[i + 2]);
+                currentTransform.localRotation *= Quaternion.Euler((float)delta_theta[i], (float)delta_theta[i + 1], (float)delta_theta[i + 2]);
             }
             Transform rootTransform = fullHierarchy[0];
             int k = hierarchySize * 3;
-            rootTransform.position = new Vector3((float)new_theta[k], (float)new_theta[k + 1], (float)new_theta[k + 2]);
+            rootTransform.localPosition = new Vector3((float)new_theta[k], (float)new_theta[k + 1], (float)new_theta[k + 2]);
 
             return true;
         }
@@ -258,49 +250,36 @@ namespace VRtist
             for (int l = 0; l < hierarchySize; l++)
             {
                 Transform currentTransform = fullHierarchy[l];
-                theta[3 * l + 0] = currentTransform.eulerAngles.x;
-                theta[3 * l + 1] = currentTransform.eulerAngles.y;
-                theta[3 * l + 2] = currentTransform.eulerAngles.z;
+                theta[3 * l + 0] = currentTransform.localEulerAngles.x;
+                theta[3 * l + 1] = currentTransform.localEulerAngles.y;
+                theta[3 * l + 2] = currentTransform.localEulerAngles.z;
             }
             Transform root = fullHierarchy[0];
-            theta[3 * hierarchySize + 0] = root.position.x;
-            theta[3 * hierarchySize + 1] = root.position.y;
-            theta[3 * hierarchySize + 2] = root.position.z;
+            theta[3 * hierarchySize + 0] = root.localPosition.x;
+            theta[3 * hierarchySize + 1] = root.localPosition.y;
+            theta[3 * hierarchySize + 2] = root.localPosition.z;
             return theta;
-        }
-
-
-        double[,] ColumnArrayToArray(double[] m)
-        {
-            int row = m.Length;
-            double[,] response = new double[row, 1];
-            for (int i = 0; i < row; i++)
-            {
-                response[i, 0] = m[i];
-            }
-            return response;
         }
 
         double[,] ds_dtheta(int p)
         {
             double[,] Js = new double[7, p];
-            float dtheta = Mathf.Pow(10, -4);
+            float dtheta = 1f;
 
             for (int l = 0; l < hierarchySize; l++)
             {
                 Transform currentTransform = fullHierarchy[l];
-                Vector3 currentRotation = currentTransform.eulerAngles;
+                Quaternion currentRotation = currentTransform.localRotation;
                 for (int i = 0; i < 3; i++)
                 {
-
-                    currentRotation[i] += dtheta;
-                    currentTransform.eulerAngles = currentRotation;
+                    Vector3 rotation = Vector3.zero;
+                    rotation[i] = 1;
+                    currentTransform.localRotation *= Quaternion.Euler(rotation);
 
                     Vector3 plusPosition = oTransform.position;
                     Quaternion plusRotation = oTransform.rotation;
 
-                    currentRotation[i] -= dtheta;
-                    currentTransform.eulerAngles = currentRotation;
+                    currentTransform.localRotation = currentRotation;
 
                     Vector3 minusPosition = oTransform.position;
                     Quaternion minusRotation = oTransform.rotation;
@@ -317,17 +296,17 @@ namespace VRtist
                 }
             }
             Transform rootTransform = fullHierarchy[0];
-            Vector3 rootPosition = rootTransform.position;
+            Vector3 rootPosition = rootTransform.localPosition;
             for (int i = 0; i < 3; i++)
             {
                 rootPosition[i] += dtheta;
-                rootTransform.position = rootPosition;
+                rootTransform.localPosition = rootPosition;
 
                 Vector3 plusPosition = oTransform.position;
                 Quaternion plusRotation = oTransform.rotation;
 
                 rootPosition[i] -= dtheta;
-                rootTransform.position = rootPosition;
+                rootTransform.localPosition = rootPosition;
 
                 Vector3 minusPosition = oTransform.position;
                 Quaternion minusRotation = oTransform.rotation;
@@ -468,7 +447,7 @@ namespace VRtist
             double[] u = new double[n];
             for (int i = 0; i < n; i++)
             {
-                u[i] = -180d;
+                u[i] = -10d;
             }
 
             return u;
@@ -479,7 +458,7 @@ namespace VRtist
             double[] v = new double[n];
             for (int i = 0; i < n; i++)
             {
-                v[i] = 180d;
+                v[i] = 10d;
             }
 
             return v;
