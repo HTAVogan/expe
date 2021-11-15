@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   version: 1
   displayGizmos: 1
+  displayLocators: 1
   displayWorldGrid: 1
   displayAvatars: 1
   displayFPS: 0
@@ -23,8 +24,8 @@ MonoBehaviour:
   uiVolume: 0
   rightHanded: 1
   forcePaletteOpen: 0
-  palettePosition: {x: 0, y: 0, z: 0}
-  paletteRotation: {x: 0.25881907, y: 0, z: 0, w: 0.9659259}
+  palettePositionOffset: {x: 0.00000016018748, y: 0.00000014490307, z: 0.0000002174518}
+  paletteRotationOffset: {x: 0, y: 0, z: 0, w: 1.0000002}
   pinnedPalette: 0
   dopeSheetPosition: {x: 0.5609078, y: 1.3983407, z: -0.0092475265}
   dopeSheetRotation: {x: 0.10379473, y: 0.5400479, z: -0.07501844, w: 0.83183366}
@@ -35,10 +36,10 @@ MonoBehaviour:
   cameraPreviewPosition: {x: 0.49638534, y: 1.6861426, z: 0.3212937}
   cameraPreviewRotation: {x: 0.10379473, y: 0.5400479, z: -0.07501844, w: 0.83183366}
   cameraPreviewVisible: 0
-  cameraFeedbackPosition: {x: 0, y: 0, z: 0}
-  cameraFeedbackRotation: {x: 0, y: 0, z: 0, w: 1}
-  cameraFeedbackScale: {x: 1, y: 1, z: 1}
+  cameraFeedbackDirection: {x: 0, y: 0, z: 1}
   cameraFeedbackScaleValue: 1
+  cameraFeedbackMaxScaleValue: 1.7
+  cameraFeedbackMinScaleValue: 0.4
   cameraFeedbackVisible: 0
   cameraDamping: 50
   consoleVisible: 0
@@ -46,13 +47,19 @@ MonoBehaviour:
   consoleRotation: {x: 0.08905364, y: 0.65752494, z: -0.12512602, w: 0.7376136}
   sky:
     topColor: {r: 0.83137256, g: 0.83137256, b: 0.83137256, a: 1}
-    middleColor: {r: 0.7647059, g: 0.7647059, b: 0.7647059, a: 1}
-    bottomColor: {r: 0.44313726, g: 0.44313726, b: 0.44313726, a: 1}
+    middleColor: {r: 0.2505688, g: 0.8386994, b: 0.75437874, a: 1}
+    bottomColor: {r: 0.19558388, g: 0.54092807, b: 0.9256608, a: 1}
   skies:
   - topColor: {r: 0.83137256, g: 0.83137256, b: 0.83137256, a: 1}
     middleColor: {r: 0.7647059, g: 0.7647059, b: 0.7647059, a: 1}
     bottomColor: {r: 0.44313726, g: 0.44313726, b: 0.44313726, a: 1}
   castShadows: 0
+  videoOutputResolution:
+    width: 1920
+    height: 1080
+  videoOutputDirectory: C:\Users\Vogan\Videos/VRtist
+  snapshotsDirectory: C:\Users\Vogan\Pictures/VRtist
+  exportDirectory: C:\Users\Vogan\Documents/VRtist
   scaleSpeed: 50
   raySliderDrag: 95
   rayHueDrag: 85
@@ -90,4 +97,5 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   interpolation: 1
-  assetBankDirectory: D:/VRtistData/
+  assetBankDirectory: C:\datas
+  lobbyScenePath: 

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using VRtist;
+using UnityEngine.SceneManagement;
 using System.IO;
 
 public class ValidateButtonHandler : MonoBehaviour
@@ -27,14 +28,21 @@ public class ValidateButtonHandler : MonoBehaviour
         
     }
 
-    public void OnValidate()
+    public void OnValidateButton()
     {
         finished = true;
+
         StreamWriter writer = new StreamWriter(path, true);
-        writer.WriteLine("Eval mode;Time spent; Percent of similitudes; Actions done; Translation for each animated GO ");
+        ActionVRCount counterAction = global.GetComponent<ActionVRCount>();
+        //writer.WriteLine("Eval mode;Time spent; Percent of similitudes; Number of actions; Actions done; Translation for each animated GO");
         if (GlobalState.translations != null)
         {
-            string line = evalMode + ";" + time.ToString() + ";" + gostManager.GetComponent<GostManager>().GetPercent().ToString() + ";" + global.GetComponent<ActionVRCount>().numberOfAction.ToString() + ";";
+            string line = evalMode + ";" + time.ToString() + ";" + gostManager.GetComponent<GostManager>().GetPercent().ToString() + ";" + counterAction.numberOfAction.ToString() + ";";
+            foreach (var item in counterAction.inputsDone)
+            {
+                line += item.Key + " : " + item.Value + "/";
+            }
+            line += ";";
             foreach (var item in GlobalState.translations)
             {
                 line += item.Key.name + ":";
@@ -49,8 +57,8 @@ public class ValidateButtonHandler : MonoBehaviour
             writer.WriteLine(line);
             writer.Close();
         }
-        
 
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Launcher");
 
     }
 }

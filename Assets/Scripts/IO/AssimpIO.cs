@@ -349,6 +349,7 @@ namespace VRtist
             int i = 0;
             foreach (Assimp.Mesh assimpMesh in scene.Meshes)
             {
+                if(!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                 GlobalState.Instance.messageBox.ShowMessage("Importing Meshes : " + i + " / " + scene.MeshCount);
                 if (assimpMesh.HasBones) isHuman = true;
 
@@ -399,6 +400,7 @@ namespace VRtist
             Material transpMat = Resources.Load<Material>("Materials/ObjectTransparent");
             foreach (Assimp.Material assimpMaterial in scene.Materials)
             {
+                if(!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                 GlobalState.Instance.messageBox.ShowMessage("Importing Materials : " + i + " / " + scene.MaterialCount);
                 if (assimpMaterial.HasOpacity && !assimpMaterial.HasColorTransparent)
                 {
@@ -636,8 +638,8 @@ namespace VRtist
         {
             if (parent != null && parent != go.transform)
                 go.transform.parent = parent;
-
-            GlobalState.Instance.messageBox.ShowMessage("Importing Hierarchy : " + importCount);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                GlobalState.Instance.messageBox.ShowMessage("Importing Hierarchy : " + importCount);
             // Do not use Assimp Decompose function, it does not work properly
             // use unity decomposition instead
             Matrix4x4 mat = new Matrix4x4(
@@ -691,9 +693,20 @@ namespace VRtist
         private void ImportAnimation(Assimp.Node node, GameObject go)
         {
             Assimp.Animation animation = scene.Animations[0];
-            if ((GlobalState.Animation.fps / (float)animation.TicksPerSecond) * animation.DurationInTicks > GlobalState.Animation.EndFrame)
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                if ((GlobalState.Animation.fps / (float)animation.TicksPerSecond) * animation.DurationInTicks > GlobalState.Animation.EndFrame)
             {
                 GlobalState.Animation.EndFrame = Mathf.CeilToInt(GlobalState.Animation.fps / (float)animation.TicksPerSecond * (float)animation.DurationInTicks) + 1;
+            }
+
+            }
+            else
+            {
+                if ((GlobalStateTradi.Animation.fps / (float)animation.TicksPerSecond) * animation.DurationInTicks > GlobalStateTradi.Animation.EndFrame)
+                {
+                    GlobalStateTradi.Animation.EndFrame = Mathf.CeilToInt(GlobalStateTradi.Animation.fps / (float)animation.TicksPerSecond * (float)animation.DurationInTicks) + 1;
+                }
             }
             Assimp.NodeAnimationChannel nodeChannel = animation.NodeAnimationChannels.Find(x => x.NodeName == node.Name);
             if (null != nodeChannel)
@@ -702,7 +715,13 @@ namespace VRtist
                 animationSet.ComputeCache();
                 foreach (Assimp.VectorKey vectorKey in nodeChannel.PositionKeys)
                 {
-                    int frame = Mathf.CeilToInt((float)vectorKey.Time * GlobalState.Animation.fps / (float)animation.TicksPerSecond) + 1;
+                    int frame;
+                    if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                         frame = Mathf.CeilToInt((float)vectorKey.Time * GlobalState.Animation.fps / (float)animation.TicksPerSecond) + 1;
+                    else
+                    {
+                        frame = Mathf.CeilToInt((float)vectorKey.Time * GlobalStateTradi.Animation.fps / (float)animation.TicksPerSecond) + 1;
+                    }
                     animationSet.curves[AnimatableProperty.PositionX].AddKey(new AnimationKey(frame, vectorKey.Value.X, Interpolation.Linear));
                     animationSet.curves[AnimatableProperty.PositionY].AddKey(new AnimationKey(frame, vectorKey.Value.Y, Interpolation.Linear));
                     animationSet.curves[AnimatableProperty.PositionZ].AddKey(new AnimationKey(frame, vectorKey.Value.Z, Interpolation.Linear));
@@ -710,7 +729,11 @@ namespace VRtist
                 Vector3 previousRotation = Vector3.zero;
                 foreach (Assimp.QuaternionKey quaternionKey in nodeChannel.RotationKeys)
                 {
-                    int frame = Mathf.RoundToInt((float)quaternionKey.Time * GlobalState.Animation.fps / (float)animation.TicksPerSecond) + 1;
+                    int frame;
+                    if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                          frame = Mathf.RoundToInt((float)quaternionKey.Time * GlobalState.Animation.fps / (float)animation.TicksPerSecond) + 1;
+                    else
+                        frame = Mathf.RoundToInt((float)quaternionKey.Time * GlobalStateTradi.Animation.fps / (float)animation.TicksPerSecond) + 1;
                     Quaternion uQuaternion = new Quaternion(quaternionKey.Value.X, quaternionKey.Value.Y, quaternionKey.Value.Z, quaternionKey.Value.W);
                     Vector3 eulerValue = uQuaternion.eulerAngles;
                     eulerValue.x = previousRotation.x + Mathf.DeltaAngle(previousRotation.x, eulerValue.x);
@@ -721,8 +744,10 @@ namespace VRtist
                     animationSet.curves[AnimatableProperty.RotationZ].AddKey(new AnimationKey(frame, eulerValue.z, Interpolation.Linear));
                     previousRotation = eulerValue;
                 }
-
-                GlobalState.Animation.SetObjectAnimations(go, animationSet);
+                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                    GlobalState.Animation.SetObjectAnimations(go, animationSet);
+                else
+                    GlobalStateTradi.Animation.SetObjectAnimations(go, animationSet);
             }
         }
 

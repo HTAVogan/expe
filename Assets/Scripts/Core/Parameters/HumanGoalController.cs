@@ -15,18 +15,37 @@ namespace VRtist
         {
             path.ForEach(x =>
             {
-                AnimationSet anim = GlobalState.Animation.GetObjectAnimation(x.gameObject);
-                PathToRoot.Add(x);
+                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                {
+                    AnimationSet anim = GlobalState.Animation.GetObjectAnimation(x.gameObject);
+                    PathToRoot.Add(x);
 
-                AnimToRoot.Add(anim);
+                    AnimToRoot.Add(anim);
+                }
+                else
+                {
+                    AnimationSet anim = GlobalStateTradi.Animation.GetObjectAnimation(x.gameObject);
+                    PathToRoot.Add(x);
+
+                    AnimToRoot.Add(anim);
+                }
+                   
             });
-            Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
+            else
+                Animation = GlobalStateTradi.Animation.GetObjectAnimation(this.gameObject);
         }
 
         public Vector3 FramePosition(int frame)
         {
-         
-            if (null == Animation) Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
+
+            if (null == Animation) {
+                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                    Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
+                else
+                    Animation = GlobalStateTradi.Animation.GetObjectAnimation(this.gameObject);
+            }
             if (null == Animation) return Vector3.zero;
 
             Matrix4x4 trsMatrix = PathToRoot[0].parent.localToWorldMatrix;
@@ -46,7 +65,13 @@ namespace VRtist
 
         public Matrix4x4 FrameMatrix(int frame)
         {
-            if (null == Animation) Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
+            if (null == Animation)
+            {
+                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                    Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
+                else
+                    Animation = GlobalStateTradi.Animation.GetObjectAnimation(this.gameObject);
+            }
             if (null == Animation) return Matrix4x4.identity;
 
             Matrix4x4 trsMatrix = PathToRoot[0].parent.localToWorldMatrix;
@@ -107,9 +132,15 @@ namespace VRtist
             AnimToRoot.Clear();
             PathToRoot.ForEach(x =>
             {
-                AnimToRoot.Add(GlobalState.Animation.GetObjectAnimation(x.gameObject));
+                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                    AnimToRoot.Add(GlobalState.Animation.GetObjectAnimation(x.gameObject));
+                else
+                    AnimToRoot.Add(GlobalStateTradi.Animation.GetObjectAnimation(x.gameObject));
             });
-            Animation = GlobalState.Animation.GetObjectAnimation(gameObject);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                Animation = GlobalState.Animation.GetObjectAnimation(gameObject);
+            else
+                Animation = GlobalStateTradi.Animation.GetObjectAnimation(gameObject);
         }
 
         [ContextMenu("try solver")]

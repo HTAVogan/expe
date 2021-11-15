@@ -33,7 +33,10 @@ public class GostManager : MonoBehaviour
                     item.material = gostMaterial;
                     item.material.SetTexture("_ColorMap", texture);
                 }
-                GlobalState.Animation.CopyAnimation(joleen, gostJoleen);
+                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                    GlobalState.Animation.CopyAnimation(joleen, gostJoleen);
+                else
+                    GlobalStateTradi.Animation.CopyAnimation(joleen, gostJoleen);
                 gostJoleen.transform.position += Vector3.forward;
                 checkAnimationsOfGosts(gostJoleen);
             }
@@ -53,8 +56,10 @@ public class GostManager : MonoBehaviour
                     item.material = gostMaterial;
                     item.material.SetTexture("_ColorMap", texture);
                 }
-                GlobalState.Animation.CopyAnimation(abe, gostAbe);
-
+                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                    GlobalState.Animation.CopyAnimation(abe, gostAbe);
+                else
+                    GlobalStateTradi.Animation.CopyAnimation(abe, gostAbe);
                 gostAbe.transform.position += Vector3.forward;
                 checkAnimationsOfGosts(gostAbe);
 
@@ -74,7 +79,10 @@ public class GostManager : MonoBehaviour
                     item.material = gostMaterial;
                     item.material.SetTexture("_ColorMap", texture);
                 }
-                GlobalState.Animation.CopyAnimation(bottleInit, bottle);
+                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                    GlobalState.Animation.CopyAnimation(bottleInit, bottle);
+                else
+                    GlobalStateTradi.Animation.CopyAnimation(bottleInit, bottle);
                 bottle.transform.position += Vector3.forward;
                 checkAnimationsOfGosts(bottle);
             }
@@ -96,7 +104,20 @@ public class GostManager : MonoBehaviour
         if(abe != null && joleen != null)
         {
             Vector3 unitAlpha = Vector3.one * delta;
-            float ret = 0f;
+            int startFrame, endFrame;
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                startFrame = GlobalState.Animation.StartFrame;
+                endFrame = GlobalState.Animation.EndFrame;
+            }
+            else
+            {
+                startFrame = GlobalStateTradi.Animation.StartFrame;
+                endFrame = GlobalStateTradi.Animation.EndFrame;
+
+            }
+
+                float ret = 0f;
             var tempGostAbe = gostAbe.GetComponentsInChildren<HumanGoalController>();
             var tempOriginalAbe = abe.GetComponentsInChildren<HumanGoalController>();
             var tempGostJoleen = gostJoleen.GetComponentsInChildren<HumanGoalController>();
@@ -105,7 +126,7 @@ public class GostManager : MonoBehaviour
             float percentAbeGlobal = 0f;
             float percentJoleenPerFrame = 0f;
             float percentJoleenGlobal = 0f;
-            for (int i = GlobalState.Animation.StartFrame; i <= GlobalState.Animation.EndFrame; i++)
+            for (int i = startFrame; i <= endFrame; i++)
             {
                 int counterAbe = 0;
                 int counterJoleen = 0;
@@ -129,9 +150,9 @@ public class GostManager : MonoBehaviour
                 percentJoleenPerFrame += percentJoleenSum / counterJoleen;
             }
             percentAbeGlobal = percentAbePerFrame;
-            percentAbeGlobal /= GlobalState.Animation.EndFrame;
+            percentAbeGlobal /= endFrame;
             percentJoleenGlobal = percentJoleenPerFrame;
-            percentJoleenGlobal /= GlobalState.Animation.EndFrame;
+            percentJoleenGlobal /= endFrame;
             ret = (percentJoleenGlobal + percentAbeGlobal) / 2;
             return 100-ret;
         }

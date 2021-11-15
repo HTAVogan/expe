@@ -94,7 +94,7 @@ namespace VRtist.Serialization
 
             defaultSaveFolder = saveFolder = Application.persistentDataPath + "/saves/";
             cameraRig = Utils.FindRootGameObject("Camera Rig").transform;
-            rootTransform = Utils.FindWorld().transform.Find("RightHanded");
+            rootTransform = Utils.FindWorld().transform.Find("  ");
         }
         #endregion
 

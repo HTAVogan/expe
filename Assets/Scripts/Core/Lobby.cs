@@ -379,6 +379,15 @@ namespace VRtist
             Serialization.SaveManager.Instance.Load(currentProject.name);
         }
 
+        [ContextMenu("LaunchFirst")]
+        public void OnLaunchFirstProject()
+        {
+            // Clear undo/redo stack
+            CommandManager.Clear();
+            currentProject = projects[0];
+            OnBackToScene();
+            Serialization.SaveManager.Instance.Load(currentProject.name);
+        }
         public void OnCloneProject()
         {
             string newName = $"{currentProject.name}_copy";

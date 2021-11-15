@@ -25,6 +25,7 @@ using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Events;
 
+
 namespace VRtist
 {
     public class SceneManager
@@ -48,7 +49,8 @@ namespace VRtist
                     instance = new SceneManager();
                     VRtistScene scene = new VRtistScene();
                     SetSceneImpl(scene);
-                    GlobalState.SetClientId(null);
+                    if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                        GlobalState.SetClientId(null);
                 }
                 return instance;
             }
@@ -109,12 +111,18 @@ namespace VRtist
             firstSave = true;
             CommandManager.SetSceneDirty(false);
 
-            CameraManager.Instance.Clear();
-            AnimationEngine.Instance.Clear();
-            Selection.Clear();
-            ConstraintManager.Clear();
-            ShotManager.Instance.Clear();
-
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                CameraManager.Instance.Clear();
+                AnimationEngine.Instance.Clear();
+                Selection.Clear();
+                ConstraintManager.Clear();
+                ShotManager.Instance.Clear();
+            }
+            else
+            {
+                AnimationEngineTradi.Instance.Clear();
+            }
             clearSceneEvent.Invoke();
             Instance.scene.ClearScene();
         }
@@ -226,38 +234,63 @@ namespace VRtist
         // Animation
         public static void ClearObjectAnimations(GameObject gobject)
         {
-            GlobalState.Animation.ClearAnimations(gobject);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                GlobalState.Animation.ClearAnimations(gobject);
+            else
+            {
+                GlobalStateTradi.Animation.ClearAnimations(gobject);
+            }
             Instance.scene.ClearObjectAnimations(gobject);
         }
 
         public static void SetObjectAnimations(GameObject gobject, AnimationSet animationSet)
         {
-            GlobalState.Animation.SetObjectAnimations(gobject, animationSet);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                GlobalState.Animation.SetObjectAnimations(gobject, animationSet);
+            else
+                GlobalStateTradi.Animation.SetObjectAnimations(gobject, animationSet);
             Instance.scene.SetObjectAnimations(gobject, animationSet);
         }
 
         public static void AddObjectKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true)
         {
-            GlobalState.Animation.AddFilteredKeyframe(gobject, property, key, updateCurves);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                GlobalState.Animation.AddFilteredKeyframe(gobject, property, key, updateCurves);
+            else
+                GlobalStateTradi.Animation.AddFilteredKeyframe(gobject, property, key, updateCurves);
             Instance.scene.AddKeyframe(gobject, property, key);
         }
 
         public static void RemoveKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true)
         {
-            GlobalState.Animation.RemoveKeyframe(gobject, property, key.frame, updateCurves);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                GlobalState.Animation.RemoveKeyframe(gobject, property, key.frame, updateCurves);
+            else
+                GlobalStateTradi.Animation.RemoveKeyframe(gobject, property, key.frame, updateCurves);
             Instance.scene.RemoveKeyframe(gobject, property, key);
         }
 
         public static void MoveKeyframe(GameObject gobject, AnimatableProperty property, int oldTime, int newTime)
         {
-            GlobalState.Animation.MoveKeyframe(gobject, property, oldTime, newTime);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                GlobalState.Animation.MoveKeyframe(gobject, property, oldTime, newTime);
+            else
+                GlobalStateTradi.Animation.MoveKeyframe(gobject, property, oldTime, newTime);
             Instance.scene.MoveKeyframe(gobject, property, oldTime, newTime);
         }
 
         public static void SetFrameRange(int start, int end)
         {
-            GlobalState.Animation.StartFrame = start;
-            GlobalState.Animation.EndFrame = end;
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                GlobalState.Animation.StartFrame = start;
+                GlobalState.Animation.EndFrame = end;
+            }
+            else
+            {
+                GlobalStateTradi.Animation.StartFrame = start;
+                GlobalStateTradi.Animation.EndFrame = end;
+            }
             Instance.scene.SetFrameRange(start, end);
         }
 
@@ -303,7 +336,8 @@ namespace VRtist
         // Sky
         public static void SetSky(SkySettings sky)
         {
-            GlobalState.Instance.SkySettings = sky;
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                GlobalState.Instance.SkySettings = sky;
             Instance.scene.SetSky(sky);
         }
 
@@ -374,9 +408,11 @@ namespace VRtist
         public static void SendUserInfo(Vector3 cameraPosition, Vector3 cameraForward, Vector3 cameraUp, Vector3 cameraRight)
         {
             Vector3 target = cameraPosition + cameraForward * 2f;
-
-            GlobalState.networkUser.position = RightHanded.InverseTransformPoint(cameraPosition);
-            GlobalState.networkUser.target = RightHanded.InverseTransformPoint(target);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                GlobalState.networkUser.position = RightHanded.InverseTransformPoint(cameraPosition);
+                GlobalState.networkUser.target = RightHanded.InverseTransformPoint(target);
+            }
 
             Instance.scene.SendUserInfo(cameraPosition, cameraForward, cameraUp, cameraRight);
         }
