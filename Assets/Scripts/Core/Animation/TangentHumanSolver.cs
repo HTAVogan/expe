@@ -750,7 +750,7 @@ namespace VRtist
                     for (int k = 0; k < K; k++)
                     {
 
-                        if (requiredKeyframeIndices[k] > 0 && requiredKeyframeIndices[k] < animationCount - 1)
+                        if (requiredKeyframeIndices[k] > 0 && requiredKeyframeIndices[k] < globalKeyframes - 1)
                         {
                             int tkp1 = curve.keys[requiredKeyframeIndices[k] + 1].frame;
                             int tk = curve.keys[requiredKeyframeIndices[k]].frame;

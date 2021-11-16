@@ -54,7 +54,7 @@ namespace VRtist
 
         private List<string> GoalNames = new List<string>()
         {
-            "LeftLeg","LeftFoot","RightLeg","RightFoot","LeftForeArm","LeftHand","RightForeArm","RightHand","Head"
+            "LeftLeg","LeftFoot","RightLeg","RightFoot","LeftShoulder","RightShoulder","LeftForeArm","LeftHand","RightForeArm","RightHand","Head"
         };
 
         // We consider that half of the total time is spent inside the assimp engine
@@ -791,8 +791,9 @@ namespace VRtist
 
         private void GenerateSkeleton(Transform root)
         {
-            GoalNames = new List<string>()
-            {"LeftLeg","LeftFoot","RightLeg","RightFoot","LeftForeArm","LeftHand","RightForeArm","RightHand","Head"};
+            GoalNames = new List<string>(){
+            "LeftLeg","LeftFoot","RightLeg","RightFoot","LeftShoulder","RightShoulder","LeftForeArm","LeftHand","RightForeArm","RightHand","Head"
+            };
 
             HumanGoalController controller = root.gameObject.AddComponent<HumanGoalController>();
             SphereCollider collider = root.gameObject.AddComponent<SphereCollider>();

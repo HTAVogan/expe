@@ -61,7 +61,7 @@ namespace VRtist
                 InitFrameMatrix = controller.FrameMatrix(frame)
             };
             AddSegmentHierarchy(controller, frame);
-            if (manipulationMode == AnimationTool.CurveEditMode.Tangents) AddSegmentKeyframes(frame, controller.Animation);
+            AddSegmentKeyframes(frame, controller.Animation);
         }
 
         public CurveManipulation(GameObject target, int frame, Transform mouthpiece, AnimationTool.CurveEditMode manipMode, int zoneSize)
@@ -117,6 +117,7 @@ namespace VRtist
             GlobalState.Animation.onChangeCurve.Invoke(Target.gameObject, AnimatableProperty.PositionX);
             humanData.Solver = solver;
         }
+
         private void DragObject(Matrix4x4 transformation, float scaleIndice)
         {
             Matrix4x4 transformed = objectData.InitialParentMatrixWorldToLocal *

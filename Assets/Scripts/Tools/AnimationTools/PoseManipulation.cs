@@ -31,6 +31,12 @@ namespace VRtist
             public Quaternion rotation;
         }
 
+        private State currentState;
+        private State desiredState;
+        private Vector3 initialRootPosition;
+        List<Quaternion> initialRotations;
+
+
         private int p;
         private double[] theta;
         private double[,] Q_opt;
@@ -64,20 +70,20 @@ namespace VRtist
 
 
 
-            debugCurrent = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            debugCurrent.transform.localScale = Vector3.one * 0.05f;
-            debugCurrent.GetComponent<MeshRenderer>().material.color = Color.red;
+            //debugCurrent = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            //debugCurrent.transform.localScale = Vector3.one * 0.05f;
+            //debugCurrent.GetComponent<MeshRenderer>().material.color = Color.red;
 
-            debugTarget = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            debugTarget.transform.localScale = Vector3.one * 0.05f;
+            //debugTarget = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            //debugTarget.transform.localScale = Vector3.one * 0.05f;
 
-            debugCurrent.transform.position = oTransform.position;
-            debugCurrent.transform.rotation = oTransform.rotation;
-            Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initialMouthMatrix;
-            Matrix4x4 target = transformation * initialTransformMatrix;
-            Maths.DecomposeMatrix(target, out Vector3 position, out Quaternion rotation, out Vector3 scale);
-            debugTarget.transform.position = position;
-            debugTarget.transform.rotation = rotation * Quaternion.Euler(180, 0, 0);
+            //debugCurrent.transform.position = oTransform.position;
+            //debugCurrent.transform.rotation = oTransform.rotation;
+            //Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initialMouthMatrix;
+            //Matrix4x4 target = transformation * initialTransformMatrix;
+            //Maths.DecomposeMatrix(target, out Vector3 position, out Quaternion rotation, out Vector3 scale);
+            //debugTarget.transform.position = position;
+            //debugTarget.transform.rotation = rotation * Quaternion.Euler(180, 0, 0);
 
         }
 
@@ -92,14 +98,14 @@ namespace VRtist
                     InitialTRS;
                 Maths.DecomposeMatrix(transformed, out Vector3 position, out Quaternion rotation, out Vector3 scale);
                 targetPosition = position;
-                targetRotation = rotation * Quaternion.Euler(180, 0, 0);
+                targetRotation = rotation;
             }
             else
             {
                 Matrix4x4 target = transformation * initialTransformMatrix;
                 Maths.DecomposeMatrix(target, out Vector3 position, out Quaternion rotation, out Vector3 scale);
                 targetPosition = position;
-                targetRotation = rotation;
+                targetRotation = rotation * Quaternion.Euler(-180, 0, 0);
             }
         }
 
@@ -123,8 +129,8 @@ namespace VRtist
             else
             {
                 Setup();
-                Compute();
-                Apply();
+                if (Compute())
+                    Apply();
 
                 return true;
             }
@@ -137,19 +143,19 @@ namespace VRtist
             theta = GetAllValues(p);
 
 
-            State currentState = new State()
+            currentState = new State()
             {
                 position = oTransform.position,
                 rotation = oTransform.rotation
             };
-            Debug.Log("current : " + currentState.position + " / " + currentState.rotation + " // " + oTransform.eulerAngles);
-            State desiredState = new State()
+            //Debug.Log("current : " + currentState.position + " / " + currentState.rotation + " // " + oTransform.eulerAngles);
+            desiredState = new State()
             {
                 position = targetPosition,
                 rotation = targetRotation
             };
-            Debug.Log("target : " + desiredState.position + " / " + desiredState.rotation);
-
+            //Debug.Log("target : " + desiredState.position + " / " + desiredState.rotation);
+            initialRootPosition = fullHierarchy[0].position;
 
             double[,] Js = ds_dtheta(p);
 
@@ -162,7 +168,14 @@ namespace VRtist
             //nonRoot rotation
             for (int i = 3; i < hierarchySize * 3; i++)
             {
-                DT_D[i, i] = 0d;
+                if (fullHierarchy[i / 3].TryGetComponent<HumanGoalController>(out HumanGoalController controller))
+                {
+                    DT_D[i, i] = controller.stiffness;
+                }
+                else
+                {
+                    DT_D[i, i] = 1d;
+                }
             }
             //root position
             for (int i = 0; i < 3; i++)
@@ -220,16 +233,17 @@ namespace VRtist
             alglib.minqpsetalgobleic(state_opt, 0.0, 0.0, 0.0, 0);
             alglib.minqpoptimize(state_opt);
             alglib.minqpresults(state_opt, out delta_theta, out rep);
-
-            return true;
+            if (rep.terminationtype != 7) return true;
+            else return false;
         }
 
         private bool Apply()
         {
             double[] new_theta = new double[p];
-            for (int i = 0; i < p; i++)
+            for (int i = 0; i < 3; i++)
             {
-                new_theta[i] = delta_theta[i] + theta[i];
+                int j = 3 * hierarchySize + i;
+                new_theta[j] = delta_theta[j] + theta[j];
             }
             for (int l = 0; l < hierarchySize; l++)
             {
@@ -241,18 +255,30 @@ namespace VRtist
             int k = hierarchySize * 3;
             rootTransform.localPosition = new Vector3((float)new_theta[k], (float)new_theta[k + 1], (float)new_theta[k + 2]);
 
+            if (Vector3.Distance(currentState.position, desiredState.position) < Vector3.Distance(oTransform.position, desiredState.position))
+            {
+                rootTransform.position = initialRootPosition;
+                for (int l = 0; l < hierarchySize; l++)
+                {
+                    fullHierarchy[l].rotation = initialRotations[l];
+                }
+            }
+
+
             return true;
         }
 
         private double[] GetAllValues(int p)
         {
             double[] theta = new double[p];
+            initialRotations = new List<Quaternion>();
             for (int l = 0; l < hierarchySize; l++)
             {
                 Transform currentTransform = fullHierarchy[l];
-                theta[3 * l + 0] = currentTransform.localEulerAngles.x;
-                theta[3 * l + 1] = currentTransform.localEulerAngles.y;
-                theta[3 * l + 2] = currentTransform.localEulerAngles.z;
+                theta[3 * l + 0] = Mathf.DeltaAngle(0, currentTransform.localEulerAngles.x);
+                theta[3 * l + 1] = Mathf.DeltaAngle(0, currentTransform.localEulerAngles.y);
+                theta[3 * l + 2] = Mathf.DeltaAngle(0, currentTransform.localEulerAngles.z);
+                initialRotations.Add(currentTransform.rotation);
             }
             Transform root = fullHierarchy[0];
             theta[3 * hierarchySize + 0] = root.localPosition.x;
@@ -445,25 +471,45 @@ namespace VRtist
         {
 
             double[] u = new double[n];
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < hierarchySize * 3; i++)
             {
-                u[i] = -10d;
-            }
+                //u[i] = theta[i] < -90 ? 0 : -10;
+                if (theta[i] < -90) u[i] = 0;
+                else u[i] = -10;
 
+                //Vector3 rotation = Vector3.zero;
+                //rotation[i % 3] = -10;
+                //Vector3 maxRotation = Quaternion.Euler(rotation) * new Vector3((float)theta[(i / 3) * 3], (float)theta[(i / 3) * 3 + 1], (float)theta[(i / 3) * 3 + 2]);
+                //if (Mathf.Abs(maxRotation.x) > 90 || Mathf.Abs(maxRotation.y) > 90 || Mathf.Abs(maxRotation.z) > 90) u[i] = 0;
+                //else u[i] = -5;
+            }
+            for (int j = hierarchySize * 3; j < hierarchySize * 3 + 3; j++)
+            {
+                u[j] = -10d;
+            }
             return u;
         }
         double[] InitializeVBound(int n)
         {
-
             double[] v = new double[n];
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < hierarchySize * 3; i++)
             {
-                v[i] = 10d;
-            }
+                //v[i] = theta[i] > 90 ? 0 : 10;
+                if (theta[i] > 90) v[i] = 0;
+                else v[i] = 10;
 
+                //Vector3 rotation = Vector3.zero;
+                //rotation[i % 3] = 10;
+                //Vector3 currentRotation = new Vector3((float)theta[(i / 3) * 3], (float)theta[(i / 3) * 3 + 1], (float)theta[(i / 3) * 3 + 2]);
+                //Vector3 maxRotation = Quaternion.Euler(rotation) * currentRotation;
+                //if (Mathf.Abs(maxRotation.x) > 90 || Mathf.Abs(maxRotation.y) > 90 || Mathf.Abs(maxRotation.z) > 90) v[i] = 0;
+                //else v[i] = 5;
+            }
+            for (int j = hierarchySize * 3; j < hierarchySize * 3 + 3; j++)
+            {
+                v[j] = 10d;
+            }
             return v;
         }
-
-
     }
 }

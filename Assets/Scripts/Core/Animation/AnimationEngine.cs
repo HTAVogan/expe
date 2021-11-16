@@ -455,6 +455,7 @@ namespace VRtist
                 }
             }
             curve.AddKey(key);
+
             if (updateCurves) onChangeCurve.Invoke(gobject, property);
         }
 

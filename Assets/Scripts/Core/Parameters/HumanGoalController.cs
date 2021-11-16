@@ -11,6 +11,9 @@ namespace VRtist
         public List<AnimationSet> AnimToRoot = new List<AnimationSet>();
         public AnimationSet Animation;
 
+        [Range(0, 1)]
+        public float stiffness;
+
         public void SetPathToRoot(List<Transform> path)
         {
             path.ForEach(x =>

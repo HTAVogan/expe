@@ -72,6 +72,30 @@ namespace VRtist
                 new CommandAddKeyframe(gObject, AnimatableProperty.ScaleY, frame, scale.y, interpolation).Submit();
                 new CommandAddKeyframe(gObject, AnimatableProperty.ScaleZ, frame, scale.z, interpolation).Submit();
             }
+
+            if (obj.TryGetComponent<SkinMeshController>(out SkinMeshController skinController))
+            {
+
+                foreach (Transform child in gObject.transform)
+                {
+                    RecursiveAddKeyFrame(child, frame, interpolation);
+                }
+            }
+        }
+
+        private void RecursiveAddKeyFrame(Transform target, int frame, Interpolation interpolation)
+        {
+            new CommandAddKeyframe(target.gameObject, AnimatableProperty.PositionX, frame, target.localPosition.x, interpolation, false).Submit();
+            new CommandAddKeyframe(target.gameObject, AnimatableProperty.PositionY, frame, target.localPosition.y, interpolation, false).Submit();
+            new CommandAddKeyframe(target.gameObject, AnimatableProperty.PositionZ, frame, target.localPosition.z, interpolation, false).Submit();
+            new CommandAddKeyframe(target.gameObject, AnimatableProperty.RotationX, frame, target.localEulerAngles.x, interpolation, false).Submit();
+            new CommandAddKeyframe(target.gameObject, AnimatableProperty.RotationY, frame, target.localEulerAngles.y, interpolation, false).Submit();
+            new CommandAddKeyframe(target.gameObject, AnimatableProperty.RotationZ, frame, target.localEulerAngles.z, interpolation, false).Submit();
+
+            foreach (Transform child in target)
+            {
+                RecursiveAddKeyFrame(child, frame, interpolation);
+            }
         }
 
         public CommandAddKeyframes(GameObject obj, int frame, Vector3 position, Vector3 rotation, Vector3 scale) : base("Add Keyframes")
