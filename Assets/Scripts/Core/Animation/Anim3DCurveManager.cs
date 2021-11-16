@@ -247,7 +247,6 @@ namespace VRtist
         {
             AnimationSet rootAnimation = GlobalState.Animation.GetObjectAnimation(goalController.gameObject);
             if (null == rootAnimation) return;
-            Debug.Log(goalController.gameObject);
             Curve positionX = rootAnimation.GetCurve(AnimatableProperty.RotationX);
             if (positionX.keys.Count == 0) return;
             int frameStart = Mathf.Clamp(positionX.keys[0].frame, GlobalState.Animation.StartFrame, GlobalState.Animation.EndFrame);

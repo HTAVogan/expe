@@ -68,7 +68,7 @@ namespace VRtist
             get { return curveMode; }
         }
 
-        public enum PoseEditMode { FK, IK}
+        public enum PoseEditMode { FK, IK }
         private PoseEditMode poseMode;
 
 
@@ -166,7 +166,7 @@ namespace VRtist
             {
                 case EditMode.Curve: return CurveModeButton.GetComponent<UIButton>();
                 case EditMode.Pose: return PoseModeButton.GetComponent<UIButton>();
-                default:return null;
+                default: return null;
             }
         }
 
@@ -244,6 +244,7 @@ namespace VRtist
         }
         internal void ShowGhost(bool state)
         {
+            if (null == ghost) return;
             ghost.SetActive(state);
             foreach (Transform child in mouthpiece)
             {

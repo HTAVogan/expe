@@ -16,6 +16,7 @@ namespace VRtist
         private AnimationSet objectAnimation;
         private int animationCount;
 
+
         struct Constraints
         {
             public List<int> gameObjectIndices;
@@ -43,7 +44,7 @@ namespace VRtist
         double[] upperBound;
         int pinsNB;
         int K;
-        public List<int> requiredKeyframeIndices;
+        public List<int> requiredKeyframe;
         double[] s;
         double[] delta_theta;
         double[] theta;
@@ -66,6 +67,7 @@ namespace VRtist
             constraints = new Constraints()
             { endFrames = new List<int>(), gameObjectIndices = new List<int>(), properties = new List<AnimatableProperty>(), startFrames = new List<int>(), values = new List<float>() };
 
+
         }
 
         public void TrySolver()
@@ -83,7 +85,7 @@ namespace VRtist
             objectAnimation.curves[AnimatableProperty.PositionX].GetKeyIndex(currentFrame - size, out int firstIndex);
             int firstFrame = objectAnimation.curves[AnimatableProperty.PositionX].keys[firstIndex].frame;
             objectAnimation.curves[AnimatableProperty.PositionX].GetKeyIndex(currentFrame + size, out int lastIndex);
-            int lastFrame = objectAnimation.curves[AnimatableProperty.PositionX].keys[lastIndex + 1].frame;
+            int lastFrame = objectAnimation.curves[AnimatableProperty.PositionX].keys[lastIndex].frame;
 
             if (currentFrame < firstFrame) return false;
             if (currentFrame > lastFrame) return false;
@@ -102,14 +104,14 @@ namespace VRtist
                 }
             }
 
-            requiredKeyframeIndices = FindRequiredTangents(firstFrame, lastFrame, objectAnimation.GetCurve(AnimatableProperty.PositionX));
-            K = requiredKeyframeIndices.Count;
+            requiredKeyframe = FindRequiredTangents(firstFrame, lastFrame, objectAnimation.GetCurve(AnimatableProperty.PositionX));
+            K = requiredKeyframe.Count;
             int totalKeyframes = objectAnimation.GetCurve(AnimatableProperty.PositionX).keys.Count;
             int n = 3 * animationCount + 3;
             p = 12 * animationCount * K + 12 * K;
             pinsNB = constraints.gameObjectIndices.Count;
 
-            theta = GetAllTangents(p, K, requiredKeyframeIndices);
+            theta = GetAllTangents(p, K);
             double[,] Theta = ColumnArrayToArray(theta);
 
             State currentState = GetCurrentState(currentFrame);
@@ -121,6 +123,7 @@ namespace VRtist
             };
             //Debug.Log("current = " + currentState.position.x + " , " + currentState.position.y + " , " + currentState.position.z + " - " + currentState.rotation);
             //Debug.Log("target = " + desiredState.position.x + " , " + desiredState.position.y + " , " + desiredState.position.z + " - " + desiredState.rotation);
+
 
             double[,] Js = ds_dtheta(p, K);
 
@@ -193,8 +196,8 @@ namespace VRtist
             double[] u = InitializeUBound(n);
             double[] v = InitializeVBound(n);
 
-            lowerBound = LowerBoundConstraints(theta, u, v, p, K, requiredKeyframeIndices, totalKeyframes);
-            upperBound = UpperBoundConstraints(theta, u, v, p, K, requiredKeyframeIndices, totalKeyframes);
+            lowerBound = LowerBoundConstraints(theta, u, v, p, K, totalKeyframes);
+            upperBound = UpperBoundConstraints(theta, u, v, p, K, totalKeyframes);
 
             delta_theta_0 = new double[p];
 
@@ -227,7 +230,7 @@ namespace VRtist
                 double[] rho_prime = rhos.Item2;
                 double[,] Delta_rho_prime = Add(ColumnArrayToArray(rho_prime), Multiply(-1d, ColumnArrayToArray(rho)));
                 double[] delta_rho_prime = ArrayToColumnArray(Delta_rho_prime);
-                double[,] Jrho = drho_dtheta(indexTable, pinsNB, p, K, requiredKeyframeIndices);
+                double[,] Jrho = drho_dtheta(indexTable, pinsNB, p, K);
 
                 (double[,], int[]) linearConstraints = FindLinearEqualityConstraints(Jrho, delta_rho_prime);
                 double[,] C = linearConstraints.Item1;
@@ -264,9 +267,10 @@ namespace VRtist
 
                     for (int k = 0; k < K; k++)
                     {
+                        curve.GetKeyIndex(requiredKeyframe[k], out int index);
                         Vector2 inTangent = new Vector2((float)new_theta[12 * K * l + 4 * (i * K + k) + 0], (float)new_theta[12 * K * l + 4 * (i * K + k) + 1]);
                         Vector2 outTangent = new Vector2((float)new_theta[12 * K * l + 4 * (i * K + k) + 2], (float)new_theta[12 * K * l + 4 * (i * K + k) + 3]);
-                        ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
+                        ModifyTangents(curve, index, inTangent, outTangent);
                     }
                 }
             }
@@ -276,14 +280,16 @@ namespace VRtist
 
                 for (int k = 0; k < K; k++)
                 {
+                    curve.GetKeyIndex(requiredKeyframe[k], out int index);
                     Vector2 inTangent = new Vector2((float)new_theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0], (float)new_theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1]);
                     Vector2 outTangent = new Vector2((float)new_theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2], (float)new_theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3]);
-                    ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
+                    ModifyTangents(curve, index, inTangent, outTangent);
                 }
             }
 
-            //State finalState = GetCurrentState(currentFrame);
-            //Debug.Log("result " + finalState.position.x + " , " + finalState.position.y + " , " + finalState.position.z + " - " + finalState.rotation);
+            State finalState = GetCurrentState(currentFrame);
+            Debug.Log("result " + finalState.position.x + " , " + finalState.position.y + " , " + finalState.position.z + " - " + finalState.rotation);
+
 
             return true;
         }
@@ -300,7 +306,7 @@ namespace VRtist
             };
         }
 
-        private double[] GetAllTangents(int p, int K, List<int> requieredKeys)
+        private double[] GetAllTangents(int p, int K)
         {
             double[] theta = new double[p];
 
@@ -317,7 +323,7 @@ namespace VRtist
 
                     for (int k = 0; k < K; k++)
                     {
-                        double[] tangents = GetTangents(curve, requieredKeys[k]);
+                        double[] tangents = GetTangents(curve, requiredKeyframe[k]);
 
                         theta[12 * K * l + 4 * (i * K + k) + 0] = tangents[0];
                         theta[12 * K * l + 4 * (i * K + k) + 1] = tangents[1];
@@ -336,7 +342,7 @@ namespace VRtist
 
                 for (int k = 0; k < K; k++)
                 {
-                    double[] tangents = GetTangents(curve, requieredKeys[k]);
+                    double[] tangents = GetTangents(curve, requiredKeyframe[k]);
 
                     theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0] = tangents[0];
                     theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1] = tangents[1];
@@ -349,11 +355,12 @@ namespace VRtist
             return theta;
         }
 
-        private double[] GetTangents(Curve curve, int key)
+        private double[] GetTangents(Curve curve, int frame)
         {
             double[] tangents = new double[4];
 
-            AnimationKey AnimKey = curve.keys[key];
+            curve.GetKeyIndex(frame, out int index);
+            AnimationKey AnimKey = curve.keys[index];
             Vector2 inTangent = AnimKey.inTangent;
             Vector2 outTangent = AnimKey.outTangent;
 
@@ -374,13 +381,13 @@ namespace VRtist
 
         private List<int> FindRequiredTangents(int firstFrame, int lastFrame, Curve curve)
         {
-            List<int> keys = new List<int>();
-            curve.GetKeyIndex(firstFrame, out int firstKeyIndex);
-            curve.GetKeyIndex(lastFrame, out int lastKeyIndex);
-            for (int i = firstKeyIndex; i <= lastKeyIndex; i++)
-            {
-                keys.Add(i);
-            }
+            List<int> keys = new List<int>() { firstFrame, lastFrame };
+            //curve.GetKeyIndex(firstFrame, out int firstKeyIndex);
+            //curve.GetKeyIndex(lastFrame, out int lastKeyIndex);
+            //for (int i = firstKeyIndex; i <= lastKeyIndex; i++)
+            //{
+            //    keys.Add(i);
+            //}
             return keys;
         }
 
@@ -412,8 +419,9 @@ namespace VRtist
 
                     for (int k = 0; k < K; k++)
                     {
-                        Vector2 inTangent = curve.keys[requiredKeyframeIndices[k]].inTangent;
-                        Vector2 outTangent = curve.keys[requiredKeyframeIndices[k]].outTangent;
+                        curve.GetKeyIndex(requiredKeyframe[k], out int index);
+                        Vector2 inTangent = curve.keys[index].inTangent;
+                        Vector2 outTangent = curve.keys[index].outTangent;
 
                         for (int m = 0; m < 4; m++)
                         {
@@ -435,7 +443,7 @@ namespace VRtist
                             {
                                 outTangent.y += dtheta;
                             }
-                            ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
+                            ModifyTangents(curve, index, inTangent, outTangent);
 
                             Matrix4x4 mat = FrameMatrix(currentFrame, animationList);
                             Maths.DecomposeMatrix(mat, out Vector3 plusPos, out Quaternion plusRot, out Vector3 plusScale);
@@ -458,7 +466,7 @@ namespace VRtist
                             {
                                 outTangent.y -= dtheta;
                             }
-                            ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
+                            ModifyTangents(curve, index, inTangent, outTangent);
 
                             Matrix4x4 minusMatrix = FrameMatrix(currentFrame, animationList);
                             Maths.DecomposeMatrix(minusMatrix, out Vector3 minusPos, out Quaternion minusRot, out Vector3 minusScale);
@@ -485,8 +493,9 @@ namespace VRtist
 
                 for (int k = 0; k < K; k++)
                 {
-                    Vector2 inTangent = curve.keys[requiredKeyframeIndices[k]].inTangent;
-                    Vector2 outTangent = curve.keys[requiredKeyframeIndices[k]].outTangent;
+                    curve.GetKeyIndex(requiredKeyframe[k], out int index);
+                    Vector2 inTangent = curve.keys[index].inTangent;
+                    Vector2 outTangent = curve.keys[index].outTangent;
 
                     for (int m = 0; m < 4; m++)
                     {
@@ -508,7 +517,7 @@ namespace VRtist
                         {
                             outTangent.y += dtheta;
                         }
-                        ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
+                        ModifyTangents(curve, index, inTangent, outTangent);
 
                         Matrix4x4 mat = FrameMatrix(currentFrame, animationList);
                         Maths.DecomposeMatrix(mat, out Vector3 plusPos, out Quaternion plusRot, out Vector3 plusScale);
@@ -530,7 +539,7 @@ namespace VRtist
                         {
                             outTangent.y -= dtheta;
                         }
-                        ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
+                        ModifyTangents(curve, index, inTangent, outTangent);
 
                         Matrix4x4 minusMatrix = FrameMatrix(currentFrame, animationList);
                         Maths.DecomposeMatrix(minusMatrix, out Vector3 minusPos, out Quaternion minusRot, out Vector3 minusScale);
@@ -689,7 +698,7 @@ namespace VRtist
             return v;
         }
 
-        double[] LowerBoundConstraints(double[] theta, double[] u, double[] v, int p, int K, List<int> requiredKeyframeIndices, int globalKeyframes)
+        double[] LowerBoundConstraints(double[] theta, double[] u, double[] v, int p, int K, int globalKeyframes)
         {
             double[] lowerBound = new double[p];
 
@@ -707,9 +716,9 @@ namespace VRtist
                     for (int k = 0; k < K; k++)
                     {
                         lowerBound[12 * K * l + 4 * (i * K + k) + 0] = -theta[12 * K * l + 4 * (i * K + k) + 0];
-                        lowerBound[12 * K * l + 4 * (i * K + k) + 1] = -psi(v[i], animation, property, requiredKeyframeIndices[k], false, globalKeyframes) - theta[12 * K * l + 4 * (i * K + k) + 1];
+                        lowerBound[12 * K * l + 4 * (i * K + k) + 1] = -psi(v[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * l + 4 * (i * K + k) + 1];
                         lowerBound[12 * K * l + 4 * (i * K + k) + 2] = -theta[12 * K * l + 4 * (i * K + k) + 2];
-                        lowerBound[12 * K * l + 4 * (i * K + k) + 3] = phi(u[i], animation, property, requiredKeyframeIndices[k], true, globalKeyframes) - theta[12 * K * l + 4 * (i * K + k) + 3];
+                        lowerBound[12 * K * l + 4 * (i * K + k) + 3] = phi(u[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * l + 4 * (i * K + k) + 3];
                     }
                 }
             }
@@ -723,16 +732,16 @@ namespace VRtist
                 for (int k = 0; k < K; k++)
                 {
                     lowerBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0] = -theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0];
-                    lowerBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1] = -psi(v[i], animation, property, requiredKeyframeIndices[k], false, globalKeyframes) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1];
+                    lowerBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1] = -psi(v[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1];
                     lowerBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2] = -theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2];
-                    lowerBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3] = phi(u[i], animation, property, requiredKeyframeIndices[k], true, globalKeyframes) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3];
+                    lowerBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3] = phi(u[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3];
                 }
             }
 
             return lowerBound;
         }
 
-        double[] UpperBoundConstraints(double[] theta, double[] u, double[] v, int p, int K, List<int> requiredKeyframeIndices, int globalKeyframes)
+        double[] UpperBoundConstraints(double[] theta, double[] u, double[] v, int p, int K, int globalKeyframes)
         {
             double[] upperBound = new double[p];
 
@@ -749,39 +758,39 @@ namespace VRtist
 
                     for (int k = 0; k < K; k++)
                     {
-
-                        if (requiredKeyframeIndices[k] > 0 && requiredKeyframeIndices[k] < globalKeyframes - 1)
+                        curve.GetKeyIndex(requiredKeyframe[k], out int index);
+                        if (index > 0 && index < curve.keys.Count - 1)
                         {
-                            int tkp1 = curve.keys[requiredKeyframeIndices[k] + 1].frame;
-                            int tk = curve.keys[requiredKeyframeIndices[k]].frame;
-                            int tkm1 = curve.keys[requiredKeyframeIndices[k] - 1].frame;
+                            int tkp1 = curve.keys[index + 1].frame;
+                            int tk = curve.keys[index].frame;
+                            int tkm1 = curve.keys[index - 1].frame;
 
                             upperBound[12 * K * l + 4 * (i * K + k) + 0] = tk - tkm1 - theta[12 * K * l + 4 * (i * K + k) + 0];
-                            upperBound[12 * K * l + 4 * (i * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframeIndices[k], false, globalKeyframes) - theta[12 * K * l + 4 * (i * K + k) + 1];
+                            upperBound[12 * K * l + 4 * (i * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * l + 4 * (i * K + k) + 1];
                             upperBound[12 * K * l + 4 * (i * K + k) + 2] = tkp1 - tk - theta[12 * K * l + 4 * (i * K + k) + 2];
-                            upperBound[12 * K * l + 4 * (i * K + k) + 3] = psi(v[i], animation, property, requiredKeyframeIndices[k], true, globalKeyframes) - theta[12 * K * l + 4 * (i * K + k) + 3];
+                            upperBound[12 * K * l + 4 * (i * K + k) + 3] = psi(v[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * l + 4 * (i * K + k) + 3];
                         }
 
-                        else if (requiredKeyframeIndices[k] == 0)
+                        else if (index == 0)
                         {
-                            int tk = curve.keys[requiredKeyframeIndices[k]].frame;
-                            int tkp1 = curve.keys[requiredKeyframeIndices[k] + 1].frame;
+                            int tk = curve.keys[index].frame;
+                            int tkp1 = curve.keys[index + 1].frame;
 
                             upperBound[12 * K * l + 4 * (i * K + k) + 0] = tkp1 - tk - theta[12 * K * l + 4 * (i * K + k) + 0];
-                            upperBound[12 * K * l + 4 * (i * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframeIndices[k], false, globalKeyframes) - theta[12 * K * l + 4 * (i * K + k) + 1];
+                            upperBound[12 * K * l + 4 * (i * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * l + 4 * (i * K + k) + 1];
                             upperBound[12 * K * l + 4 * (i * K + k) + 2] = tkp1 - tk - theta[12 * K * l + 4 * (i * K + k) + 2];
-                            upperBound[12 * K * l + 4 * (i * K + k) + 3] = psi(v[i], animation, property, requiredKeyframeIndices[k], true, globalKeyframes) - theta[12 * K * l + 4 * (i * K + k) + 3];
+                            upperBound[12 * K * l + 4 * (i * K + k) + 3] = psi(v[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * l + 4 * (i * K + k) + 3];
                         }
 
                         else
                         {
-                            int tk = curve.keys[requiredKeyframeIndices[k]].frame;
-                            int tkm1 = curve.keys[requiredKeyframeIndices[k] - 1].frame;
+                            int tk = curve.keys[index].frame;
+                            int tkm1 = curve.keys[index - 1].frame;
 
                             upperBound[12 * K * l + 4 * (i * K + k) + 0] = tk - tkm1 - theta[12 * K * l + 4 * (i * K + k) + 0];
-                            upperBound[12 * K * l + 4 * (i * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframeIndices[k], false, globalKeyframes) - theta[12 * K * l + 4 * (i * K + k) + 1];
+                            upperBound[12 * K * l + 4 * (i * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * l + 4 * (i * K + k) + 1];
                             upperBound[12 * K * l + 4 * (i * K + k) + 2] = tk - tkm1 - theta[12 * K * l + 4 * (i * K + k) + 2];
-                            upperBound[12 * K * l + 4 * (i * K + k) + 3] = psi(v[i], animation, property, requiredKeyframeIndices[k], true, globalKeyframes) - theta[12 * K * l + 4 * (i * K + k) + 3];
+                            upperBound[12 * K * l + 4 * (i * K + k) + 3] = psi(v[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * l + 4 * (i * K + k) + 3];
                         }
 
                     }
@@ -798,39 +807,39 @@ namespace VRtist
 
                 for (int k = 0; k < K; k++)
                 {
-
-                    if (requiredKeyframeIndices[k] > 0 && requiredKeyframeIndices[k] < globalKeyframes - 1)
+                    curve.GetKeyIndex(requiredKeyframe[k], out int index);
+                    if (index > 0 && index < curve.keys.Count - 1)
                     {
-                        int tkp1 = curve.keys[requiredKeyframeIndices[k] + 1].frame;
-                        int tk = curve.keys[requiredKeyframeIndices[k]].frame;
-                        int tkm1 = curve.keys[requiredKeyframeIndices[k] - 1].frame;
+                        int tkp1 = curve.keys[index + 1].frame;
+                        int tk = curve.keys[index].frame;
+                        int tkm1 = curve.keys[index - 1].frame;
 
                         upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0] = tk - tkm1 - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0];
-                        upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframeIndices[k], false, globalKeyframes) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1];
+                        upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1];
                         upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2] = tkp1 - tk - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2];
-                        upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3] = psi(v[i], animation, property, requiredKeyframeIndices[k], true, globalKeyframes) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3];
+                        upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3] = psi(v[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3];
                     }
 
-                    else if (requiredKeyframeIndices[k] == 0)
+                    else if (index == 0)
                     {
-                        int tk = curve.keys[requiredKeyframeIndices[k]].frame;
-                        int tkp1 = curve.keys[requiredKeyframeIndices[k] + 1].frame;
+                        int tk = curve.keys[index].frame;
+                        int tkp1 = curve.keys[index + 1].frame;
 
                         upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0] = tkp1 - tk - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0];
-                        upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframeIndices[k], false, globalKeyframes) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1];
+                        upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1];
                         upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2] = tkp1 - tk - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2];
-                        upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3] = psi(v[i], animation, property, requiredKeyframeIndices[k], true, globalKeyframes) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3];
+                        upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3] = psi(v[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3];
                     }
 
                     else
                     {
-                        int tk = curve.keys[requiredKeyframeIndices[k]].frame;
-                        int tkm1 = curve.keys[requiredKeyframeIndices[k] - 1].frame;
+                        int tk = curve.keys[index].frame;
+                        int tkm1 = curve.keys[index - 1].frame;
 
                         upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0] = tk - tkm1 - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0];
-                        upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframeIndices[k], false, globalKeyframes) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1];
+                        upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1];
                         upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2] = tk - tkm1 - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2];
-                        upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3] = psi(v[i], animation, property, requiredKeyframeIndices[k], true, globalKeyframes) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3];
+                        upperBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3] = psi(v[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3];
                     }
 
                 }
@@ -839,23 +848,23 @@ namespace VRtist
             return upperBound;
         }
 
-        double psi(double v, AnimationSet currentAnim, AnimatableProperty property, int k, bool plus, int GlobalKeyframes)
+        double psi(double v, AnimationSet currentAnim, AnimatableProperty property, int frame, bool plus)
         {
             Curve curve = currentAnim.GetCurve(property);
-
+            curve.GetKeyIndex(frame, out int index);
             if (plus)
             {
 
-                if (k < GlobalKeyframes - 1)
+                if (curve.keys.Count > index + 1)
                 {
-                    float cik = curve.keys[k].value;
-                    float cikp1 = curve.keys[k + 1].value;
+                    float cik = curve.keys[index].value;
+                    float cikp1 = curve.keys[index + 1].value;
                     return (double)((3f / 4f) * ((float)v - Mathf.Max(cik, cikp1)));
                 }
 
                 else
                 {
-                    float cik = curve.keys[k].value;
+                    float cik = curve.keys[index].value;
                     return (double)((3f / 4f) * ((float)v - cik));
                 }
 
@@ -864,40 +873,40 @@ namespace VRtist
             else
             {
 
-                if (k > 0)
+                if (index > 0)
                 {
-                    float cik = curve.keys[k].value;
-                    float cikm1 = curve.keys[k - 1].value;
+                    float cik = curve.keys[index].value;
+                    float cikm1 = curve.keys[index - 1].value;
                     return (double)((3f / 4f) * ((float)v - Mathf.Max(cik, cikm1)));
                 }
 
                 else
                 {
-                    float cik = curve.keys[k].value;
+                    float cik = curve.keys[index].value;
                     return (double)((3f / 4f) * ((float)v - cik));
                 }
 
             }
         }
 
-        double phi(double u, AnimationSet currentAnim, AnimatableProperty property, int k, bool plus, int globalKeyframes)
+        double phi(double u, AnimationSet currentAnim, AnimatableProperty property, int frame, bool plus)
         {
 
             Curve curve = currentAnim.GetCurve(property);
-
+            curve.GetKeyIndex(frame, out int index);
             if (plus)
             {
 
-                if (k < globalKeyframes - 1)
+                if (curve.keys.Count > index + 1)
                 {
-                    float cik = curve.keys[k].value;
-                    float cikp1 = curve.keys[k + 1].value;
+                    float cik = curve.keys[index].value;
+                    float cikp1 = curve.keys[index + 1].value;
                     return (double)((3f / 4f) * ((float)u - Mathf.Min(cik, cikp1)));
                 }
 
                 else
                 {
-                    float cik = curve.keys[k].value;
+                    float cik = curve.keys[index].value;
                     return (double)((3f / 4f) * ((float)u - cik));
                 }
 
@@ -906,16 +915,16 @@ namespace VRtist
             else
             {
 
-                if (k > 0)
+                if (index > 0)
                 {
-                    float cik = curve.keys[k].value;
-                    float cikm1 = curve.keys[k - 1].value;
+                    float cik = curve.keys[index].value;
+                    float cikm1 = curve.keys[index - 1].value;
                     return (double)((3f / 4f) * ((float)u - Mathf.Min(cik, cikm1)));
                 }
 
                 else
                 {
-                    float cik = curve.keys[k].value;
+                    float cik = curve.keys[index].value;
                     return (double)((3f / 4f) * ((float)u - cik));
                 }
 
@@ -963,7 +972,7 @@ namespace VRtist
 
         }
 
-        double[,] drho_dtheta(Dictionary<int, int[]> indexTable, int nb_pins, int p, int K, List<int> requiredKeyframes)
+        double[,] drho_dtheta(Dictionary<int, int[]> indexTable, int nb_pins, int p, int K)
         {
             int size = indexTable[nb_pins - 1][1] + 1;
             double[,] Jrho = new double[size, p];

@@ -110,7 +110,7 @@ namespace VRtist
 
         private void DragHuman(Matrix4x4 transformation)
         {
-            Matrix4x4 target = humanData.InitFrameMatrix * transformation;
+            Matrix4x4 target = transformation * humanData.InitFrameMatrix;
             Maths.DecomposeMatrix(target, out Vector3 targetPos, out Quaternion targetRot, out Vector3 targetScale);
             TangentHumanSolver solver = new TangentHumanSolver(targetPos, targetRot, humanData.Controller.Animation, humanData.Controller.AnimToRoot, Frame, zoneSize);
             solver.TrySolver();
@@ -206,9 +206,11 @@ namespace VRtist
                 {
                     AnimatableProperty property = (AnimatableProperty)prop;
                     List<AnimationKey> keys = new List<AnimationKey>();
-                    for (int k = 0; k < humanData.Solver.requiredKeyframeIndices.Count; k++)
+                    for (int k = 0; k < humanData.Solver.requiredKeyframe.Count; k++)
                     {
-                        keys.Add(humanData.Controller.AnimToRoot[i].GetCurve(property).keys[humanData.Solver.requiredKeyframeIndices[k]]);
+                        Curve curve = humanData.Controller.AnimToRoot[i].GetCurve(property);
+                        curve.GetKeyIndex(humanData.Solver.requiredKeyframe[k], out int keyIndex);
+                        keys.Add(curve.keys[keyIndex]);
                     }
                     keyframesLists[keyframesLists.Count - 1].Add(property, keys);
                 }
@@ -222,9 +224,11 @@ namespace VRtist
             {
                 AnimatableProperty property = (AnimatableProperty)prop;
                 List<AnimationKey> keys = new List<AnimationKey>();
-                for (int k = 0; k < humanData.Solver.requiredKeyframeIndices.Count; k++)
+                for (int k = 0; k < humanData.Solver.requiredKeyframe.Count; k++)
                 {
-                    keys.Add(humanData.Controller.Animation.GetCurve(property).keys[humanData.Solver.requiredKeyframeIndices[k]]);
+                    Curve curve = humanData.Controller.Animation.GetCurve(property);
+                    curve.GetKeyIndex(humanData.Solver.requiredKeyframe[k], out int keyIndex);
+                    keys.Add(curve.keys[keyIndex]);
                 }
                 keyframesLists[keyframesLists.Count - 1].Add(property, keys);
             }

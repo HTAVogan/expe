@@ -91,6 +91,9 @@ namespace VRtist
             new CommandAddKeyframe(target.gameObject, AnimatableProperty.RotationX, frame, target.localEulerAngles.x, interpolation, false).Submit();
             new CommandAddKeyframe(target.gameObject, AnimatableProperty.RotationY, frame, target.localEulerAngles.y, interpolation, false).Submit();
             new CommandAddKeyframe(target.gameObject, AnimatableProperty.RotationZ, frame, target.localEulerAngles.z, interpolation, false).Submit();
+            new CommandAddKeyframe(target.gameObject, AnimatableProperty.ScaleX, frame, target.localScale.x, interpolation, false).Submit();
+            new CommandAddKeyframe(target.gameObject, AnimatableProperty.ScaleY, frame, target.localScale.y, interpolation, false).Submit();
+            new CommandAddKeyframe(target.gameObject, AnimatableProperty.ScaleZ, frame, target.localScale.z, interpolation, false).Submit();
 
             foreach (Transform child in target)
             {
