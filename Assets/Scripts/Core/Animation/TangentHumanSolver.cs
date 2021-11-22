@@ -33,6 +33,9 @@ namespace VRtist
             public int time;
         }
 
+        private State currentState;
+        private State desiredState;
+
         Constraints constraints;
 
 
@@ -114,15 +117,13 @@ namespace VRtist
             theta = GetAllTangents(p, K);
             double[,] Theta = ColumnArrayToArray(theta);
 
-            State currentState = GetCurrentState(currentFrame);
-            State desiredState = new State()
+            currentState = GetCurrentState(currentFrame);
+            desiredState = new State()
             {
                 position = positionTarget,
                 rotation = rotationTarget,
                 time = currentFrame
             };
-            //Debug.Log("current = " + currentState.position.x + " , " + currentState.position.y + " , " + currentState.position.z + " - " + currentState.rotation);
-            //Debug.Log("target = " + desiredState.position.x + " , " + desiredState.position.y + " , " + desiredState.position.z + " - " + desiredState.rotation);
 
 
             double[,] Js = ds_dtheta(p, K);
@@ -290,6 +291,39 @@ namespace VRtist
             State finalState = GetCurrentState(currentFrame);
             Debug.Log("result " + finalState.position.x + " , " + finalState.position.y + " , " + finalState.position.z + " - " + finalState.rotation);
 
+            if (Vector3.Distance(finalState.position, desiredState.position) > Vector3.Distance(currentState.position, desiredState.position))
+            {
+                for (int l = 0; l < animationCount; l++)
+                {
+                    AnimationSet currentAnim = animationList[l];
+                    for (int i = 0; i < 3; i++)
+                    {
+
+                        AnimatableProperty property = (AnimatableProperty)i + 3;
+                        Curve curve = currentAnim.GetCurve(property);
+
+                        for (int k = 0; k < K; k++)
+                        {
+                            curve.GetKeyIndex(requiredKeyframe[k], out int index);
+                            Vector2 inTangent = new Vector2((float)theta[12 * K * l + 4 * (i * K + k) + 0], (float)theta[12 * K * l + 4 * (i * K + k) + 1]);
+                            Vector2 outTangent = new Vector2((float)theta[12 * K * l + 4 * (i * K + k) + 2], (float)theta[12 * K * l + 4 * (i * K + k) + 3]);
+                            ModifyTangents(curve, index, inTangent, outTangent);
+                        }
+                    }
+                }
+                for (int i = 3; i < 6; i++)
+                {
+                    Curve curve = animationList[0].GetCurve((AnimatableProperty)i - 3);
+
+                    for (int k = 0; k < K; k++)
+                    {
+                        curve.GetKeyIndex(requiredKeyframe[k], out int index);
+                        Vector2 inTangent = new Vector2((float)theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0], (float)theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1]);
+                        Vector2 outTangent = new Vector2((float)theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2], (float)theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3]);
+                        ModifyTangents(curve, index, inTangent, outTangent);
+                    }
+                }
+            }
 
             return true;
         }
@@ -1066,7 +1100,7 @@ namespace VRtist
             {
                 if (scalex.Evaluate(frame, out float sx) && scaley.Evaluate(frame, out float sy) && scalez.Evaluate(frame, out float sz))
                 {
-                    position = new Vector3(sx, sy, sz);
+                    scale = new Vector3(sx, sy, sz);
                 }
             }
             return Matrix4x4.TRS(position, rotation, scale);

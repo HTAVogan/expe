@@ -707,6 +707,13 @@ namespace VRtist
                     animationSet.curves[AnimatableProperty.PositionY].AddKey(new AnimationKey(frame, vectorKey.Value.Y, Interpolation.Bezier));
                     animationSet.curves[AnimatableProperty.PositionZ].AddKey(new AnimationKey(frame, vectorKey.Value.Z, Interpolation.Bezier));
                 }
+                foreach (Assimp.VectorKey vectorKey in nodeChannel.ScalingKeys)
+                {
+                    int frame = Mathf.CeilToInt((float)vectorKey.Time * GlobalState.Animation.fps / (float)animation.TicksPerSecond) + 1;
+                    animationSet.curves[AnimatableProperty.ScaleX].AddKey(new AnimationKey(frame, vectorKey.Value.X, Interpolation.Bezier));
+                    animationSet.curves[AnimatableProperty.ScaleY].AddKey(new AnimationKey(frame, vectorKey.Value.Y, Interpolation.Bezier));
+                    animationSet.curves[AnimatableProperty.ScaleZ].AddKey(new AnimationKey(frame, vectorKey.Value.Z, Interpolation.Bezier));
+                }
                 Vector3 previousRotation = Vector3.zero;
                 foreach (Assimp.QuaternionKey quaternionKey in nodeChannel.RotationKeys)
                 {
@@ -784,12 +791,12 @@ namespace VRtist
                 skinMesh.Collider = objectCollider;
                 skinMesh.RootObject = rootBone;
 
-                GenerateSkeleton(rootBone);
+                GenerateSkeleton(rootBone, skinMesh);
             }
 
         }
 
-        private void GenerateSkeleton(Transform root)
+        private void GenerateSkeleton(Transform root, SkinMeshController rootController)
         {
             GoalNames = new List<string>(){
             "LeftLeg","LeftFoot","RightLeg","RightFoot","LeftShoulder","RightShoulder","LeftForeArm","LeftHand","RightForeArm","RightHand","Head"
@@ -798,14 +805,14 @@ namespace VRtist
             HumanGoalController controller = root.gameObject.AddComponent<HumanGoalController>();
             SphereCollider collider = root.gameObject.AddComponent<SphereCollider>();
             collider.isTrigger = true;
-            controller.SetPathToRoot(new List<Transform>() { root });
+            controller.SetPathToRoot(rootController, new List<Transform>() { root });
             foreach (Transform child in root)
             {
-                GenerateSkeletonRec(child, new List<Transform>() { root });
+                GenerateSkeletonRec(rootController, child, new List<Transform>() { root });
             }
         }
 
-        private void GenerateSkeletonRec(Transform transform, List<Transform> path)
+        private void GenerateSkeletonRec(SkinMeshController rootController, Transform transform, List<Transform> path)
         {
             string foundName = "";
             GoalNames.ForEach(x =>
@@ -821,14 +828,14 @@ namespace VRtist
                 SphereCollider collider = transform.gameObject.AddComponent<SphereCollider>();
                 collider.isTrigger = true;
                 GoalNames.Remove(foundName);
-                controller.SetPathToRoot(path);
+                controller.SetPathToRoot(rootController, path);
             }
             path.Add(transform);
             if (transform.childCount > 0)
             {
                 foreach (Transform child in transform)
                 {
-                    GenerateSkeletonRec(child, new List<Transform>(path));
+                    GenerateSkeletonRec(rootController, child, new List<Transform>(path));
                 }
             }
 

@@ -718,16 +718,22 @@ namespace VRtist.Serialization
         public int frame;
         public float value;
         public Interpolation interpolation;
+        public Vector2 inTangent;
+        public Vector2 outTangent;
 
         public byte[] ToBytes()
         {
             byte[] frameBuffer = Converter.IntToBytes(frame);
             byte[] valueBuffer = Converter.FloatToBytes(value);
             byte[] interpolationBuffer = Converter.IntToBytes((int)interpolation);
+            byte[] inTanBuffer = Converter.Vector2ToBytes(inTangent);
+            byte[] outTanBuffer = Converter.Vector2ToBytes(outTangent);
             return Converter.ConcatenateBuffers(new List<byte[]> {
                 frameBuffer,
                 valueBuffer,
-                interpolationBuffer
+                interpolationBuffer,
+                inTanBuffer,
+                outTanBuffer
             });
         }
 
@@ -736,6 +742,8 @@ namespace VRtist.Serialization
             frame = Converter.GetInt(buffer, ref index);
             value = Converter.GetFloat(buffer, ref index);
             interpolation = (Interpolation)Converter.GetInt(buffer, ref index);
+            inTangent = Converter.GetVector2(buffer, ref index);
+            outTangent = Converter.GetVector2(buffer, ref index);
         }
     }
 

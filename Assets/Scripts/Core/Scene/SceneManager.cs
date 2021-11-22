@@ -224,15 +224,15 @@ namespace VRtist
         }
 
         // Animation
-        public static void ClearObjectAnimations(GameObject gobject)
+        public static void ClearObjectAnimations(GameObject gobject, bool callEvent = true)
         {
-            GlobalState.Animation.ClearAnimations(gobject);
+            GlobalState.Animation.ClearAnimations(gobject, callEvent);
             Instance.scene.ClearObjectAnimations(gobject);
         }
 
-        public static void SetObjectAnimations(GameObject gobject, AnimationSet animationSet)
+        public static void SetObjectAnimations(GameObject gobject, AnimationSet animationSet, bool callEvent = true)
         {
-            GlobalState.Animation.SetObjectAnimations(gobject, animationSet);
+            GlobalState.Animation.SetObjectAnimations(gobject, animationSet, callEvent);
             Instance.scene.SetObjectAnimations(gobject, animationSet);
         }
 

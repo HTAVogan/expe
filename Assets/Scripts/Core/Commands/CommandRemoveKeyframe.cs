@@ -33,11 +33,13 @@ namespace VRtist
         readonly GameObject gObject;
         readonly AnimatableProperty property;
         readonly AnimationKey oldAnimationKey = null;
+        readonly bool updateCurve = true;
 
-        public CommandRemoveKeyframe(GameObject obj, AnimatableProperty property, int frame)
+        public CommandRemoveKeyframe(GameObject obj, AnimatableProperty property, int frame, bool updateCurve = true)
         {
             gObject = obj;
             this.property = property;
+            this.updateCurve = updateCurve;
 
             AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(obj);
             if (null == animationSet)
@@ -52,12 +54,12 @@ namespace VRtist
 
         public override void Undo()
         {
-            SceneManager.AddObjectKeyframe(gObject, property, oldAnimationKey);
+            SceneManager.AddObjectKeyframe(gObject, property, oldAnimationKey, updateCurve);
         }
 
         public override void Redo()
         {
-            SceneManager.RemoveKeyframe(gObject, property, oldAnimationKey);
+            SceneManager.RemoveKeyframe(gObject, property, oldAnimationKey, updateCurve);
         }
 
         public override void Submit()

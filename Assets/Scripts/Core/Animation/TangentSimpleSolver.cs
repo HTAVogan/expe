@@ -9,9 +9,11 @@ namespace VRtist
     {
         private Vector3 positionTarget;
         private Quaternion rotationTarget;
-        private AnimationSet objectAnimation;
+        public AnimationSet ObjectAnimation;
         private int currentFrame;
         private int size;
+
+        public List<int> RequiredKeyframeIndices;
 
         struct Constraints
         {
@@ -35,7 +37,7 @@ namespace VRtist
         {
             positionTarget = targetPosition;
             rotationTarget = targetRotation;
-            objectAnimation = animation;
+            ObjectAnimation = animation;
             currentFrame = frame;
             size = zoneSize;
             constraints = new Constraints()
@@ -45,10 +47,10 @@ namespace VRtist
 
         public bool TrySolver()
         {
-            objectAnimation.curves[AnimatableProperty.PositionX].GetKeyIndex(currentFrame - size, out int firstIndex);
-            int firstFrame = objectAnimation.curves[AnimatableProperty.PositionX].keys[firstIndex].frame;
-            objectAnimation.curves[AnimatableProperty.PositionX].GetKeyIndex(currentFrame + size, out int lastIndex);
-            int lastFrame = objectAnimation.curves[AnimatableProperty.PositionX].keys[lastIndex + 1].frame;
+            ObjectAnimation.curves[AnimatableProperty.PositionX].GetKeyIndex(currentFrame - size, out int firstIndex);
+            int firstFrame = ObjectAnimation.curves[AnimatableProperty.PositionX].keys[firstIndex].frame;
+            ObjectAnimation.curves[AnimatableProperty.PositionX].GetKeyIndex(currentFrame + size, out int lastIndex);
+            int lastFrame = ObjectAnimation.curves[AnimatableProperty.PositionX].keys[lastIndex].frame;
 
             if (currentFrame < firstFrame) return false;
             if (currentFrame > lastFrame) return false;
@@ -67,14 +69,14 @@ namespace VRtist
                 }
             }
 
-            List<int> requiredKeyframeIndices = FindRequiredTangents(firstFrame, lastFrame, objectAnimation.GetCurve(AnimatableProperty.PositionX));
-            int K = requiredKeyframeIndices.Count;
-            int totalKeyframes = objectAnimation.GetCurve(AnimatableProperty.PositionX).keys.Count;
+            RequiredKeyframeIndices = FindRequiredTangents(firstFrame, lastFrame, ObjectAnimation.GetCurve(AnimatableProperty.PositionX));
+            int K = RequiredKeyframeIndices.Count;
+            int totalKeyframes = ObjectAnimation.GetCurve(AnimatableProperty.PositionX).keys.Count;
             int n = 6;
             int p = 24 * K;
             int pinsNB = constraints.gameObjectIndices.Count;
 
-            double[] theta = GetAllTangents(p, K, requiredKeyframeIndices);
+            double[] theta = GetAllTangents(p, K, RequiredKeyframeIndices);
             double[,] Theta = ColumnArrayToArray(theta);
 
             State currentState = GetCurrentState(currentFrame);
@@ -84,7 +86,7 @@ namespace VRtist
                 euler_orientation = rotationTarget.eulerAngles,
                 time = currentFrame
             };
-            double[,] Js = ds_dtheta(currentFrame, n, p, K, requiredKeyframeIndices);
+            double[,] Js = ds_dtheta(currentFrame, n, p, K, RequiredKeyframeIndices);
             double[,] DT_D = new double[p, p];
             for (int i = 0; i < p; i++)
             {
@@ -127,8 +129,8 @@ namespace VRtist
             double[] u = InitializeUBound(n);
             double[] v = InitializeVBound(n);
 
-            double[] lowerBound = LowerBoundConstraints(theta, u, v, p, K, requiredKeyframeIndices, totalKeyframes);
-            double[] upperBound = UpperBoundConstraints(theta, u, v, p, K, requiredKeyframeIndices, totalKeyframes);
+            double[] lowerBound = LowerBoundConstraints(theta, u, v, p, K, RequiredKeyframeIndices, totalKeyframes);
+            double[] upperBound = UpperBoundConstraints(theta, u, v, p, K, RequiredKeyframeIndices, totalKeyframes);
 
             double[] delta_theta_0 = new double[p];
             double[] delta_theta;
@@ -157,7 +159,7 @@ namespace VRtist
                 double[] rho_prime = rhos.Item2;
                 double[,] Delta_rho_prime = Add(ColumnArrayToArray(rho_prime), Multiply(-1d, ColumnArrayToArray(rho)));
                 double[] delta_rho_prime = ArrayToColumnArray(Delta_rho_prime);
-                double[,] Jrho = drho_dtheta(indexTable, pinsNB, p, K, requiredKeyframeIndices);
+                double[,] Jrho = drho_dtheta(indexTable, pinsNB, p, K, RequiredKeyframeIndices);
 
                 (double[,], int[]) linearConstraints = FindLinearEqualityConstraints(Jrho, delta_rho_prime);
                 double[,] C = linearConstraints.Item1;
@@ -192,18 +194,18 @@ namespace VRtist
             {
 
                 AnimatableProperty property = (AnimatableProperty)i;
-                Curve curve = objectAnimation.curves[property];
+                Curve curve = ObjectAnimation.curves[property];
 
                 for (int k = 0; k < K; k++)
                 {
                     Vector2 inTangent = new Vector2((float)new_theta[4 * (i * K + k) + 0], (float)new_theta[4 * (i * K + k) + 1]);
                     Vector2 outTangent = new Vector2((float)new_theta[4 * (i * K + k) + 2], (float)new_theta[4 * (i * K + k) + 3]);
-                    ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
-                    //if (k == 0) Debug.Log(property + " / " + inTangent + " / " + outTangent);
+                    ModifyTangents(curve, RequiredKeyframeIndices[k], inTangent, outTangent);
+                    //if (property == AnimatableProperty.PositionX) Debug.Log("k" + k + " - " + property + " / " + inTangent + " / " + outTangent);
                 }
             }
 
-            State newState = GetCurrentState(currentFrame);
+            //State newState = GetCurrentState(currentFrame);
 
             return true;
         }
@@ -214,7 +216,7 @@ namespace VRtist
             for (int i = 0; i < data.Length; i++)
             {
                 AnimatableProperty property = (AnimatableProperty)i;
-                objectAnimation.GetCurve(property).Evaluate(currentFrame, out data[i]);
+                ObjectAnimation.GetCurve(property).Evaluate(currentFrame, out data[i]);
             }
             return new State()
             {
@@ -231,7 +233,7 @@ namespace VRtist
             for (int i = 0; i < 6; i++)
             {
                 AnimatableProperty property = (AnimatableProperty)i;
-                Curve curve = objectAnimation.GetCurve(property);
+                Curve curve = ObjectAnimation.GetCurve(property);
                 for (int k = 0; k < K; k++)
                 {
                     AnimationKey key = curve.keys[requieredKeys[k]];
@@ -254,13 +256,13 @@ namespace VRtist
 
         private List<int> FindRequiredTangents(int firstFrame, int lastFrame, Curve curve)
         {
-            List<int> keys = new List<int>();
             curve.GetKeyIndex(firstFrame, out int firstKeyIndex);
             curve.GetKeyIndex(lastFrame, out int lastKeyIndex);
-            for (int i = firstKeyIndex; i <= lastKeyIndex; i++)
-            {
-                keys.Add(i);
-            }
+            List<int> keys = new List<int>() { firstKeyIndex, lastKeyIndex };
+            //for (int i = firstKeyIndex; i <= lastKeyIndex; i++)
+            //{
+            //    keys.Add(i);
+            //}
             return keys;
         }
 
@@ -279,9 +281,9 @@ namespace VRtist
         {
             double[,] Js1 = new double[6, n];
 
-            objectAnimation.curves[AnimatableProperty.PositionX].Evaluate(frame, out float x);
-            objectAnimation.curves[AnimatableProperty.PositionY].Evaluate(frame, out float y);
-            objectAnimation.curves[AnimatableProperty.PositionZ].Evaluate(frame, out float z);
+            ObjectAnimation.curves[AnimatableProperty.PositionX].Evaluate(frame, out float x);
+            ObjectAnimation.curves[AnimatableProperty.PositionY].Evaluate(frame, out float y);
+            ObjectAnimation.curves[AnimatableProperty.PositionZ].Evaluate(frame, out float z);
             Vector3 sp = new Vector3(x, y, z);
 
             for (int j = 0; j < 6; j++)
@@ -324,7 +326,7 @@ namespace VRtist
             {
 
                 AnimatableProperty property = (AnimatableProperty)i;
-                Curve curve = objectAnimation.curves[property];
+                Curve curve = ObjectAnimation.curves[property];
 
                 for (int k = 0; k < K; k++)
                 {
@@ -550,7 +552,7 @@ namespace VRtist
             for (int i = 0; i < 6; i++)
             {
                 AnimatableProperty property = (AnimatableProperty)i;
-                Curve curve = objectAnimation.curves[property];
+                Curve curve = ObjectAnimation.curves[property];
 
                 for (int k = 0; k < K; k++)
                 {
@@ -593,7 +595,7 @@ namespace VRtist
 
         double psi(double v, AnimatableProperty property, int k, bool plus, int GlobalKeyframes)
         {
-            Curve curve = objectAnimation.curves[property];
+            Curve curve = ObjectAnimation.curves[property];
 
             if (plus)
             {
@@ -635,7 +637,7 @@ namespace VRtist
         double phi(double u, AnimatableProperty property, int k, bool plus, int globalKeyframes)
         {
 
-            Curve curve = objectAnimation.curves[property];
+            Curve curve = ObjectAnimation.curves[property];
 
             if (plus)
             {
@@ -698,7 +700,7 @@ namespace VRtist
             {
                 int start = constraints.startFrames[i];
                 int end = constraints.endFrames[i];
-                Curve Property = objectAnimation.curves[constraints.properties[i]];
+                Curve Property = ObjectAnimation.curves[constraints.properties[i]];
 
                 for (int frame = start; frame <= end; frame++)
                 {

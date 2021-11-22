@@ -41,7 +41,7 @@ namespace VRtist
             gObject = obj;
             this.property = property;
             newAnimationKey = new AnimationKey(frame, value, interpolation);
-            updateCurve = true;
+            this.updateCurve = updateCurve;
 
             AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(obj);
             if (null == animationSet)
@@ -60,13 +60,13 @@ namespace VRtist
 
             if (null != oldAnimationKey)
             {
-                SceneManager.AddObjectKeyframe(gObject, property, oldAnimationKey, updateCurve);
+                SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(oldAnimationKey), updateCurve);
             }
         }
 
         public override void Redo()
         {
-            SceneManager.AddObjectKeyframe(gObject, property, newAnimationKey, updateCurve);
+            SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(newAnimationKey), updateCurve);
         }
 
         public override void Submit()

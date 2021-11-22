@@ -10,11 +10,12 @@ namespace VRtist
         public List<Transform> PathToRoot = new List<Transform>();
         public List<AnimationSet> AnimToRoot = new List<AnimationSet>();
         public AnimationSet Animation;
+        public SkinMeshController RootController;
 
         [Range(0, 1)]
         public float stiffness;
 
-        public void SetPathToRoot(List<Transform> path)
+        public void SetPathToRoot(SkinMeshController controller, List<Transform> path)
         {
             path.ForEach(x =>
             {
@@ -24,6 +25,7 @@ namespace VRtist
                 AnimToRoot.Add(anim);
             });
             Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
+            RootController = controller;
         }
 
         public Vector3 FramePosition(int frame)
@@ -98,7 +100,7 @@ namespace VRtist
             {
                 if (scalex.Evaluate(frame, out float sx) && scaley.Evaluate(frame, out float sy) && scalez.Evaluate(frame, out float sz))
                 {
-                    position = new Vector3(sx, sy, sz);
+                    scale = new Vector3(sx, sy, sz);
                 }
             }
             return Matrix4x4.TRS(position, rotation, scale);
@@ -114,30 +116,7 @@ namespace VRtist
             Animation = GlobalState.Animation.GetObjectAnimation(gameObject);
         }
 
-        [ContextMenu("try solver")]
-        public void TestSolver()
-        {
-            CheckAnimations();
-            int currentFrame = 20;
 
 
-            TangentsSolver solver = new TangentsSolver(transform.localPosition + transform.forward, transform.rotation, AnimToRoot, currentFrame, 5,
-                new TangentsSolver.Constraint() { startFrames = new List<int>(), properties = new List<int>(), endFrames = new List<int>(), gameObjectIndices = new List<int>(), values = new List<float>() });
-        }
-
-        public IEnumerator TestSolver(Vector3 position, Quaternion rotation, int frame, int zoneSize)
-        {
-            CheckAnimations();
-            TangentsSolver solver = new TangentsSolver(position, rotation, AnimToRoot, frame, zoneSize,
-                new TangentsSolver.Constraint() { startFrames = new List<int>(), properties = new List<int>(), endFrames = new List<int>(), gameObjectIndices = new List<int>(), values = new List<float>() });
-            yield return false;
-            solver.StepOne();
-            yield return false;
-            solver.StepThree();
-            yield return false;
-            solver.StepFive();
-            GlobalState.Animation.onChangeCurve.Invoke(PathToRoot[0].gameObject, AnimatableProperty.PositionX);
-
-        }
     }
 }

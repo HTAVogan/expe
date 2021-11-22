@@ -23,13 +23,13 @@ namespace VRtist
             if (null == animationSet) return;
             Curve curve = animationSet.GetCurve(property);
 
-            curve.GetTangentKeys(frame, zoneSize,ref oldKeys);
+            curve.GetTangentKeys(frame, zoneSize, ref oldKeys);
         }
 
         public override void Redo()
         {
-            oldKeys.ForEach(x => SceneManager.RemoveKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation, x.inTangent, x.outTangent), false));
-            newKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation, x.inTangent, x.outTangent), false));
+            oldKeys.ForEach(x => SceneManager.RemoveKeyframe(gObject, property, x, false));
+            newKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x), false));
         }
 
         public override void Submit()
@@ -40,8 +40,8 @@ namespace VRtist
 
         public override void Undo()
         {
-            newKeys.ForEach(x => SceneManager.RemoveKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation, x.inTangent, x.outTangent), false));
-            oldKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation, x.inTangent, x.outTangent), false));
+            newKeys.ForEach(x => SceneManager.RemoveKeyframe(gObject, property, x, false));
+            oldKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x), false));
         }
-    } 
+    }
 }

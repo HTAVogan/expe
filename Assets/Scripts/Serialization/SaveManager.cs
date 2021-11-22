@@ -445,7 +445,9 @@ namespace VRtist.Serialization
                         {
                             frame = key.frame,
                             value = key.value,
-                            interpolation = key.interpolation
+                            interpolation = key.interpolation,
+                            inTangent = key.inTangent,
+                            outTangent = key.outTangent
                         };
                         curveData.keyframes.Add(keyData);
                     }
@@ -890,7 +892,7 @@ namespace VRtist.Serialization
                 List<AnimationKey> keys = new List<AnimationKey>();
                 foreach (KeyframeData keyData in curve.keyframes)
                 {
-                    keys.Add(new AnimationKey(keyData.frame, keyData.value, keyData.interpolation));
+                    keys.Add(new AnimationKey(keyData.frame, keyData.value, keyData.interpolation, keyData.inTangent, keyData.outTangent));
                 }
 
                 animSet.SetCurve(curve.property, keys);

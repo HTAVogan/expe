@@ -68,6 +68,15 @@ namespace VRtist
             this.outTangent = outTangent;
         }
 
+        public AnimationKey(AnimationKey key)
+        {
+            frame = key.frame;
+            value = key.value;
+            interpolation = key.interpolation;
+            inTangent = key.inTangent;
+            outTangent = key.outTangent;
+        }
+
         public int frame;
         public float value;
         public Vector2 inTangent;
@@ -366,12 +375,12 @@ namespace VRtist
             return animationSet;
         }
 
-        public void SetObjectAnimations(GameObject gobject, AnimationSet animationSet)
+        public void SetObjectAnimations(GameObject gobject, AnimationSet animationSet, bool callEvent = true)
         {
             animations[gobject] = animationSet;
             foreach (Curve curve in animationSet.curves.Values)
                 curve.ComputeCache();
-            onAddAnimation.Invoke(gobject);
+            if (callEvent) onAddAnimation.Invoke(gobject);
         }
 
         public bool ObjectHasAnimation(GameObject gobject)
@@ -391,9 +400,9 @@ namespace VRtist
             return false;
         }
 
-        public void ClearAnimations(GameObject gobject)
+        public void ClearAnimations(GameObject gobject, bool callEvent = true)
         {
-            if (animations.Remove(gobject))
+            if (animations.Remove(gobject) && callEvent)
                 onRemoveAnimation.Invoke(gobject);
         }
 
@@ -540,7 +549,7 @@ namespace VRtist
 
             if (!IsAnimating())
                 EvaluateAnimations();
-            if(updateCurves) onChangeCurve.Invoke(gobject, property);
+            if (updateCurves) onChangeCurve.Invoke(gobject, property);
         }
 
         public void Record()

@@ -47,10 +47,9 @@ namespace VRtist
             get { return editMode; }
             set
             {
-                if (value == editMode) return;
-                GetModeButton(editMode).Selected = false;
+                GetModeButton(editMode).Checked = false;
                 editMode = value;
-                GetModeButton(editMode).Selected = true;
+                GetModeButton(editMode).Checked = true;
             }
         }
 
@@ -60,10 +59,9 @@ namespace VRtist
         {
             set
             {
-                if (value == curveMode) return;
-                GetCurveModeButton(curveMode).Selected = false;
+                GetCurveModeButton(curveMode).Checked = false;
                 curveMode = value;
-                GetCurveModeButton(curveMode).Selected = true;
+                GetCurveModeButton(curveMode).Checked = true;
             }
             get { return curveMode; }
         }
@@ -77,10 +75,9 @@ namespace VRtist
             get { return poseMode; }
             set
             {
-                if (value == poseMode) return;
-                GetPoseModeButton(poseMode).Selected = false;
+                GetPoseModeButton(poseMode).Checked = false;
                 poseMode = value;
-                GetPoseModeButton(poseMode).Selected = true;
+                GetPoseModeButton(poseMode).Checked = true;
             }
         }
 
@@ -322,6 +319,7 @@ namespace VRtist
 
         public void EndPose(Transform mouthpiece)
         {
+            poseManip.GetCommand().Submit();
             poseManip = null;
         }
 

@@ -39,9 +39,11 @@ namespace VRtist
 
             foreach (Curve curve in GlobalState.Animation.GetObjectAnimation(obj).curves.Values)
             {
-                new CommandRemoveKeyframe(gObject, curve.property, frame).Submit();
+                if (curve.HasKeyAt(frame))
+                    new CommandRemoveKeyframe(gObject, curve.property, frame).Submit();
             }
         }
+
 
         public override void Undo()
         {

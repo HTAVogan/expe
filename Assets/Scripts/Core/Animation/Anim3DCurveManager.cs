@@ -96,6 +96,7 @@ namespace VRtist
             if (controllers.Length > 0)
             {
                 UpdateHumanCurve(controllers);
+                return;
             }
             if (property != AnimatableProperty.PositionX && property != AnimatableProperty.PositionY && property != AnimatableProperty.PositionZ)
                 return;
@@ -111,13 +112,19 @@ namespace VRtist
         {
             if (!Selection.IsSelected(gObject))
                 return;
-
             UpdateCurve(gObject);
         }
 
         void OnAnimationRemoved(GameObject gObject)
         {
-            DeleteCurve(gObject);
+            if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+            {
+                RecursiveDeleteCurve(gObject.transform);
+            }
+            else
+            {
+                DeleteCurve(gObject);
+            }
         }
 
         void OnToolChanged(object sender, ToolChangedArgs args)
@@ -141,6 +148,15 @@ namespace VRtist
             {
                 Destroy(curves[gObject]);
                 curves.Remove(gObject);
+            }
+        }
+
+        void RecursiveDeleteCurve(Transform target)
+        {
+            DeleteCurve(target.gameObject);
+            foreach (Transform child in target)
+            {
+                RecursiveDeleteCurve(child);
             }
         }
 

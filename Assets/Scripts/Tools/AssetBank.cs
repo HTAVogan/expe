@@ -139,11 +139,10 @@ namespace VRtist
                         controller.isImported = true;
                         controller.importPath = item.assetName;
                     }
-                    if(controller is SkinMeshController)
+                    if (controller is SkinMeshController)
                     {
                         controller.isImported = true;
                         controller.importPath = item.assetName;
-                        Debug.Log("has skin mesh controller");
                     }
                 }
 
@@ -156,7 +155,7 @@ namespace VRtist
                         bounds.Encapsulate(subMeshFilter.mesh.bounds);
                     }
                 }
-                foreach(var subSkinneMesh in newObject.GetComponentsInChildren<SkinnedMeshRenderer>())
+                foreach (var subSkinneMesh in newObject.GetComponentsInChildren<SkinnedMeshRenderer>())
                 {
                     if (!useDefaultInstantiationScale)
                     {

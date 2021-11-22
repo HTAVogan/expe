@@ -18,6 +18,7 @@ namespace VRtist
             public Matrix4x4 InitialParentMatrixWorldToLocal;
             public Matrix4x4 InitialTRS;
             public float ScaleIndice;
+            public TangentSimpleSolver Solver;
         }
         private ObjectData objectData;
 
@@ -98,13 +99,16 @@ namespace VRtist
                 ScaleIndice = 1f
             };
 
-            if (manipulationMode == AnimationTool.CurveEditMode.Tangents) AddSegmentKeyframes(frame, previousSet);
+            if (manipulationMode == AnimationTool.CurveEditMode.Segment) AddSegmentKeyframes(frame, previousSet);
         }
 
         public void DragCurve(Transform mouthpiece, float scaleIndice)
         {
             Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initialMouthMatrix;
-            if (isHuman) DragHuman(transformation);
+            if (isHuman)
+            {
+                DragHuman(transformation);
+            }
             else DragObject(transformation, scaleIndice);
         }
 
@@ -114,8 +118,8 @@ namespace VRtist
             Maths.DecomposeMatrix(target, out Vector3 targetPos, out Quaternion targetRot, out Vector3 targetScale);
             TangentHumanSolver solver = new TangentHumanSolver(targetPos, targetRot, humanData.Controller.Animation, humanData.Controller.AnimToRoot, Frame, zoneSize);
             solver.TrySolver();
-            GlobalState.Animation.onChangeCurve.Invoke(Target.gameObject, AnimatableProperty.PositionX);
             humanData.Solver = solver;
+            GlobalState.Animation.onChangeCurve.Invoke(humanData.Controller.RootController.gameObject, AnimatableProperty.PositionX);
         }
 
         private void DragObject(Matrix4x4 transformation, float scaleIndice)
@@ -147,12 +151,12 @@ namespace VRtist
                 case AnimationTool.CurveEditMode.Zone:
                     AddFilteredKeyframeZone(Target, posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
                     break;
+                //case AnimationTool.CurveEditMode.Segment:
+                //    AddFilteredKeyframeSegment(Target, posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
+                //    break;
                 case AnimationTool.CurveEditMode.Segment:
-                    AddFilteredKeyframeSegment(Target, posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
-                    break;
-                case AnimationTool.CurveEditMode.Tangents:
-                    TangentSimpleSolver solver = new TangentSimpleSolver(position, qrotation, GlobalState.Animation.GetObjectAnimation(Target), Frame, zoneSize);
-                    solver.TrySolver();
+                    objectData.Solver = new TangentSimpleSolver(position, qrotation, GlobalState.Animation.GetObjectAnimation(Target), Frame, zoneSize);
+                    objectData.Solver.TrySolver();
                     GlobalState.Animation.onChangeCurve.Invoke(Target, AnimatableProperty.PositionX);
                     break;
             }
@@ -185,13 +189,23 @@ namespace VRtist
                     new CommandAddKeyframes(Target, Frame, zoneSize, position, rotation, scale).Submit();
                     break;
                 case AnimationTool.CurveEditMode.Segment:
-                    new CommandAddKeyframes(Target, Frame, zoneSize, position, rotation, scale, true).Submit();
-                    break;
+                    Dictionary<AnimatableProperty, List<AnimationKey>> keyframeList = new Dictionary<AnimatableProperty, List<AnimationKey>>();
 
+                    for (int prop = 0; prop < 6; prop++)
+                    {
+                        AnimatableProperty property = (AnimatableProperty)prop;
+                        keyframeList.Add(property, new List<AnimationKey>());
+                        for (int i = 0; i < objectData.Solver.RequiredKeyframeIndices.Count; i++)
+                        {
+                            keyframeList[property].Add(objectData.Solver.ObjectAnimation.GetCurve(property).keys[objectData.Solver.RequiredKeyframeIndices[i]]);
+                        }
+                    }
+                    new CommandAddKeyframes(Target, Frame, zoneSize, keyframeList).Submit();
+                    break;
             }
             group.Submit();
-
         }
+
         private void ReleaseHuman()
         {
             List<GameObject> objectList = new List<GameObject>();
@@ -237,10 +251,8 @@ namespace VRtist
 
             GlobalState.Animation.onChangeCurve.Invoke(humanData.Animations[0].transform.gameObject, AnimatableProperty.PositionX);
             CommandGroup group = new CommandGroup("Add Keyframe");
-            new CommandAddKeyframes(Target, objectList, Frame, zoneSize, keyframesLists).Submit();
+            new CommandAddKeyframes(humanData.Controller.RootController.gameObject, objectList, Frame, zoneSize, keyframesLists).Submit();
             group.Submit();
-
-            GlobalState.Animation.onChangeCurve.Invoke(humanData.Animations[0].transform.gameObject, AnimatableProperty.PositionX);
         }
 
         private void AddSegmentKeyframes(int frame, AnimationSet animation)
@@ -288,7 +300,9 @@ namespace VRtist
             GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.ScaleZ, scaleZ, zoneSize, false);
             GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.PositionX, posX, zoneSize, false);
             GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.PositionY, posY, zoneSize, false);
-            GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.PositionZ, posZ, zoneSize);
+            GlobalState.Animation.AddFilteredKeyframeTangent(target, AnimatableProperty.PositionZ, posZ, zoneSize, false);
+
+
         }
 
         private void AddFilteredKeyframe(GameObject target, AnimationKey posX, AnimationKey posY, AnimationKey posZ, AnimationKey rotX, AnimationKey rotY, AnimationKey rotZ, AnimationKey scalex, AnimationKey scaley, AnimationKey scalez)
@@ -299,9 +313,9 @@ namespace VRtist
             GlobalState.Animation.AddFilteredKeyframe(target, AnimatableProperty.ScaleX, scalex, false);
             GlobalState.Animation.AddFilteredKeyframe(target, AnimatableProperty.ScaleY, scaley, false);
             GlobalState.Animation.AddFilteredKeyframe(target, AnimatableProperty.ScaleZ, scalez, false);
-            GlobalState.Animation.AddFilteredKeyframe(target, AnimatableProperty.PositionX, posX, false);
             GlobalState.Animation.AddFilteredKeyframe(target, AnimatableProperty.PositionY, posY, false);
-            GlobalState.Animation.AddFilteredKeyframe(target, AnimatableProperty.PositionZ, posZ);
+            GlobalState.Animation.AddFilteredKeyframe(target, AnimatableProperty.PositionZ, posZ, false);
+            GlobalState.Animation.AddFilteredKeyframe(target, AnimatableProperty.PositionX, posX);
         }
 
         private void AddFilteredKeyframeZone(GameObject target, AnimationKey posX, AnimationKey posY, AnimationKey posZ, AnimationKey rotX, AnimationKey rotY, AnimationKey rotZ, AnimationKey scalex, AnimationKey scaley, AnimationKey scalez)

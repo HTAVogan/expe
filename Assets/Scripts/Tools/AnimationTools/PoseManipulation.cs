@@ -33,8 +33,6 @@ namespace VRtist
 
         private State currentState;
         private State desiredState;
-        private Vector3 initialRootPosition;
-        List<Quaternion> initialRotations;
 
 
         private int p;
@@ -48,6 +46,14 @@ namespace VRtist
 
         private GameObject debugCurrent;
         private GameObject debugTarget;
+
+        private List<GameObject> movedObjects;
+        private List<Vector3> startPositions;
+        private List<Quaternion> startRotations;
+        private List<Vector3> startScales;
+        private List<Vector3> endPositions;
+        private List<Quaternion> endRotations;
+        private List<Vector3> endScales;
 
         public PoseManipulation(Transform objectTransform, List<Transform> objectHierarchy, Transform mouthpiece, AnimationTool.PoseEditMode mode)
         {
@@ -63,10 +69,56 @@ namespace VRtist
             InitialParentMatrixWorldToLocal = oTransform.parent.worldToLocalMatrix;
             InitialTRS = Matrix4x4.TRS(oTransform.localPosition, oTransform.localRotation, oTransform.localScale);
             initialTransformMatrix = oTransform.localToWorldMatrix;
+            if (mode == AnimationTool.PoseEditMode.FK)
+            {
 
+                movedObjects = new List<GameObject>() { oTransform.gameObject };
+                startPositions = new List<Vector3>() { oTransform.localPosition };
+                endPositions = new List<Vector3>() { oTransform.localPosition };
 
-            fromRotation = Quaternion.FromToRotation(Vector3.forward, oTransform.localPosition) * Vector3.forward;
-            initialRotation = fullHierarchy[hierarchySize - 2].localRotation;
+                startRotations = new List<Quaternion>() { oTransform.localRotation };
+                endRotations = new List<Quaternion>() { oTransform.localRotation };
+
+                startScales = new List<Vector3> { oTransform.localScale };
+                endScales = new List<Vector3> { oTransform.localScale };
+
+                fromRotation = Quaternion.FromToRotation(Vector3.forward, oTransform.localPosition) * Vector3.forward;
+                if (hierarchySize > 2)
+                {
+                    initialRotation = fullHierarchy[hierarchySize - 2].localRotation;
+
+                    movedObjects.Add(fullHierarchy[hierarchySize - 2].gameObject);
+                    startPositions.Add(fullHierarchy[hierarchySize - 2].localPosition);
+                    endPositions.Add(fullHierarchy[hierarchySize - 2].localPosition);
+
+                    startRotations.Add(fullHierarchy[hierarchySize - 2].localRotation);
+                    endRotations.Add(fullHierarchy[hierarchySize - 2].localRotation);
+
+                    startScales.Add(fullHierarchy[hierarchySize - 2].localScale);
+                    endScales.Add(fullHierarchy[hierarchySize - 2].localScale);
+                }
+            }
+            else
+            {
+                movedObjects = new List<GameObject>();
+                startPositions = new List<Vector3>();
+                endPositions = new List<Vector3>();
+                startRotations = new List<Quaternion>();
+                endRotations = new List<Quaternion>();
+                startScales = new List<Vector3>();
+                endScales = new List<Vector3>();
+
+                fullHierarchy.ForEach(x =>
+                {
+                    movedObjects.Add(x.gameObject);
+                    startPositions.Add(x.localPosition);
+                    endPositions.Add(x.localPosition);
+                    startRotations.Add(x.localRotation);
+                    endRotations.Add(x.localRotation);
+                    startScales.Add(x.localScale);
+                    endScales.Add(x.localScale);
+                });
+            }
 
 
 
@@ -117,13 +169,15 @@ namespace VRtist
                 {
                     Vector3 to = Quaternion.FromToRotation(Vector3.forward, targetPosition) * Vector3.forward;
                     fullHierarchy[hierarchySize - 2].localRotation = initialRotation * Quaternion.FromToRotation(fromRotation, to);
+                    endRotations[1] = fullHierarchy[hierarchySize - 2].localRotation;
                 }
                 else
                 {
                     oTransform.localPosition = targetPosition;
+                    endPositions[0] = targetPosition;
                 }
-
                 oTransform.localRotation = targetRotation;
+                endRotations[0] = targetRotation;
                 return true;
             }
             else
@@ -134,6 +188,11 @@ namespace VRtist
 
                 return true;
             }
+        }
+
+        public CommandMoveObjects GetCommand()
+        {
+            return new CommandMoveObjects(movedObjects, startPositions, startRotations, startScales, endPositions, endRotations, endScales);
         }
 
         public bool Setup()
@@ -155,7 +214,6 @@ namespace VRtist
                 rotation = targetRotation
             };
             //Debug.Log("target : " + desiredState.position + " / " + desiredState.rotation);
-            initialRootPosition = fullHierarchy[0].position;
 
             double[,] Js = ds_dtheta(p);
 
@@ -257,13 +315,19 @@ namespace VRtist
 
             if (Vector3.Distance(currentState.position, desiredState.position) < Vector3.Distance(oTransform.position, desiredState.position))
             {
-                rootTransform.position = initialRootPosition;
+                rootTransform.localPosition = endPositions[0];
                 for (int l = 0; l < hierarchySize; l++)
                 {
-                    fullHierarchy[l].rotation = initialRotations[l];
+                    fullHierarchy[l].localRotation = endRotations[l];
                 }
             }
 
+            for (int c = 0; c < fullHierarchy.Count; c++)
+            {
+                endPositions[c] = fullHierarchy[c].localPosition;
+                endRotations[c] = fullHierarchy[c].localRotation;
+                endScales[c] = fullHierarchy[c].localScale;
+            }
 
             return true;
         }
@@ -271,14 +335,12 @@ namespace VRtist
         private double[] GetAllValues(int p)
         {
             double[] theta = new double[p];
-            initialRotations = new List<Quaternion>();
             for (int l = 0; l < hierarchySize; l++)
             {
                 Transform currentTransform = fullHierarchy[l];
                 theta[3 * l + 0] = Mathf.DeltaAngle(0, currentTransform.localEulerAngles.x);
                 theta[3 * l + 1] = Mathf.DeltaAngle(0, currentTransform.localEulerAngles.y);
                 theta[3 * l + 2] = Mathf.DeltaAngle(0, currentTransform.localEulerAngles.z);
-                initialRotations.Add(currentTransform.rotation);
             }
             Transform root = fullHierarchy[0];
             theta[3 * hierarchySize + 0] = root.localPosition.x;
