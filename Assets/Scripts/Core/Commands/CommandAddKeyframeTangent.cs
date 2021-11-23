@@ -24,11 +24,26 @@ namespace VRtist
             Curve curve = animationSet.GetCurve(property);
 
             curve.GetTangentKeys(frame, zoneSize, ref oldKeys);
+            //if (property == AnimatableProperty.PositionX)
+            //{
+            //    string deb = "new keys : ";
+            //    keysChanged.ForEach(x => deb += " " + x.frame);
+            //    deb += " old keys ";
+            //    oldKeys.ForEach(x => deb += " " + x.frame);
+            //    Debug.Log(deb);
+            //}
+
         }
 
         public override void Redo()
         {
-            oldKeys.ForEach(x => SceneManager.RemoveKeyframe(gObject, property, x, false));
+            oldKeys.ForEach(x =>
+            {
+                if (!newKeys.Exists(y => x.frame == y.frame))
+                {
+                    SceneManager.RemoveKeyframe(gObject, property, x, false);
+                }
+            });
             newKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x), false));
         }
 
@@ -40,7 +55,13 @@ namespace VRtist
 
         public override void Undo()
         {
-            newKeys.ForEach(x => SceneManager.RemoveKeyframe(gObject, property, x, false));
+            newKeys.ForEach(x =>
+            {
+                if (!oldKeys.Exists(y => x.frame == y.frame))
+                {
+                    SceneManager.RemoveKeyframe(gObject, property, x, false);
+                }
+            });
             oldKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x), false));
         }
     }

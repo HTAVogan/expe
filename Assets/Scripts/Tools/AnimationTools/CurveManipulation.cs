@@ -35,7 +35,8 @@ namespace VRtist
         private Matrix4x4 initialMouthMatrix;
 
 
-        private int zoneSize;
+        private int startFrame;
+        private int endFrame;
 
         private AnimationTool.CurveEditMode manipulationMode;
 
@@ -98,7 +99,6 @@ namespace VRtist
                 InitialTRS = Matrix4x4.TRS(initialPosition, initialRotation, initialScale),
                 ScaleIndice = 1f
             };
-
             if (manipulationMode == AnimationTool.CurveEditMode.Segment) AddSegmentKeyframes(frame, previousSet);
         }
 
@@ -151,13 +151,12 @@ namespace VRtist
                 case AnimationTool.CurveEditMode.Zone:
                     AddFilteredKeyframeZone(Target, posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
                     break;
-                //case AnimationTool.CurveEditMode.Segment:
-                //    AddFilteredKeyframeSegment(Target, posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
-                //    break;
                 case AnimationTool.CurveEditMode.Segment:
                     objectData.Solver = new TangentSimpleSolver(position, qrotation, GlobalState.Animation.GetObjectAnimation(Target), Frame, zoneSize);
                     objectData.Solver.TrySolver();
                     GlobalState.Animation.onChangeCurve.Invoke(Target, AnimatableProperty.PositionX);
+                    break;
+                case AnimationTool.CurveEditMode.Tangents:
                     break;
             }
         }
@@ -179,6 +178,7 @@ namespace VRtist
             Vector3 rotation = qrotation.eulerAngles;
             scale *= scaleIndice;
             GlobalState.Animation.SetObjectAnimations(Target, objectData.Animation);
+
             CommandGroup group = new CommandGroup("Add Keyframe");
             switch (manipulationMode)
             {
@@ -195,9 +195,11 @@ namespace VRtist
                     {
                         AnimatableProperty property = (AnimatableProperty)prop;
                         keyframeList.Add(property, new List<AnimationKey>());
-                        for (int i = 0; i < objectData.Solver.RequiredKeyframeIndices.Count; i++)
+                        int firstKey = Mathf.Max(0, objectData.Solver.RequiredKeyframeIndices[0] - 1);
+                        int lastKey = Mathf.Min(objectData.Solver.ObjectAnimation.GetCurve(property).keys.Count - 1, objectData.Solver.RequiredKeyframeIndices[objectData.Solver.RequiredKeyframeIndices.Count - 1] + 1);
+                        for (int i = firstKey; i <= lastKey; i++)
                         {
-                            keyframeList[property].Add(objectData.Solver.ObjectAnimation.GetCurve(property).keys[objectData.Solver.RequiredKeyframeIndices[i]]);
+                            keyframeList[property].Add(objectData.Solver.ObjectAnimation.GetCurve(property).keys[i]);
                         }
                     }
                     new CommandAddKeyframes(Target, Frame, zoneSize, keyframeList).Submit();
@@ -220,12 +222,19 @@ namespace VRtist
                 {
                     AnimatableProperty property = (AnimatableProperty)prop;
                     List<AnimationKey> keys = new List<AnimationKey>();
+                    Curve curve = humanData.Controller.AnimToRoot[i].GetCurve(property);
+
+                    curve.GetKeyIndex(humanData.Solver.requiredKeyframe[0], out int beforKey);
+                    if (beforKey > 0) keys.Add(curve.keys[beforKey - 1]);
+
                     for (int k = 0; k < humanData.Solver.requiredKeyframe.Count; k++)
                     {
-                        Curve curve = humanData.Controller.AnimToRoot[i].GetCurve(property);
                         curve.GetKeyIndex(humanData.Solver.requiredKeyframe[k], out int keyIndex);
                         keys.Add(curve.keys[keyIndex]);
                     }
+
+                    curve.GetKeyIndex(humanData.Solver.requiredKeyframe[humanData.Solver.requiredKeyframe.Count - 1], out int afterKey);
+                    if (afterKey < curve.keys.Count - 1) keys.Add(curve.keys[afterKey + 1]);
                     keyframesLists[keyframesLists.Count - 1].Add(property, keys);
                 }
                 GlobalState.Animation.SetObjectAnimations(humanData.Animations[index].transform.gameObject, humanData.Animations[index]);
@@ -238,12 +247,19 @@ namespace VRtist
             {
                 AnimatableProperty property = (AnimatableProperty)prop;
                 List<AnimationKey> keys = new List<AnimationKey>();
+                Curve curve = humanData.Controller.Animation.GetCurve(property);
+
+                curve.GetKeyIndex(humanData.Solver.requiredKeyframe[0], out int beforKey);
+                if (beforKey > 0) keys.Add(curve.keys[beforKey - 1]);
+
                 for (int k = 0; k < humanData.Solver.requiredKeyframe.Count; k++)
                 {
-                    Curve curve = humanData.Controller.Animation.GetCurve(property);
                     curve.GetKeyIndex(humanData.Solver.requiredKeyframe[k], out int keyIndex);
                     keys.Add(curve.keys[keyIndex]);
                 }
+                curve.GetKeyIndex(humanData.Solver.requiredKeyframe[humanData.Solver.requiredKeyframe.Count - 1], out int afterKey);
+                if (afterKey < curve.keys.Count - 1) keys.Add(curve.keys[afterKey + 1]);
+
                 keyframesLists[keyframesLists.Count - 1].Add(property, keys);
             }
             GlobalState.Animation.SetObjectAnimations(Target, humanData.ObjectAnimation);

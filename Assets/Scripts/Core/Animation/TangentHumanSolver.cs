@@ -289,7 +289,7 @@ namespace VRtist
             }
 
             State finalState = GetCurrentState(currentFrame);
-            Debug.Log("result " + finalState.position.x + " , " + finalState.position.y + " , " + finalState.position.z + " - " + finalState.rotation);
+            //Debug.Log("result " + finalState.position.x + " , " + finalState.position.y + " , " + finalState.position.z + " - " + finalState.rotation);
 
             if (Vector3.Distance(finalState.position, desiredState.position) > Vector3.Distance(currentState.position, desiredState.position))
             {

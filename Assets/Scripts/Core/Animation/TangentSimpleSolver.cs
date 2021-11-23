@@ -11,7 +11,8 @@ namespace VRtist
         private Quaternion rotationTarget;
         public AnimationSet ObjectAnimation;
         private int currentFrame;
-        private int size;
+        private int startFrame;
+        private int endFrame;
 
         public List<int> RequiredKeyframeIndices;
 
@@ -33,23 +34,25 @@ namespace VRtist
 
         Constraints constraints;
 
-        public TangentSimpleSolver(Vector3 targetPosition, Quaternion targetRotation, AnimationSet animation, int frame, int zoneSize)
+        public TangentSimpleSolver(Vector3 targetPosition, Quaternion targetRotation, AnimationSet animation, int frame, int start, int end)
         {
             positionTarget = targetPosition;
             rotationTarget = targetRotation;
             ObjectAnimation = animation;
             currentFrame = frame;
-            size = zoneSize;
+            startFrame = start;
+            endFrame = end;
             constraints = new Constraints()
             { endFrames = new List<int>(), gameObjectIndices = new List<int>(), properties = new List<AnimatableProperty>(), startFrames = new List<int>(), values = new List<float>() };
-
         }
+
+
 
         public bool TrySolver()
         {
-            ObjectAnimation.curves[AnimatableProperty.PositionX].GetKeyIndex(currentFrame - size, out int firstIndex);
+            ObjectAnimation.curves[AnimatableProperty.PositionX].GetKeyIndex(startFrame, out int firstIndex);
             int firstFrame = ObjectAnimation.curves[AnimatableProperty.PositionX].keys[firstIndex].frame;
-            ObjectAnimation.curves[AnimatableProperty.PositionX].GetKeyIndex(currentFrame + size, out int lastIndex);
+            ObjectAnimation.curves[AnimatableProperty.PositionX].GetKeyIndex(endFrame, out int lastIndex);
             int lastFrame = ObjectAnimation.curves[AnimatableProperty.PositionX].keys[lastIndex].frame;
 
             if (currentFrame < firstFrame) return false;

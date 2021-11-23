@@ -31,6 +31,9 @@ namespace VRtist
 
         private int zoneSize;
 
+        private int startFrame;
+        private int endFrame;
+
         private LineRenderer lastLine;
         private Texture2D lastTexture;
 
