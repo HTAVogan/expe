@@ -175,6 +175,19 @@ namespace VRtist
             return key.frame == frame;
         }
 
+        public int GetPreviousKeyFrame(int frame)
+        {
+            int index = cachedKeysIndices[frame - GlobalState.Animation.StartFrame];
+            if (index < 0) return 0;
+            return keys[index].frame;
+        }
+        public int GetNextKeyFrame(int frame)
+        {
+            int index = cachedKeysIndices[frame - GlobalState.Animation.StartFrame] + 1;
+            if (index >= keys.Count) return keys.Count - 1;
+            return keys[index].frame;
+        }
+
         public void SetKeys(List<AnimationKey> k)
         {
             k.ForEach(x => keys.Add(new AnimationKey(x)));
@@ -205,7 +218,7 @@ namespace VRtist
             keys.Add(key);
         }
 
-        public void AddKey(AnimationKey key, bool lockTangents = true)
+        public void AddKey(AnimationKey key, bool lockTangents = false)
         {
             if (GetKeyIndex(key.frame, out int index))
             {
@@ -485,57 +498,13 @@ namespace VRtist
             newKeys.Add(new AnimationKey(key.frame, key.value, key.interpolation));
         }
 
-        public void AddKeySegment(AnimationKey key, int zoneSize)
-        {
-            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, key.frame - zoneSize);
-            int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
 
-            int firstKeyIndex = cachedKeysIndices[startFrame - (GlobalState.Animation.StartFrame - 1)];
-            int lastKeyIndex = cachedKeysIndices[endFrame - (GlobalState.Animation.StartFrame - 1)];
-
-            if (keys.Count == 0) return;
-
-            if (keys[firstKeyIndex].frame != startFrame && Evaluate(startFrame, out float prevValue))
-            {
-                AddKey(new AnimationKey(startFrame, prevValue, key.interpolation));
-            }
-            if (keys[lastKeyIndex].frame != endFrame && Evaluate(endFrame, out float nextValue))
-            {
-                AddKey(new AnimationKey(endFrame, nextValue, key.interpolation));
-            }
-            List<AnimationKey> toRemove = keys.FindAll(x => x.frame > startFrame && x.frame < endFrame && x.frame != key.frame);
-            toRemove.ForEach(x => RemoveKey(x.frame));
-            AddKey(key);
-        }
-
-        public void GetSegmentKeyChanges(AnimationKey key, int zoneSize, List<AnimationKey> oldKeys, List<AnimationKey> newKeys)
-        {
-            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, key.frame - zoneSize);
-            int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
-
-            int firstKeyIndex = cachedKeysIndices[startFrame - (GlobalState.Animation.StartFrame - 1)];
-            int lastKeyIndex = cachedKeysIndices[endFrame - (GlobalState.Animation.StartFrame - 1)];
-
-            if (keys.Count == 0) return;
-
-            keys.FindAll(x => x.frame > startFrame && x.frame < endFrame).ForEach(x => oldKeys.Add(new AnimationKey(x.frame, x.value, x.interpolation, x.inTangent, x.outTangent)));
-            if (keys[firstKeyIndex].frame != startFrame && Evaluate(startFrame, out float prevValue))
-            {
-                newKeys.Add(new AnimationKey(startFrame, prevValue, key.interpolation));
-            }
-            if (keys[lastKeyIndex].frame != endFrame && Evaluate(endFrame, out float nextValue))
-            {
-                newKeys.Add(new AnimationKey(endFrame, nextValue, key.interpolation));
-            }
-            newKeys.Add(key);
-        }
-
-        public void AddTangentKey(AnimationKey key, int zoneSize)
+        public void AddTangentKey(AnimationKey key, int start, int end)
         {
             if (keys.Count == 0) return;
 
-            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, key.frame - zoneSize);
-            int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
+            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, start);
+            int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, end);
 
             int firstKeyIndex = Mathf.Max(cachedKeysIndices[startFrame - (GlobalState.Animation.StartFrame)], 0);
             int lastKeyIndex = Mathf.Max(cachedKeysIndices[endFrame - (GlobalState.Animation.StartFrame)], 0);
@@ -564,6 +533,13 @@ namespace VRtist
             oldKeys = keys.FindAll(x => x.frame >= startFrame && x.frame <= endFrame);
             oldKeys.Add(keys[prevIndex]);
             oldKeys.Add(keys[nextIndex]);
+        }
+
+        public void GetTangentKeys(int frame, int start, int end, ref List<AnimationKey> oldKeys)
+        {
+            if (GetKeyIndex(start, out int firstIndex)) oldKeys.Add(keys[firstIndex]);
+            if (GetKeyIndex(end, out int endIndex)) oldKeys.Add(keys[endIndex]);
+
         }
 
         public void MoveKey(int oldFrame, int newFrame)
@@ -727,6 +703,8 @@ namespace VRtist
             keys[index].outTangent = outTangent;
             ComputeCacheValuesAt(index);
         }
+
+
 
     }
 }

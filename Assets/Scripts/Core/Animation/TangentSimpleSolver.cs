@@ -13,6 +13,7 @@ namespace VRtist
         private int currentFrame;
         private int startFrame;
         private int endFrame;
+        private double tangentEnergy;
 
         public List<int> RequiredKeyframeIndices;
 
@@ -34,7 +35,7 @@ namespace VRtist
 
         Constraints constraints;
 
-        public TangentSimpleSolver(Vector3 targetPosition, Quaternion targetRotation, AnimationSet animation, int frame, int start, int end)
+        public TangentSimpleSolver(Vector3 targetPosition, Quaternion targetRotation, AnimationSet animation, int frame, int start, int end, double tanEnergy)
         {
             positionTarget = targetPosition;
             rotationTarget = targetRotation;
@@ -42,6 +43,7 @@ namespace VRtist
             currentFrame = frame;
             startFrame = start;
             endFrame = end;
+            tangentEnergy = tanEnergy;
             constraints = new Constraints()
             { endFrames = new List<int>(), gameObjectIndices = new List<int>(), properties = new List<AnimatableProperty>(), startFrames = new List<int>(), values = new List<float>() };
         }
@@ -121,7 +123,7 @@ namespace VRtist
             }
 
             double wm = 100d;
-            double wb = 1d;
+            double wb = tangentEnergy;
             double wd = 1d;
 
             double[,] Q_opt = Add(Add(Multiply(2d * wm, Multiply(Transpose(Js), Js)), Add(Multiply(2d * wd, DT_D), Multiply(2d * wb, TT_T))), Multiply((double)Mathf.Pow(10, -6), Identity(p)));

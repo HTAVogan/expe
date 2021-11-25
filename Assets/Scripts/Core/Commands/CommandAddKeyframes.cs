@@ -173,6 +173,16 @@ namespace VRtist
             }
         }
 
+        public CommandAddKeyframes(GameObject obj, int frame, int start, int end, Dictionary<AnimatableProperty, List<AnimationKey>> newKeys)
+        {
+            gObject = obj;
+            for (int i = 0; i < 6; i++)
+            {
+                AnimatableProperty property = (AnimatableProperty)i;
+                new CommandAddKeyframeTangent(gObject, property, frame, start, end, newKeys[property]).Submit();
+            }
+        }
+
         public override void Undo()
         {
             base.Undo();

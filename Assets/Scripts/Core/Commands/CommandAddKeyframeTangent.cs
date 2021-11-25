@@ -11,6 +11,7 @@ namespace VRtist
         readonly AnimatableProperty property;
         readonly List<AnimationKey> oldKeys;
         readonly List<AnimationKey> newKeys;
+        private bool lockTangents = false;
 
         public CommandAddKeyframeTangent(GameObject obj, AnimatableProperty property, int frame, int zoneSize, List<AnimationKey> keysChanged)
         {
@@ -32,7 +33,19 @@ namespace VRtist
             //    oldKeys.ForEach(x => deb += " " + x.frame);
             //    Debug.Log(deb);
             //}
+        }
 
+        public CommandAddKeyframeTangent(GameObject obj, AnimatableProperty property, int frame, int start, int end, List<AnimationKey> keysChanged)
+        {
+            gObject = obj;
+            this.property = property;
+            oldKeys = new List<AnimationKey>();
+            newKeys = keysChanged;
+            AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(gObject);
+            if (null == animationSet) return;
+            Curve curve = animationSet.GetCurve(property);
+            lockTangents = true;
+            curve.GetTangentKeys(frame, start, end, ref oldKeys);
         }
 
         public override void Redo()
@@ -44,7 +57,7 @@ namespace VRtist
                     SceneManager.RemoveKeyframe(gObject, property, x, false);
                 }
             });
-            newKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x), false));
+            newKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x), false, lockTangents));
         }
 
         public override void Submit()
@@ -62,7 +75,7 @@ namespace VRtist
                     SceneManager.RemoveKeyframe(gObject, property, x, false);
                 }
             });
-            oldKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x), false));
+            oldKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x), false, lockTangents));
         }
     }
 }

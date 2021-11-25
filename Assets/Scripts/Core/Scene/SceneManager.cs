@@ -236,9 +236,9 @@ namespace VRtist
             Instance.scene.SetObjectAnimations(gobject, animationSet);
         }
 
-        public static void AddObjectKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true)
+        public static void AddObjectKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true, bool lockTangents = false)
         {
-            GlobalState.Animation.AddFilteredKeyframe(gobject, property, key, updateCurves);
+            GlobalState.Animation.AddFilteredKeyframe(gobject, property, key, updateCurves, lockTangents);
             Instance.scene.AddKeyframe(gobject, property, key);
         }
 

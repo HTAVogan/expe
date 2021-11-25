@@ -443,7 +443,7 @@ namespace VRtist
         }
 
         // To be used by in-app add key (not from networked keys)
-        public void AddFilteredKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true)
+        public void AddFilteredKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true, bool lockTangents = false)
         {
             AnimationSet animationSet = GetObjectAnimation(gobject);
             if (null == animationSet)
@@ -463,7 +463,7 @@ namespace VRtist
                     key.value = previousKey.value + delta;
                 }
             }
-            curve.AddKey(key);
+            curve.AddKey(key, lockTangents);
 
             if (updateCurves) onChangeCurve.Invoke(gobject, property);
         }
@@ -487,25 +487,8 @@ namespace VRtist
             if (updateCurves) onChangeCurve.Invoke(gobject, property);
         }
 
-        public void AddFilteredKeyframeSegment(GameObject gobjet, AnimatableProperty property, AnimationKey key, int zoneSize, bool updateCurves = true)
-        {
-            AnimationSet animationSet = GetObjectAnimation(gobjet);
-            Curve curve = animationSet.GetCurve(property);
-            // Filter rotation
-            if (property == AnimatableProperty.RotationX || property == AnimatableProperty.RotationY || property == AnimatableProperty.RotationZ)
-            {
-                AnimationKey previousKey = curve.GetPreviousKey(key.frame);
-                if (null != previousKey)
-                {
-                    float delta = Mathf.DeltaAngle(previousKey.value, key.value);
-                    key.value = previousKey.value + delta;
-                }
-            }
-            curve.AddKeySegment(key, zoneSize);
-            if (updateCurves) onChangeCurve.Invoke(gobjet, property);
-        }
 
-        public void AddFilteredKeyframeTangent(GameObject gobjet, AnimatableProperty property, AnimationKey key, int zoneSize, bool updateCurves = true)
+        public void AddFilteredKeyframeTangent(GameObject gobjet, AnimatableProperty property, AnimationKey key, int start, int end, bool updateCurves = true)
         {
             AnimationSet animationSet = GetObjectAnimation(gobjet);
             Curve curve = animationSet.GetCurve(property);
@@ -519,7 +502,7 @@ namespace VRtist
                     key.value = previousKey.value + delta;
                 }
             }
-            curve.AddTangentKey(key, zoneSize);
+            curve.AddTangentKey(key, start, end);
             if (updateCurves) onChangeCurve.Invoke(gobjet, property);
         }
 

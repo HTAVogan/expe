@@ -28,8 +28,10 @@ namespace VRtist
         private Transform PoseModeButton;
         private Transform FKModeButton;
         private Transform IKModeButton;
+        private Transform ContSlider;
 
         private int zoneSize;
+        private float tanCont;
 
         private int startFrame;
         private int endFrame;
@@ -129,6 +131,11 @@ namespace VRtist
             ZoneSlider.GetComponent<UISlider>().Value = zoneSize;
         }
 
+        public void SetTanCont(float value)
+        {
+            tanCont = value;
+            ContSlider.GetComponent<UISlider>().Value = tanCont;
+        }
         protected override void Awake()
         {
             base.Awake();
@@ -142,6 +149,7 @@ namespace VRtist
             PoseModeButton = panel.Find("Pose");
             FKModeButton = panel.Find("FK");
             IKModeButton = panel.Find("IK");
+            ContSlider = panel.Find("Tangents");
 
             zoneSize = Mathf.RoundToInt(ZoneSlider.GetComponent<UISlider>().Value);
             CurveMode = CurveEditMode.AddKeyframe;
@@ -214,7 +222,16 @@ namespace VRtist
             int frame = GetFrameFromPoint(line, point);
             GameObject gobject = CurveManager.GetObjectFromCurve(curveObject);
             DrawCurveGhost(gobject, frame);
-            if (curveMode == CurveEditMode.Zone || curveMode == CurveEditMode.Segment || curveMode == CurveEditMode.Tangents) DrawZone(line, frame);
+            if (curveMode == CurveEditMode.Zone || curveMode == CurveEditMode.Segment) DrawZone(line, frame - zoneSize, frame + zoneSize);
+            if (curveMode == CurveEditMode.Tangents)
+            {
+                AnimationSet anim = GlobalState.Animation.GetObjectAnimation(gobject);
+                Curve curve = anim.GetCurve(AnimatableProperty.PositionX);
+                int prev = curve.GetPreviousKeyFrame(frame);
+                int next = curve.GetNextKeyFrame(frame);
+                DrawZone(line, prev, next);
+
+            }
         }
 
         public void DrawCurveGhost(GameObject gobject, int frame)
@@ -264,7 +281,7 @@ namespace VRtist
             ghost.GetComponent<MeshRenderer>().material = GhostMaterial;
         }
 
-        public void DrawZone(LineRenderer line, int frame)
+        public void DrawZone(LineRenderer line, int start, int end)
         {
             lastTexture = (Texture2D)line.material.mainTexture;
             if (lastTexture == null)
@@ -273,7 +290,7 @@ namespace VRtist
                 line.material.mainTexture = lastTexture;
             }
 
-            ApplyTexture(frame);
+            ApplyTexture(start, end);
             lastLine = line;
         }
         public void DrawZoneDrag()
@@ -284,12 +301,12 @@ namespace VRtist
             }
         }
 
-        private void ApplyTexture(int frame)
+        private void ApplyTexture(int start, int end)
         {
             NativeArray<Color32> colors = lastTexture.GetRawTextureData<Color32>();
             for (int i = 0; i < colors.Length; i++)
             {
-                if (i < (frame - zoneSize) || i > frame + zoneSize)
+                if (i < start || i > end)
                 {
                     colors[i] = DefaultColor;
                 }
@@ -338,11 +355,11 @@ namespace VRtist
 
             if (target.TryGetComponent<HumanGoalController>(out HumanGoalController controller))
             {
-                curveManip = new CurveManipulation(target, controller, frame, mouthpiece, CurveMode, zoneSize);
+                curveManip = new CurveManipulation(target, controller, frame, mouthpiece, CurveMode, zoneSize, (double)tanCont);
             }
             else
             {
-                curveManip = new CurveManipulation(target, frame, mouthpiece, curveMode, zoneSize);
+                curveManip = new CurveManipulation(target, frame, mouthpiece, curveMode, zoneSize, (double)tanCont);
             }
         }
 
