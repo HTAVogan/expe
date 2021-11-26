@@ -520,13 +520,13 @@ namespace VRtist
             animations.Remove(gobject);
         }
 
-        public void RemoveKeyframe(GameObject gobject, AnimatableProperty property, int frame, bool updateCurves = true)
+        public void RemoveKeyframe(GameObject gobject, AnimatableProperty property, int frame, bool updateCurves = true, bool lockTangents = false)
         {
             AnimationSet animationSet = GetObjectAnimation(gobject);
             if (null == animationSet)
                 return;
             Curve curve = animationSet.GetCurve(property);
-            curve.RemoveKey(frame);
+            curve.RemoveKey(frame, lockTangents);
 
             RemoveEmptyAnimationSet(gobject);
 

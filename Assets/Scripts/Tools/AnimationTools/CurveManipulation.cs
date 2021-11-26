@@ -206,6 +206,7 @@ namespace VRtist
                 case AnimationTool.CurveEditMode.Zone:
                     new CommandAddKeyframes(Target, Frame, zoneSize, position, rotation, scale).Submit();
                     break;
+
                 case AnimationTool.CurveEditMode.Segment:
                     Dictionary<AnimatableProperty, List<AnimationKey>> keyframeList = new Dictionary<AnimatableProperty, List<AnimationKey>>();
 
@@ -222,6 +223,7 @@ namespace VRtist
                     }
                     new CommandAddKeyframes(Target, Frame, zoneSize, keyframeList).Submit();
                     break;
+
                 case AnimationTool.CurveEditMode.Tangents:
                     Dictionary<AnimatableProperty, List<AnimationKey>> keyList = new Dictionary<AnimatableProperty, List<AnimationKey>>();
                     for (int prop = 0; prop < 6; prop++)

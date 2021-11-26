@@ -242,9 +242,9 @@ namespace VRtist
             Instance.scene.AddKeyframe(gobject, property, key);
         }
 
-        public static void RemoveKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true)
+        public static void RemoveKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true, bool lockTangents = false)
         {
-            GlobalState.Animation.RemoveKeyframe(gobject, property, key.frame, updateCurves);
+            GlobalState.Animation.RemoveKeyframe(gobject, property, key.frame, updateCurves, lockTangents);
             Instance.scene.RemoveKeyframe(gobject, property, key);
         }
 

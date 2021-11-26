@@ -194,7 +194,7 @@ namespace VRtist
             ComputeCache();
         }
 
-        public void RemoveKey(int frame)
+        public void RemoveKey(int frame, bool lockTangents = false)
         {
             if (GetKeyIndex(frame, out int index))
             {
@@ -206,7 +206,8 @@ namespace VRtist
 
                 keys.RemoveAt(index);
 
-                InitializeTangents(index);
+                if (!lockTangents)
+                    InitializeTangents(index);
                 ComputeCacheValuesAt(index);
             }
         }

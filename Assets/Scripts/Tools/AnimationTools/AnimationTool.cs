@@ -64,8 +64,10 @@ namespace VRtist
         {
             set
             {
+                Debug.Log(curveMode);
                 GetCurveModeButton(curveMode).Checked = false;
                 curveMode = value;
+                Debug.Log(curveMode);
                 GetCurveModeButton(curveMode).Checked = true;
             }
             get { return curveMode; }
@@ -89,11 +91,11 @@ namespace VRtist
 
         public void SetCurveMode()
         {
-            editMode = EditMode.Curve;
+            Mode = EditMode.Curve;
         }
         public void SetPoseMode()
         {
-            editMode = EditMode.Pose;
+            Mode = EditMode.Pose;
         }
 
         public void SetAddKeyMode()
@@ -107,12 +109,12 @@ namespace VRtist
 
         public void SetSegmentMode()
         {
-            curveMode = CurveEditMode.Segment;
+            CurveMode = CurveEditMode.Segment;
         }
 
         public void SetTangentMode()
         {
-            curveMode = CurveEditMode.Tangents;
+            CurveMode = CurveEditMode.Tangents;
         }
 
         public void SetFKMode()
@@ -153,7 +155,8 @@ namespace VRtist
 
             zoneSize = Mathf.RoundToInt(ZoneSlider.GetComponent<UISlider>().Value);
             CurveMode = CurveEditMode.AddKeyframe;
-            editMode = EditMode.Curve;
+            Mode = EditMode.Curve;
+            PoseMode = PoseEditMode.FK;
         }
 
         private UIButton GetCurveModeButton(CurveEditMode mode)
@@ -222,8 +225,8 @@ namespace VRtist
             int frame = GetFrameFromPoint(line, point);
             GameObject gobject = CurveManager.GetObjectFromCurve(curveObject);
             DrawCurveGhost(gobject, frame);
-            if (curveMode == CurveEditMode.Zone || curveMode == CurveEditMode.Segment) DrawZone(line, frame - zoneSize, frame + zoneSize);
-            if (curveMode == CurveEditMode.Tangents)
+            if (CurveMode == CurveEditMode.Zone || CurveMode == CurveEditMode.Segment) DrawZone(line, frame - zoneSize, frame + zoneSize);
+            if (CurveMode == CurveEditMode.Tangents)
             {
                 AnimationSet anim = GlobalState.Animation.GetObjectAnimation(gobject);
                 Curve curve = anim.GetCurve(AnimatableProperty.PositionX);
@@ -257,7 +260,7 @@ namespace VRtist
         internal void DrawCurveGhost()
         {
             DrawCurveGhost(curveManip.Target, curveManip.Frame);
-            if (curveMode == CurveEditMode.Zone || curveMode == CurveEditMode.Segment || curveMode == CurveEditMode.Tangents) DrawZoneDrag();
+            if (CurveMode == CurveEditMode.Zone || CurveMode == CurveEditMode.Segment || CurveMode == CurveEditMode.Tangents) DrawZoneDrag();
         }
         internal void ShowGhost(bool state)
         {
@@ -359,7 +362,7 @@ namespace VRtist
             }
             else
             {
-                curveManip = new CurveManipulation(target, frame, mouthpiece, curveMode, zoneSize, (double)tanCont);
+                curveManip = new CurveManipulation(target, frame, mouthpiece, CurveMode, zoneSize, (double)tanCont);
             }
         }
 

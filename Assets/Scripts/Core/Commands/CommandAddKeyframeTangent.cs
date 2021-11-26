@@ -11,7 +11,7 @@ namespace VRtist
         readonly AnimatableProperty property;
         readonly List<AnimationKey> oldKeys;
         readonly List<AnimationKey> newKeys;
-        private bool lockTangents = false;
+        private bool lockTangents = true;
 
         public CommandAddKeyframeTangent(GameObject obj, AnimatableProperty property, int frame, int zoneSize, List<AnimationKey> keysChanged)
         {
@@ -54,7 +54,7 @@ namespace VRtist
             {
                 if (!newKeys.Exists(y => x.frame == y.frame))
                 {
-                    SceneManager.RemoveKeyframe(gObject, property, x, false);
+                    SceneManager.RemoveKeyframe(gObject, property, x, false, true);
                 }
             });
             newKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x), false, lockTangents));
@@ -72,7 +72,7 @@ namespace VRtist
             {
                 if (!oldKeys.Exists(y => x.frame == y.frame))
                 {
-                    SceneManager.RemoveKeyframe(gObject, property, x, false);
+                    SceneManager.RemoveKeyframe(gObject, property, x, false, true);
                 }
             });
             oldKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x), false, lockTangents));
