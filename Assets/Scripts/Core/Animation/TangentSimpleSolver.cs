@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using UnityEngine.Profiling;
+
 namespace VRtist
 {
 
@@ -80,10 +82,11 @@ namespace VRtist
             int n = 6;
             int p = 24 * K;
             int pinsNB = constraints.gameObjectIndices.Count;
-
+            Profiler.BeginSample("get tan");
+            Profiler.BeginSample("theta");
             double[] theta = GetAllTangents(p, K, RequiredKeyframeIndices);
             double[,] Theta = ColumnArrayToArray(theta);
-
+            Profiler.EndSample();
             State currentState = GetCurrentState(currentFrame);
             State desiredState = new State()
             {
@@ -91,7 +94,9 @@ namespace VRtist
                 euler_orientation = rotationTarget.eulerAngles,
                 time = currentFrame
             };
+            Profiler.BeginSample("ds theta");
             double[,] Js = ds_dtheta(currentFrame, n, p, K, RequiredKeyframeIndices);
+            Profiler.EndSample();
             double[,] DT_D = new double[p, p];
             for (int i = 0; i < p; i++)
             {
@@ -121,7 +126,7 @@ namespace VRtist
                     TT_T[j - 2, j] = -1d;
                 }
             }
-
+            Profiler.EndSample();
             double wm = 100d;
             double wb = tangentEnergy;
             double wd = 1d;
@@ -181,6 +186,8 @@ namespace VRtist
             alglib.minqpoptimize(state_opt);
             alglib.minqpresults(state_opt, out delta_theta, out rep);
 
+            Profiler.BeginSample("apply");
+
             double[] new_theta = new double[p];
             for (int i = 0; i < p; i++)
             {
@@ -210,6 +217,7 @@ namespace VRtist
                 }
             }
 
+            Profiler.EndSample();
             //State newState = GetCurrentState(currentFrame);
 
             return true;
@@ -316,8 +324,12 @@ namespace VRtist
 
         double[,] ds_dtheta(int frame, int n, int p, int K, List<int> requiredKeyframes)
         {
+            Profiler.BeginSample("dc");
             double[,] Js1 = ds_dc(frame, n);
+            Profiler.EndSample();
+            Profiler.BeginSample("dc_d");
             double[,] Js2 = dc_dtheta(frame, n, p, K, requiredKeyframes);
+            Profiler.EndSample();
             return Multiply(Js1, Js2);
         }
 
@@ -329,13 +341,10 @@ namespace VRtist
 
             for (int i = 0; i < 6; i++)
             {
-
                 AnimatableProperty property = (AnimatableProperty)i;
                 Curve curve = ObjectAnimation.curves[property];
-
                 for (int k = 0; k < K; k++)
                 {
-
                     Vector2 inTangent = curve.keys[requiredKeyframeIndices[k]].inTangent;
                     Vector2 outTangent = curve.keys[requiredKeyframeIndices[k]].outTangent;
                     float c_plus, c_minus;
@@ -344,48 +353,39 @@ namespace VRtist
                     inTangent.x += dtheta;
                     ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
                     curve.Evaluate(frame, out c_plus);
-                    inTangent.x -= 2f * dtheta;
+                    inTangent.x -= dtheta;
                     ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
                     curve.Evaluate(frame, out c_minus);
-                    Js2[i, j1] = (double)((c_plus - c_minus) / (2f * dtheta));
-                    inTangent.x += dtheta;
-                    ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
+                    Js2[i, j1] = (double)((c_plus - c_minus) / dtheta);
 
                     int j2 = 4 * (i * K + k) + 1;
                     inTangent.y += dtheta;
                     ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
                     curve.Evaluate(frame, out c_plus);
-                    inTangent.y -= 2f * dtheta;
+                    inTangent.y -= dtheta;
                     ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
                     curve.Evaluate(frame, out c_minus);
-                    Js2[i, j2] = (double)((c_plus - c_minus) / (2f * dtheta));
-                    inTangent.y += dtheta;
-                    ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
+                    Js2[i, j2] = (double)((c_plus - c_minus) / dtheta);
 
                     int j3 = 4 * (i * K + k) + 2;
                     outTangent.x += dtheta;
                     ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
                     curve.Evaluate(frame, out c_plus);
-                    outTangent.x -= 2f * dtheta;
+                    outTangent.x -= dtheta;
                     ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
                     curve.Evaluate(frame, out c_minus);
-                    Js2[i, j3] = (double)((c_plus - c_minus) / (2f * dtheta));
-                    outTangent.x += dtheta;
-                    ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
+                    Js2[i, j3] = (double)((c_plus - c_minus) / dtheta);
 
                     int j4 = 4 * (i * K + k) + 3;
                     outTangent.y += dtheta;
                     ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
                     curve.Evaluate(frame, out c_plus);
-                    outTangent.y -= 2f * dtheta;
+                    outTangent.y -= dtheta;
                     ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
                     curve.Evaluate(frame, out c_minus);
-                    Js2[i, j4] = (double)((c_plus - c_minus) / (2f * dtheta));
-                    outTangent.y += dtheta;
-                    ModifyTangents(curve, requiredKeyframeIndices[k], inTangent, outTangent);
+                    Js2[i, j4] = (double)((c_plus - c_minus) / dtheta);
                 }
             }
-
             return Js2;
         }
 

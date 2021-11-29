@@ -66,6 +66,7 @@ namespace VRtist
 
         private void ComputeCacheValues(int startIndex, int endIndex)
         {
+            UnityEngine.Profiling.Profiler.BeginSample("compute cache values");
             if (null == cachedValues || cachedValues.Length != GlobalState.Animation.EndFrame - GlobalState.Animation.StartFrame + 1)
             {
                 cachedValues = new float[GlobalState.Animation.EndFrame - GlobalState.Animation.StartFrame + 1];
@@ -77,6 +78,7 @@ namespace VRtist
             {
                 EvaluateCache(i + GlobalState.Animation.StartFrame, out cachedValues[i]);
             }
+            UnityEngine.Profiling.Profiler.EndSample();
         }
 
         public void ComputeCacheValuesAt(int keyIndex)
