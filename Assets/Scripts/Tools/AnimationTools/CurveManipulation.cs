@@ -65,8 +65,18 @@ namespace VRtist
                 ObjectAnimation = new AnimationSet(controller.Animation),
                 InitFrameMatrix = controller.FrameMatrix(frame)
             };
-            AddSegmentHierarchy(controller, frame);
-            AddSegmentKeyframes(frame, controller.Animation);
+            if (manipulationMode == AnimationTool.CurveEditMode.Segment)
+            {
+                startFrame = frame - zoneSize;
+                endFrame = frame + zoneSize;
+                AddSegmentHierarchy(controller, frame);
+                AddSegmentKeyframes(frame, controller.Animation);
+            }
+            if (manipulationMode == AnimationTool.CurveEditMode.Tangents)
+            {
+                startFrame = humanData.ObjectAnimation.GetCurve(AnimatableProperty.RotationX).GetPreviousKeyFrame(frame);
+                endFrame = humanData.ObjectAnimation.GetCurve(AnimatableProperty.RotationX).GetNextKeyFrame(frame);
+            }
         }
 
         public CurveManipulation(GameObject target, int frame, Transform mouthpiece, AnimationTool.CurveEditMode manipMode, int zoneSize, double tanCont)
@@ -114,7 +124,6 @@ namespace VRtist
                 startFrame = objectData.Animation.GetCurve(AnimatableProperty.PositionX).GetPreviousKeyFrame(frame);
                 endFrame = objectData.Animation.GetCurve(AnimatableProperty.PositionX).GetNextKeyFrame(frame);
             }
-
         }
 
         public void DragCurve(Transform mouthpiece, float scaleIndice)
@@ -128,6 +137,21 @@ namespace VRtist
         }
 
         private void DragHuman(Matrix4x4 transformation)
+        {
+            if (humanData.Solver == null)
+            {
+                CreateSolver(transformation);
+            }
+            else
+            {
+                if (!humanData.Solver.TrySolver())
+                {
+                    CreateSolver(transformation);
+                }
+            }
+        }
+
+        private void CreateSolver(Matrix4x4 transformation)
         {
             Matrix4x4 target = transformation * humanData.InitFrameMatrix;
             Maths.DecomposeMatrix(target, out Vector3 targetPos, out Quaternion targetRot, out Vector3 targetScale);
@@ -248,6 +272,12 @@ namespace VRtist
             List<GameObject> objectList = new List<GameObject>();
             List<Dictionary<AnimatableProperty, List<AnimationKey>>> keyframesLists = new List<Dictionary<AnimatableProperty, List<AnimationKey>>>();
 
+            if (humanData.Solver != null)
+            {
+                humanData.Solver.ClearJob();
+                Debug.Log("cleared job");
+            }
+
             int index = 0;
             for (int i = 0; i < humanData.Controller.PathToRoot.Count; i++)
             {
@@ -258,6 +288,7 @@ namespace VRtist
                     AnimatableProperty property = (AnimatableProperty)prop;
                     List<AnimationKey> keys = new List<AnimationKey>();
                     Curve curve = humanData.Controller.AnimToRoot[i].GetCurve(property);
+                    Debug.Log(humanData.Controller.AnimToRoot[i].transform + " / " + property);
 
                     curve.GetKeyIndex(humanData.Solver.requiredKeyframe[0], out int beforKey);
                     if (beforKey > 0) keys.Add(curve.keys[beforKey - 1]);

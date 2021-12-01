@@ -64,10 +64,8 @@ namespace VRtist
         {
             set
             {
-                Debug.Log(curveMode);
                 GetCurveModeButton(curveMode).Checked = false;
                 curveMode = value;
-                Debug.Log(curveMode);
                 GetCurveModeButton(curveMode).Checked = true;
             }
             get { return curveMode; }

@@ -1,7 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace VRtist
 {
@@ -15,6 +18,7 @@ namespace VRtist
         private int size;
         private AnimationSet objectAnimation;
         private int animationCount;
+        private IEnumerator coroutine;
 
 
         struct Constraints
@@ -32,6 +36,18 @@ namespace VRtist
             public Quaternion rotation;
             public int time;
         }
+
+        struct JobData
+        {
+            public List<NativeArray<double>> jsValues;
+            public DsThetaJob Job;
+            public JobHandle Handle;
+            public NativeArray<KeyFrame> prevFrames;
+            public NativeArray<KeyFrame> postFrames;
+        }
+
+        private JobData jData;
+        private bool activeJob = false;
 
         private State currentState;
         private State desiredState;
@@ -51,7 +67,10 @@ namespace VRtist
         double[] s;
         double[] delta_theta;
         double[] theta;
-
+        double[,] DT_D;
+        double[,] Delta_s_prime;
+        double[,] TT_T;
+        double[,] Theta;
 
         public TangentHumanSolver(Vector3 targetPosition, Quaternion targetRotation, AnimationSet objectAnim, List<AnimationSet> animation, int frame, int zoneSize)
         {
@@ -73,18 +92,33 @@ namespace VRtist
 
         }
 
-        public void TrySolver()
+        public bool TrySolver()
         {
+            if (coroutine == null)
+            {
+                coroutine = Solve();
+                return true;
+            }
+            return coroutine.MoveNext();
+        }
 
-            bool res = Setup();
-            res &= Compute();
-            res &= Apply();
-
-            if (!res) Debug.Log("no solution");
+        public IEnumerator Solve()
+        {
+            //Profiler.BeginSample("setup");
+            yield return Setup();
+            //Profiler.EndSample();
+            //Profiler.BeginSample("compute");
+            yield return Compute();
+            //Profiler.EndSample();
+            //Profiler.BeginSample("Apply");
+            yield return Apply();
+            //Profiler.EndSample();
+            yield return false;
         }
 
         public bool Setup()
         {
+            Debug.Log("setup");
             objectAnimation.curves[AnimatableProperty.PositionX].GetKeyIndex(currentFrame - size, out int firstIndex);
             int firstFrame = objectAnimation.curves[AnimatableProperty.PositionX].keys[firstIndex].frame;
             objectAnimation.curves[AnimatableProperty.PositionX].GetKeyIndex(currentFrame + size, out int lastIndex);
@@ -114,8 +148,10 @@ namespace VRtist
             p = 12 * animationCount * K + 12 * K;
             pinsNB = constraints.gameObjectIndices.Count;
 
+            Profiler.BeginSample("get all tan");
             theta = GetAllTangents(p, K);
-            double[,] Theta = ColumnArrayToArray(theta);
+            Profiler.EndSample();
+            Theta = ColumnArrayToArray(theta);
 
             currentState = GetCurrentState(currentFrame);
             desiredState = new State()
@@ -125,11 +161,12 @@ namespace VRtist
                 time = currentFrame
             };
 
-
-            double[,] Js = ds_dtheta(p, K);
-
+            Profiler.BeginSample("ds dtheta");
+            //double[,] Js = ds_dtheta(p, K);
+            ds_thetaJob(p, K);
+            Profiler.EndSample();
             //Stiffness
-            double[,] DT_D = new double[p, p];
+            DT_D = new double[p, p];
             //Root rotation tangents
             for (int i = 0; i < 12 * K; i++)
             {
@@ -159,7 +196,7 @@ namespace VRtist
                 DT_D[i, i] = 1d;
             }
 
-            double[,] Delta_s_prime = new double[7, 1];
+            Delta_s_prime = new double[7, 1];
             for (int i = 0; i < 3; i++)
             {
                 Delta_s_prime[i, 0] = desiredState.position[i] - currentState.position[i];
@@ -169,7 +206,7 @@ namespace VRtist
                 Delta_s_prime[i, 0] = desiredState.rotation[i - 3] - currentState.rotation[i - 3];
             }
 
-            double[,] TT_T = new double[p, p];
+            TT_T = new double[p, p];
             for (int j = 0; j < p; j++)
             {
                 TT_T[j, j] = 1d;
@@ -183,22 +220,13 @@ namespace VRtist
                 }
             }
 
-            double wm = 100d;
-            double wb = 1d;
-            double wd = 1d;
-
-
-
-            Q_opt = Add(Add(Multiply(2d * wm, Multiply(Transpose(Js), Js)), Add(Multiply(2d * wd, DT_D), Multiply(2d * wb, TT_T))), Multiply((double)Mathf.Pow(10, -6), Identity(p)));
-
-            double[,] B_opt = Add(Multiply(-2d * wm, Multiply(Transpose(Js), Delta_s_prime)), Multiply(2d * wb, Multiply(TT_T, Theta)));
-            b_opt = ArrayToColumnArray(B_opt);
-
             double[] u = InitializeUBound(n);
             double[] v = InitializeVBound(n);
 
+            Profiler.BeginSample("constraints");
             lowerBound = LowerBoundConstraints(theta, u, v, p, K, totalKeyframes);
             upperBound = UpperBoundConstraints(theta, u, v, p, K, totalKeyframes);
+            Profiler.EndSample();
 
             delta_theta_0 = new double[p];
 
@@ -213,6 +241,20 @@ namespace VRtist
 
         public bool Compute()
         {
+            //Debug.Log("compute");
+
+            Profiler.BeginSample("compute");
+            double wm = 100d;
+            double wb = 1d;
+            double wd = 1d;
+
+            double[,] Js = ThetaFromJob(p);
+
+            Q_opt = Add(Add(Multiply(2d * wm, Multiply(Transpose(Js), Js)), Add(Multiply(2d * wd, DT_D), Multiply(2d * wb, TT_T))), Multiply((double)Mathf.Pow(10, -6), Identity(p)));
+
+            double[,] B_opt = Add(Multiply(-2d * wm, Multiply(Transpose(Js), Delta_s_prime)), Multiply(2d * wb, Multiply(TT_T, Theta)));
+            b_opt = ArrayToColumnArray(B_opt);
+
             alglib.minqpstate state_opt;
             alglib.minqpreport rep;
 
@@ -241,17 +283,21 @@ namespace VRtist
                 alglib.minqpsetlc(state_opt, C, CT, K_size);
             }
 
+            Profiler.BeginSample("alglib");
             alglib.minqpsetscale(state_opt, s);
 
             //alglib.minqpsetalgoquickqp(state_opt, 0.0, 0.0, 0.0, 0, true);
             alglib.minqpsetalgobleic(state_opt, 0.0, 0.0, 0.0, 0);
             alglib.minqpoptimize(state_opt);
             alglib.minqpresults(state_opt, out delta_theta, out rep);
+            Profiler.EndSample();
+            Profiler.EndSample();
 
             return true;
         }
         public bool Apply()
         {
+            Debug.Log("apply");
             double[] new_theta = new double[p];
             for (int i = 0; i < p; i++)
             {
@@ -408,9 +454,11 @@ namespace VRtist
 
         public void ModifyTangents(Curve curve, int index, Vector2 inTangent, Vector2 outTangent)
         {
+            Profiler.BeginSample("modify tan");
             curve.keys[index].inTangent = inTangent;
             curve.keys[index].outTangent = outTangent;
             curve.ComputeCacheValuesAt(index);
+            Profiler.EndSample();
         }
 
         private List<int> FindRequiredTangents(int firstFrame, int lastFrame, Curve curve)
@@ -436,6 +484,85 @@ namespace VRtist
             return response;
         }
 
+        void ds_thetaJob(int p, int K)
+        {
+            float dtheta = Mathf.Pow(10, -2);
+            jData = new JobData();
+            jData.jsValues = new List<NativeArray<double>>();
+            for (int i = 0; i < 7; i++)
+            {
+                jData.jsValues.Add(new NativeArray<double>(12 * 2 * animationCount + 24, Allocator.TempJob));
+            }
+            Matrix4x4 parentMatrix = animationList[0].transform.parent.localToWorldMatrix;
+
+            jData.prevFrames = new NativeArray<KeyFrame>(animationCount, Allocator.TempJob);
+            jData.postFrames = new NativeArray<KeyFrame>(animationCount, Allocator.TempJob);
+
+            for (int l = 0; l < animationCount; l++)
+            {
+                jData.prevFrames[l] = KeyFrame.GetKey(animationList[l], requiredKeyframe[0]);
+                jData.postFrames[l] = KeyFrame.GetKey(animationList[l], requiredKeyframe[1]);
+            }
+
+            jData.Job = new DsThetaJob()
+            {
+                Js0 = jData.jsValues[0],
+                Js1 = jData.jsValues[1],
+                Js2 = jData.jsValues[2],
+                Js3 = jData.jsValues[3],
+                Js4 = jData.jsValues[4],
+                Js5 = jData.jsValues[5],
+                Js6 = jData.jsValues[6],
+                dtheta = dtheta,
+                frame = currentFrame,
+                ParentMatrix = parentMatrix,
+                postFrames = jData.postFrames,
+                prevFrames = jData.prevFrames
+            };
+
+            jData.Handle = jData.Job.Schedule(24 * animationCount, 48);
+            activeJob = true;
+        }
+
+        double[,] ThetaFromJob(int p)
+        {
+            Profiler.BeginSample("theta from job");
+            double[,] Js = new double[7, p];
+
+            jData.Handle.Complete();
+            for (int i = 0; i < p; i++)
+            {
+                for (int v = 0; v < 7; v++)
+                {
+                    Js[v, i] = jData.jsValues[v][i];
+                }
+            }
+            jData.jsValues.ForEach(x => x.Dispose());
+            jData.postFrames.Dispose();
+            jData.prevFrames.Dispose();
+            activeJob = false;
+            Profiler.EndSample();
+
+            double[,] test = ds_dtheta(p, K);
+
+            return Js;
+        }
+
+        public void ClearJob()
+        {
+            if (activeJob)
+            {
+                jData.Handle.Complete();
+                for (int v = 0; v < 7; v++)
+                {
+                    jData.jsValues[v].Dispose();
+                }
+                jData.postFrames.Dispose();
+                jData.prevFrames.Dispose();
+                activeJob = false;
+            }
+        }
+
         double[,] ds_dtheta(int p, int K)
         {
 
@@ -453,6 +580,7 @@ namespace VRtist
 
                     for (int k = 0; k < K; k++)
                     {
+                        //Debug.Log("k is : " + k);
                         curve.GetKeyIndex(requiredKeyframe[k], out int index);
                         Vector2 inTangent = curve.keys[index].inTangent;
                         Vector2 outTangent = curve.keys[index].outTangent;
@@ -514,6 +642,16 @@ namespace VRtist
                             Js[4, col] = (double)(rotation_plus.y - rotation_minus.y) / (dtheta);
                             Js[5, col] = (double)(rotation_plus.z - rotation_minus.z) / (dtheta);
                             Js[6, col] = (double)(rotation_plus.w - rotation_minus.w) / (dtheta);
+
+                            //double sum =
+                            //    Js[0, col] +
+                            //    Js[1, col] +
+                            //    Js[2, col] +
+                            //    Js[3, col] +
+                            //    Js[4, col] +
+                            //    Js[5, col] +
+                            //    Js[6, col];
+                            //if (sum == 0) Debug.Log(m);
 
                         }
                     }
@@ -1058,12 +1196,14 @@ namespace VRtist
 
         public Matrix4x4 FrameMatrix(int frame, List<AnimationSet> animations)
         {
+            Profiler.BeginSample("frame matrix");
             Matrix4x4 trsMatrix = animations[0].transform.parent.localToWorldMatrix;
 
             for (int i = 0; i < animationList.Count; i++)
             {
                 trsMatrix = trsMatrix * GetBoneMatrix(animations[i], frame);
             }
+            Profiler.EndSample();
             return trsMatrix;
         }
 

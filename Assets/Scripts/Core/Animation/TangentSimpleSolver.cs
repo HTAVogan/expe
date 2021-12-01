@@ -82,11 +82,8 @@ namespace VRtist
             int n = 6;
             int p = 24 * K;
             int pinsNB = constraints.gameObjectIndices.Count;
-            Profiler.BeginSample("get tan");
-            Profiler.BeginSample("theta");
             double[] theta = GetAllTangents(p, K, RequiredKeyframeIndices);
             double[,] Theta = ColumnArrayToArray(theta);
-            Profiler.EndSample();
             State currentState = GetCurrentState(currentFrame);
             State desiredState = new State()
             {
@@ -94,9 +91,7 @@ namespace VRtist
                 euler_orientation = rotationTarget.eulerAngles,
                 time = currentFrame
             };
-            Profiler.BeginSample("ds theta");
             double[,] Js = ds_dtheta(currentFrame, n, p, K, RequiredKeyframeIndices);
-            Profiler.EndSample();
             double[,] DT_D = new double[p, p];
             for (int i = 0; i < p; i++)
             {
@@ -126,7 +121,6 @@ namespace VRtist
                     TT_T[j - 2, j] = -1d;
                 }
             }
-            Profiler.EndSample();
             double wm = 100d;
             double wb = tangentEnergy;
             double wd = 1d;
@@ -186,7 +180,6 @@ namespace VRtist
             alglib.minqpoptimize(state_opt);
             alglib.minqpresults(state_opt, out delta_theta, out rep);
 
-            Profiler.BeginSample("apply");
 
             double[] new_theta = new double[p];
             for (int i = 0; i < p; i++)
@@ -217,7 +210,6 @@ namespace VRtist
                 }
             }
 
-            Profiler.EndSample();
             //State newState = GetCurrentState(currentFrame);
 
             return true;
@@ -324,12 +316,8 @@ namespace VRtist
 
         double[,] ds_dtheta(int frame, int n, int p, int K, List<int> requiredKeyframes)
         {
-            Profiler.BeginSample("dc");
             double[,] Js1 = ds_dc(frame, n);
-            Profiler.EndSample();
-            Profiler.BeginSample("dc_d");
             double[,] Js2 = dc_dtheta(frame, n, p, K, requiredKeyframes);
-            Profiler.EndSample();
             return Multiply(Js1, Js2);
         }
 

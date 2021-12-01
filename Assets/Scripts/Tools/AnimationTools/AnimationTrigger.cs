@@ -22,7 +22,7 @@ namespace VRtist
 
         public void OnTriggerExit(Collider other)
         {
-            if (!isGrip && other.tag == "Curve" && hoveredCurves.Contains(other.gameObject) )
+            if (!isGrip && other.tag == "Curve" && hoveredCurves.Contains(other.gameObject))
             {
                 hoveredCurves.Remove(other.gameObject);
                 if (hoveredCurves.Count == 0) animator.ShowGhost(false);

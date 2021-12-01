@@ -23,7 +23,8 @@
 
 using System;
 using System.Collections.Generic;
-
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 
 namespace VRtist
@@ -61,12 +62,11 @@ namespace VRtist
             int length = -1;
             if (null != cachedValues)
                 length = cachedValues.Length - 1;
-            ComputeCacheValues(0, length);
+            ComputeCacheValues2(0, length);
         }
 
         private void ComputeCacheValues(int startIndex, int endIndex)
         {
-            UnityEngine.Profiling.Profiler.BeginSample("compute cache values");
             if (null == cachedValues || cachedValues.Length != GlobalState.Animation.EndFrame - GlobalState.Animation.StartFrame + 1)
             {
                 cachedValues = new float[GlobalState.Animation.EndFrame - GlobalState.Animation.StartFrame + 1];
@@ -78,7 +78,40 @@ namespace VRtist
             {
                 EvaluateCache(i + GlobalState.Animation.StartFrame, out cachedValues[i]);
             }
-            UnityEngine.Profiling.Profiler.EndSample();
+        }
+
+        private void ComputeCacheValues2(int startIndex, int endIndex)
+        {
+            if (null == cachedValues || cachedValues.Length != GlobalState.Animation.EndFrame - GlobalState.Animation.StartFrame + 1)
+            {
+                cachedValues = new float[GlobalState.Animation.EndFrame - GlobalState.Animation.StartFrame + 1];
+                startIndex = 0;
+                endIndex = cachedValues.Length - 1;
+            }
+            NativeArray<keyStruct> keysStructs = new NativeArray<keyStruct>(keys.Count, Allocator.TempJob);
+            for (int i = 0; i < keys.Count; i++) keysStructs[i] = keyStruct.GetKeyStruct(keys[i]);
+            NativeArray<int> keysIndices = new NativeArray<int>(cachedKeysIndices, Allocator.TempJob);
+            NativeArray<float> vals = new NativeArray<float>(endIndex - startIndex, Allocator.TempJob);
+            CurveEvalutationJobs job = new CurveEvalutationJobs()
+            {
+                Keys = keysStructs,
+                CachedKeysIndices = keysIndices,
+                StartFrame = startIndex + GlobalState.Animation.StartFrame,
+                Value = vals
+            };
+
+            JobHandle jobHandle = job.Schedule(endIndex - startIndex, 20);
+            jobHandle.Complete();
+
+            for (int i = 0; i < (endIndex - startIndex); i++)
+            {
+                cachedValues[i + startIndex] = vals[i];
+            }
+
+            keysStructs.Dispose();
+            keysIndices.Dispose();
+            vals.Dispose();
+
         }
 
         public void ComputeCacheValuesAt(int keyIndex)
@@ -95,7 +128,7 @@ namespace VRtist
             if (endKeyIndex >= 0 && endKeyIndex <= keys.Count - 1)
                 end = Mathf.Clamp(keys[endKeyIndex].frame - GlobalState.Animation.StartFrame, 0, cachedValues.Length - 1);
 
-            ComputeCacheValues(start, end);
+            ComputeCacheValues2(start, end);
         }
 
         private void ComputeCacheIndices()
@@ -509,6 +542,7 @@ namespace VRtist
             int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, start);
             int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, end);
 
+            //Debug.Log(property + " / cached key " + cachedKeysIndices.Length + " / start frame " + startFrame + " / end frame " + endFrame + " / end " + end + " / anim start " + GlobalState.Animation.StartFrame);
             int firstKeyIndex = Mathf.Max(cachedKeysIndices[startFrame - (GlobalState.Animation.StartFrame)], 0);
             int lastKeyIndex = Mathf.Max(cachedKeysIndices[endFrame - (GlobalState.Animation.StartFrame)], 0);
 
