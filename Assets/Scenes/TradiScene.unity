@@ -123,6 +123,96 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &767845410
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 767845412}
+  - component: {fileID: 767845411}
+  - component: {fileID: 767845413}
+  - component: {fileID: 767845414}
+  - component: {fileID: 767845415}
+  m_Layer: 0
+  m_Name: AnimationManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &767845411
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767845410}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 471949ca93534524fa9c3b59b7500936, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  clipJoleen: {fileID: -203655887218126122, guid: 772e45b6e8fcc5643b7d3e4f453efade,
+    type: 3}
+  clipAbe: {fileID: -203655887218126122, guid: f23cc80a172fc6b4b823b6e0b3cc50e5, type: 3}
+  clipBottle: {fileID: 7400000, guid: f0c6007f3a313ae498be67ce468e7135, type: 2}
+--- !u!4 &767845412
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767845410}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 37.282616, y: 4.3832245, z: 13.665688}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &767845413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767845410}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a089debad304ed64b85a2242622eb269, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  clip: {fileID: 0}
+  fps: 60
+--- !u!114 &767845414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767845410}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e46e2bc17aad794ca5302754bdcb8ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &767845415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767845410}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e159815f8f8997340bc83e998575e077, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gostMaterial: {fileID: 2100000, guid: 7b333695d4efe3a4b94b9e9f8e97d65d, type: 2}
+  delta: 1
 --- !u!1 &1090069226
 GameObject:
   m_ObjectHideFlags: 0
@@ -633,6 +723,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: GostManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 582309316043709834, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ff982bb7ddd1b074aa6ba96e8741c69a, type: 3}

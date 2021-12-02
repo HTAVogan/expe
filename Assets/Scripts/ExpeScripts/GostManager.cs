@@ -39,6 +39,9 @@ public class GostManager : MonoBehaviour
                     GlobalStateTradi.Animation.CopyAnimation(joleen, gostJoleen);
                 gostJoleen.transform.position += Vector3.forward;
                 checkAnimationsOfGosts(gostJoleen);
+                AnimationManager manager = gameObject.GetComponent<AnimationManager>();
+                manager.ClearAnimationFormOrigin(joleen);
+
             }
 
 
@@ -62,6 +65,7 @@ public class GostManager : MonoBehaviour
                     GlobalStateTradi.Animation.CopyAnimation(abe, gostAbe);
                 gostAbe.transform.position += Vector3.forward;
                 checkAnimationsOfGosts(gostAbe);
+                gameObject.GetComponent<AnimationManager>().ClearAnimationFormOrigin(abe);
 
             }
         }
@@ -85,23 +89,25 @@ public class GostManager : MonoBehaviour
                     GlobalStateTradi.Animation.CopyAnimation(bottleInit, bottle);
                 bottle.transform.position += Vector3.forward;
                 checkAnimationsOfGosts(bottle);
+                gameObject.GetComponent<AnimationManager>().ClearAnimationFormOrigin(bottle);
+
             }
         }
         time += Time.deltaTime;
-        if(time >= 1)
+        if (time >= 1)
         {
             time = 0;
-           float percent = GetPercent();
+            float percent = GetPercent();
         }
-        
+
     }
     /// <summary>
     /// Get the animation percent of similitaries between gost and user animations
     /// </summary>
     /// <returns>% of similtaries</returns>
-   public float GetPercent()
+    public float GetPercent()
     {
-        if(abe != null && joleen != null)
+        if (abe != null && joleen != null)
         {
             Vector3 unitAlpha = Vector3.one * delta;
             int startFrame, endFrame;
@@ -117,7 +123,7 @@ public class GostManager : MonoBehaviour
 
             }
 
-                float ret = 0f;
+            float ret = 0f;
             var tempGostAbe = gostAbe.GetComponentsInChildren<HumanGoalController>();
             var tempOriginalAbe = abe.GetComponentsInChildren<HumanGoalController>();
             var tempGostJoleen = gostJoleen.GetComponentsInChildren<HumanGoalController>();
@@ -139,10 +145,10 @@ public class GostManager : MonoBehaviour
                     counterAbe++;
                 }
                 percentAbePerFrame += percentAbeSum / counterAbe;
-               // Debug.Log("percent abe on this "+i +" is : " + percentJoleenPerFrame + "because sub diff was : "+ percentAbeSum + " and counter was " + counterAbe);
+                // Debug.Log("percent abe on this "+i +" is : " + percentJoleenPerFrame + "because sub diff was : "+ percentAbeSum + " and counter was " + counterAbe);
                 foreach (var item in tempGostJoleen)
                 {
-                   
+
                     Vector3 diff = item.FramePosition(i) - tempOriginalJoleen[counterJoleen].FramePosition(i);
                     percentJoleenSum = (100 * (diff.x / unitAlpha.x) + 100 * (diff.y / unitAlpha.y) + 100 * (diff.z / unitAlpha.z)) / 3;
                     counterJoleen++;
@@ -154,18 +160,20 @@ public class GostManager : MonoBehaviour
             percentJoleenGlobal = percentJoleenPerFrame;
             percentJoleenGlobal /= endFrame;
             ret = (percentJoleenGlobal + percentAbeGlobal) / 2;
-            return 100-ret;
+            return 100 - ret;
         }
         return 0;
-   
+
     }
 
     private void checkAnimationsOfGosts(GameObject go)
     {
-         var goGoal = go.GetComponentsInChildren<HumanGoalController>();
+        var goGoal = go.GetComponentsInChildren<HumanGoalController>();
         foreach (var item in goGoal)
         {
             item.CheckAnimations();
         }
     }
+
+
 }

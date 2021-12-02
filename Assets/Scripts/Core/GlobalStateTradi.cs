@@ -52,7 +52,6 @@ namespace VRtist
 
 
 
-
         // Geometry Importer
         private GeometryImporter geometryImporter;
         public static GeometryImporter GeometryImporter

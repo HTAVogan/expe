@@ -63,7 +63,7 @@ namespace VRtist
         {
             this.frame = frame;
             this.value = value;
-            this.interpolation = interpolation ?? GlobalState.Settings.interpolation;
+            this.interpolation = interpolation ?? Interpolation.Bezier;
             this.inTangent = inTangent;
             this.outTangent = outTangent;
         }
@@ -188,9 +188,12 @@ namespace VRtist
         {
             countdown.onCountdownFinished.AddListener(StartRecording);
             onRangeEvent.AddListener(RecomputeCurvesCache);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                GlobalState.ObjectAddedEvent.AddListener(OnObjectAdded);
+                GlobalState.ObjectRemovedEvent.AddListener(OnObjectRemoved);
 
-            GlobalState.ObjectAddedEvent.AddListener(OnObjectAdded);
-            GlobalState.ObjectRemovedEvent.AddListener(OnObjectRemoved);
+            }
         }
 
         public void RegisterTimeHook(TimeHook timeHook)
@@ -523,7 +526,7 @@ namespace VRtist
 
             if (!IsAnimating())
                 EvaluateAnimations();
-            if(updateCurves) onChangeCurve.Invoke(gobject, property);
+            if (updateCurves) onChangeCurve.Invoke(gobject, property);
         }
 
         public void Record()
@@ -593,8 +596,12 @@ namespace VRtist
             playStartTime = Time.time;
             animationState = AnimationState.AnimationRecording;
             onAnimationStateEvent.Invoke(animationState);
-            preRecordInterpolation = GlobalState.Settings.interpolation;
-            GlobalState.Settings.interpolation = Interpolation.Linear;
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                preRecordInterpolation = GlobalState.Settings.interpolation;
+                GlobalState.Settings.interpolation = Interpolation.Linear;
+
+            }
         }
 
         void RecordFrame()
@@ -694,7 +701,8 @@ namespace VRtist
 
             recordingObjects.Clear();
             oldAnimations.Clear();
-            GlobalState.Settings.interpolation = preRecordInterpolation;
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                GlobalState.Settings.interpolation = preRecordInterpolation;
         }
     }
 }
