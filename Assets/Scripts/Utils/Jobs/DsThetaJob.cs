@@ -40,43 +40,82 @@ namespace VRtist
             int objectIndex = index / 24;
             int executionIndex = index % 24;
 
-            KeyFrame prevFrame = prevFrames[objectIndex];
-            KeyFrame nextFrame = postFrames[objectIndex];
 
             Matrix4x4 prevMatrix = GetFrameMatrix();
             Maths.DecomposeMatrix(prevMatrix, out Vector3 currentPosition, out Quaternion currentRotation, out Vector3 prevScale);
-
-            switch (executionIndex)
+            KeyFrame prevFrame = prevFrames[0];
+            KeyFrame nextFrame = postFrames[0];
+            if (objectIndex < prevFrames.Length)
             {
-                case 0: prevFrame.rotX.inTanX += dtheta; break;
-                case 1: prevFrame.rotX.inTanY += dtheta; break;
-                case 2: prevFrame.rotX.outTanX += dtheta; break;
-                case 3: prevFrame.rotX.outTanY += dtheta; break;
+                prevFrame = prevFrames[objectIndex];
+                nextFrame = postFrames[objectIndex];
+                switch (executionIndex)
+                {
+                    case 0: prevFrame.rotX.inTanX += dtheta; break;
+                    case 1: prevFrame.rotX.inTanY += dtheta; break;
+                    case 2: prevFrame.rotX.outTanX += dtheta; break;
+                    case 3: prevFrame.rotX.outTanY += dtheta; break;
 
-                case 5: prevFrame.rotY.inTanX += dtheta; break;
-                case 6: prevFrame.rotY.inTanY += dtheta; break;
-                case 4: prevFrame.rotY.outTanX += dtheta; break;
-                case 7: prevFrame.rotY.outTanY += dtheta; break;
+                    case 4: nextFrame.rotX.inTanX += dtheta; break;
+                    case 5: nextFrame.rotX.inTanY += dtheta; break;
+                    case 6: nextFrame.rotX.outTanY += dtheta; break;
+                    case 7: nextFrame.rotX.outTanY += dtheta; break;
 
-                case 8: prevFrame.rotZ.inTanX += dtheta; break;
-                case 9: prevFrame.rotZ.inTanY += dtheta; break;
-                case 10: prevFrame.rotZ.outTanX += dtheta; break;
-                case 11: prevFrame.rotZ.outTanY += dtheta; break;
+                    case 8: prevFrame.rotY.inTanX += dtheta; break;
+                    case 9: prevFrame.rotY.inTanY += dtheta; break;
+                    case 10: prevFrame.rotY.outTanX += dtheta; break;
+                    case 11: prevFrame.rotY.outTanY += dtheta; break;
 
-                case 12: nextFrame.rotX.inTanX += dtheta; break;
-                case 13: nextFrame.rotX.inTanY += dtheta; break;
-                case 14: nextFrame.rotX.outTanY += dtheta; break;
-                case 15: nextFrame.rotX.outTanY += dtheta; break;
+                    case 12: nextFrame.rotY.inTanX += dtheta; break;
+                    case 13: nextFrame.rotY.inTanY += dtheta; break;
+                    case 14: nextFrame.rotY.outTanY += dtheta; break;
+                    case 15: nextFrame.rotY.outTanY += dtheta; break;
 
-                case 16: nextFrame.rotY.inTanX += dtheta; break;
-                case 17: nextFrame.rotY.inTanY += dtheta; break;
-                case 18: nextFrame.rotY.outTanY += dtheta; break;
-                case 19: nextFrame.rotY.outTanY += dtheta; break;
+                    case 16: prevFrame.rotZ.inTanX += dtheta; break;
+                    case 17: prevFrame.rotZ.inTanY += dtheta; break;
+                    case 18: prevFrame.rotZ.outTanX += dtheta; break;
+                    case 19: prevFrame.rotZ.outTanY += dtheta; break;
 
-                case 20: nextFrame.rotZ.inTanX += dtheta; break;
-                case 21: nextFrame.rotZ.inTanY += dtheta; break;
-                case 22: nextFrame.rotZ.outTanY += dtheta; break;
-                case 23: nextFrame.rotZ.outTanY += dtheta; break;
+                    case 20: nextFrame.rotZ.inTanX += dtheta; break;
+                    case 21: nextFrame.rotZ.inTanY += dtheta; break;
+                    case 22: nextFrame.rotZ.outTanY += dtheta; break;
+                    case 23: nextFrame.rotZ.outTanY += dtheta; break;
+                }
+            }
+            else
+            {
+                switch (executionIndex)
+                {
+                    case 0: prevFrame.posX.inTanX += dtheta; break;
+                    case 1: prevFrame.posX.inTanY += dtheta; break;
+                    case 2: prevFrame.posX.outTanX += dtheta; break;
+                    case 3: prevFrame.posX.outTanY += dtheta; break;
+
+                    case 4: nextFrame.posX.inTanX += dtheta; break;
+                    case 5: nextFrame.posX.inTanY += dtheta; break;
+                    case 6: nextFrame.posX.outTanY += dtheta; break;
+                    case 7: nextFrame.posX.outTanY += dtheta; break;
+
+                    case 8: prevFrame.posY.inTanX += dtheta; break;
+                    case 9: prevFrame.posY.inTanY += dtheta; break;
+                    case 10: prevFrame.posY.outTanX += dtheta; break;
+                    case 11: prevFrame.posY.outTanY += dtheta; break;
+
+                    case 12: nextFrame.posY.inTanX += dtheta; break;
+                    case 13: nextFrame.posY.inTanY += dtheta; break;
+                    case 14: nextFrame.posY.outTanY += dtheta; break;
+                    case 15: nextFrame.posY.outTanY += dtheta; break;
+
+                    case 16: prevFrame.posZ.inTanX += dtheta; break;
+                    case 17: prevFrame.posZ.inTanY += dtheta; break;
+                    case 18: prevFrame.posZ.outTanX += dtheta; break;
+                    case 19: prevFrame.posZ.outTanY += dtheta; break;
+
+                    case 20: nextFrame.posZ.inTanX += dtheta; break;
+                    case 21: nextFrame.posZ.inTanY += dtheta; break;
+                    case 22: nextFrame.posZ.outTanY += dtheta; break;
+                    case 23: nextFrame.posZ.outTanY += dtheta; break;
+                }
             }
 
             Matrix4x4 matrix = GetFrameMatrix(objectIndex, prevFrame, nextFrame);

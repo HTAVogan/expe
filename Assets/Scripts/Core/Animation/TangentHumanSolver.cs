@@ -290,6 +290,7 @@ namespace VRtist
             alglib.minqpsetalgobleic(state_opt, 0.0, 0.0, 0.0, 0);
             alglib.minqpoptimize(state_opt);
             alglib.minqpresults(state_opt, out delta_theta, out rep);
+
             Profiler.EndSample();
             Profiler.EndSample();
 
@@ -542,8 +543,6 @@ namespace VRtist
             jData.prevFrames.Dispose();
             activeJob = false;
             Profiler.EndSample();
-
-            double[,] test = ds_dtheta(p, K);
 
             return Js;
         }
