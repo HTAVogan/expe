@@ -63,6 +63,33 @@ namespace VRtist
             return parentPosition;
         }
 
+        public Vector3 LocalFramePosition(int frame)
+        {
+            if (null == Animation)
+            {
+                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                    Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
+                else
+                    Animation = GlobalStateTradi.Animation.GetObjectAnimation(this.gameObject);
+            }
+            if (null == Animation) return Vector3.zero;
+
+            Matrix4x4 trsMatrix = Matrix4x4.identity;
+
+            if (PathToRoot.Count > 1)
+            {
+                for (int i = 0; i < PathToRoot.Count; i++)
+                {
+                   
+                    trsMatrix = trsMatrix * GetBoneMatrix(AnimToRoot[i], frame);
+                }
+            }
+            trsMatrix = trsMatrix * GetBoneMatrix(Animation, frame);
+
+            Maths.DecomposeMatrix(trsMatrix, out Vector3 parentPosition, out Quaternion quaternion, out Vector3 scale);
+            return parentPosition;
+        }
+
         public Matrix4x4 FrameMatrix(int frame)
         {
             if (null == Animation)
@@ -121,7 +148,7 @@ namespace VRtist
             {
                 if (scalex.Evaluate(frame, out float sx) && scaley.Evaluate(frame, out float sy) && scalez.Evaluate(frame, out float sz))
                 {
-                    position = new Vector3(sx, sy, sz);
+                    scale = new Vector3(sx, sy, sz);
                 }
             }
             return Matrix4x4.TRS(position, rotation, scale);

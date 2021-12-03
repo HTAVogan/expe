@@ -140,8 +140,9 @@ public class GostManager : MonoBehaviour
                 float percentJoleenSum = 0f;
                 foreach (var item in tempGostAbe)
                 {
-                    Vector3 diff = item.FramePosition(i) - tempOriginalAbe[counterAbe].FramePosition(i);
-                    percentAbeSum = (100 * (diff.x / unitAlpha.x) + 100 * (diff.y / unitAlpha.y) + 100 * (diff.z / unitAlpha.z)) / 3;
+                    Vector3 diff = item.LocalFramePosition(i) - tempOriginalAbe[counterAbe].LocalFramePosition(i);
+                   // Debug.Log(diff);
+                    percentAbeSum += (100 * (diff.x / unitAlpha.x) + 100 * (diff.y / unitAlpha.y) + 100 * (diff.z / unitAlpha.z)) / 3;
                     counterAbe++;
                 }
                 percentAbePerFrame += percentAbeSum / counterAbe;
@@ -149,8 +150,8 @@ public class GostManager : MonoBehaviour
                 foreach (var item in tempGostJoleen)
                 {
 
-                    Vector3 diff = item.FramePosition(i) - tempOriginalJoleen[counterJoleen].FramePosition(i);
-                    percentJoleenSum = (100 * (diff.x / unitAlpha.x) + 100 * (diff.y / unitAlpha.y) + 100 * (diff.z / unitAlpha.z)) / 3;
+                    Vector3 diff = item.LocalFramePosition(i) - tempOriginalJoleen[counterJoleen].LocalFramePosition(i);
+                    percentJoleenSum += (100 * (diff.x / unitAlpha.x) + 100 * (diff.y / unitAlpha.y) + 100 * (diff.z / unitAlpha.z)) / 3;
                     counterJoleen++;
                 }
                 percentJoleenPerFrame += percentJoleenSum / counterJoleen;
@@ -160,6 +161,7 @@ public class GostManager : MonoBehaviour
             percentJoleenGlobal = percentJoleenPerFrame;
             percentJoleenGlobal /= endFrame;
             ret = (percentJoleenGlobal + percentAbeGlobal) / 2;
+           // Debug.Log("Percent actually : " + (100 - ret));
             return 100 - ret;
         }
         return 0;
