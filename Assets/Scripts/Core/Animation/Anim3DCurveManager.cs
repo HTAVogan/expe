@@ -130,8 +130,10 @@ namespace VRtist
         void OnToolChanged(object sender, ToolChangedArgs args)
         {
             bool switchToAnim = args.toolName == "Animation";
-            if (!switchToAnim && !isAnimTool) return;
-            UpdateFromSelection();
+            if (switchToAnim && !isAnimTool)
+            {
+                UpdateFromSelection();
+            }
             isAnimTool = switchToAnim;
         }
 
@@ -178,13 +180,13 @@ namespace VRtist
 
         void AddCurve(GameObject gObject)
         {
+            if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+            {
+                AddHumanCurve(gObject, controller);
+            }
             AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(gObject);
             if (null == animationSet)
             {
-                if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
-                {
-                    AddHumanCurve(gObject, controller);
-                }
                 return;
             }
 

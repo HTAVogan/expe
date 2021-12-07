@@ -103,6 +103,19 @@ namespace VRtist
                 if (!isGrip) animator.DrawCurveGhost(hoveredCurves[0], transform.position);
                 else animator.DrawCurveGhost();
             }
+
+            VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.triggerButton, () =>
+            {
+                if (hoveredCurves.Count > 0)
+                {
+                    animator.SelectCurve(hoveredCurves[0], transform);
+                }
+            },
+            () =>
+            {
+
+            });
+
         }
 
         public Vector3 GetCollisionPoint(GameObject gameObject, Vector3 position)

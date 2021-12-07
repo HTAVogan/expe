@@ -395,6 +395,12 @@ namespace VRtist
             return closestPoint + GlobalState.Animation.StartFrame;
         }
 
+        public void SelectCurve(GameObject curve, Transform mouthpiece)
+        {
+            GameObject target = CurveManager.GetObjectFromCurve(gameObject);
+            Debug.Log(target);
+        }
+
         #endregion
     }
 
