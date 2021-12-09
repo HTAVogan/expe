@@ -39,10 +39,11 @@ namespace VRtist
             {
                 for (int i = 0; i < PathToRoot.Count; i++)
                 {
-                    trsMatrix = trsMatrix * GetBoneMatrix(AnimToRoot[i], frame);
+                    if (null != AnimToRoot[i])
+                        trsMatrix = trsMatrix * AnimToRoot[i].GetTranformMatrix(frame);
                 }
             }
-            trsMatrix = trsMatrix * GetBoneMatrix(Animation, frame);
+            trsMatrix = trsMatrix * Animation.GetTranformMatrix(frame);
 
             Maths.DecomposeMatrix(trsMatrix, out Vector3 parentPosition, out Quaternion quaternion, out Vector3 scale);
             return parentPosition;
@@ -59,51 +60,11 @@ namespace VRtist
             {
                 for (int i = 0; i < PathToRoot.Count; i++)
                 {
-                    trsMatrix = trsMatrix * GetBoneMatrix(AnimToRoot[i], frame);
+                    trsMatrix = trsMatrix * AnimToRoot[i].GetTranformMatrix(frame);
                 }
             }
-            trsMatrix = trsMatrix * GetBoneMatrix(Animation, frame);
+            trsMatrix = trsMatrix * Animation.GetTranformMatrix(frame);
             return trsMatrix;
-        }
-
-        private Matrix4x4 GetBoneMatrix(AnimationSet anim, int frame)
-        {
-            if (null == anim) return Matrix4x4.identity;
-
-            Vector3 position = Vector3.zero;
-            Curve posx = anim.GetCurve(AnimatableProperty.PositionX);
-            Curve posy = anim.GetCurve(AnimatableProperty.PositionY);
-            Curve posz = anim.GetCurve(AnimatableProperty.PositionZ);
-            if (null != posx && null != posy && null != posz)
-            {
-                if (posx.Evaluate(frame, out float px) && posy.Evaluate(frame, out float py) && posz.Evaluate(frame, out float pz))
-                {
-                    position = new Vector3(px, py, pz);
-                }
-            }
-            Quaternion rotation = Quaternion.identity;
-            Curve rotx = anim.GetCurve(AnimatableProperty.RotationX);
-            Curve roty = anim.GetCurve(AnimatableProperty.RotationY);
-            Curve rotz = anim.GetCurve(AnimatableProperty.RotationZ);
-            if (null != posx && null != roty && null != rotz)
-            {
-                if (rotx.Evaluate(frame, out float rx) && roty.Evaluate(frame, out float ry) && rotz.Evaluate(frame, out float rz))
-                {
-                    rotation = Quaternion.Euler(rx, ry, rz);
-                }
-            }
-            Vector3 scale = Vector3.one;
-            Curve scalex = anim.GetCurve(AnimatableProperty.ScaleX);
-            Curve scaley = anim.GetCurve(AnimatableProperty.ScaleY);
-            Curve scalez = anim.GetCurve(AnimatableProperty.ScaleZ);
-            if (null != scalex && null != scaley && null != scalez)
-            {
-                if (scalex.Evaluate(frame, out float sx) && scaley.Evaluate(frame, out float sy) && scalez.Evaluate(frame, out float sz))
-                {
-                    scale = new Vector3(sx, sy, sz);
-                }
-            }
-            return Matrix4x4.TRS(position, rotation, scale);
         }
 
         public void CheckAnimations()
@@ -115,8 +76,5 @@ namespace VRtist
             });
             Animation = GlobalState.Animation.GetObjectAnimation(gameObject);
         }
-
-
-
     }
 }
