@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace VRtist
@@ -27,22 +29,48 @@ namespace VRtist
         private Quaternion targetRotation;
         private List<AnimationSet> objectHierarchy;
         private int frame;
+        private int zoneSize;
         private Constraint objectConstraints;
 
+        private int p;
+        private int keyCount;
+        List<int> requiredKeyFrames;
+        State desiredState;
+        State currentState;
+        double[,] Js;
+        double[] theta;
+        double[,] Theta;
+        private int n;
+        alglib.minqpstate state_opt;
+        alglib.minqpreport rep;
+        double[,] Q_opt;
+        double[] b_opt;
+        double[] delta_theta_0;
+        double[] delta_theta;
+        double[] lowerBound;
+        double[] upperBound;
+        double[] s;
 
-        public TangentsSolver(Vector3 targetPosition, Quaternion targetRotation, List<AnimationSet> hierarchy, int frame, Constraint constraints)
+
+        public TangentsSolver(Vector3 targetPosition, Quaternion targetRotation, List<AnimationSet> hierarchy, int frame, int zoneSize, Constraint constraints)
         {
+
+            Debug.Log(targetPosition + " / " + targetRotation);
+
             this.targetPosition = targetPosition;
             this.targetRotation = targetRotation;
             objectHierarchy = hierarchy;
             this.frame = frame;
+            this.zoneSize = zoneSize;
             objectConstraints = constraints;
         }
 
-        public bool TrySolver()
+        public bool StepOne()
         {
-            int firstFrame = objectHierarchy[0].curves[AnimatableProperty.PositionX].keys[0].frame;
-            int lastFrame = objectHierarchy[0].curves[AnimatableProperty.PositionX].keys[objectHierarchy[0].curves[AnimatableProperty.PositionX].keys.Count - 1].frame;
+            objectHierarchy[0].curves[AnimatableProperty.PositionX].GetKeyIndex(frame - zoneSize, out int firstIndex);
+            int firstFrame = objectHierarchy[0].curves[AnimatableProperty.PositionX].keys[firstIndex].frame;
+            objectHierarchy[0].curves[AnimatableProperty.PositionX].GetKeyIndex(frame + zoneSize, out int lastIndex);
+            int lastFrame = objectHierarchy[0].curves[AnimatableProperty.PositionX].keys[lastIndex + 1].frame;
 
             if (frame < firstFrame) return false;
             if (frame > lastFrame) return false;
@@ -55,22 +83,26 @@ namespace VRtist
                 if (lf > lastFrame) return false;
             }
 
-            List<int> requiredKeyFrames = FindRequieredTangents(firstFrame, lastFrame, objectHierarchy[0].curves[AnimatableProperty.PositionX]);
-            int keyCount = requiredKeyFrames.Count - 1;
+            requiredKeyFrames = FindRequieredTangents(firstFrame, lastFrame, objectHierarchy[0].curves[AnimatableProperty.PositionX]);
+            keyCount = requiredKeyFrames.Count - 1;
             int totalKeyframeNB = objectHierarchy[0].curves[AnimatableProperty.PositionX].keys.Count;
 
-            int n = 3 * objectHierarchy.Count + 3;
-            int p = 12 * objectHierarchy.Count * keyCount + 12 * keyCount;
+            n = 3 * objectHierarchy.Count + 3;
+            p = 12 * objectHierarchy.Count * keyCount + 12 * keyCount;
             int nb_pins = objectConstraints.gameObjectIndices.Count;
 
-            double[] theta = GetAllTangents(p, keyCount, objectHierarchy, requiredKeyFrames);
-            double[,] Theta = ColumnArrayToArray(theta);
+            theta = GetAllTangents(p, keyCount, objectHierarchy, requiredKeyFrames);
+            Theta = ColumnArrayToArray(theta);
 
-            State currentState = GetCurrentState(objectHierarchy[objectHierarchy.Count - 1], frame);
-            State desiredState = new State() { position = targetPosition, rotation = targetRotation, frame = frame };
+            currentState = GetCurrentState(objectHierarchy[objectHierarchy.Count - 1], frame);
+            desiredState = new State() { position = targetPosition, rotation = targetRotation, frame = frame };
+            Js = ds_dtheta(objectHierarchy, frame, p, objectHierarchy.Count, keyCount, requiredKeyFrames);
 
-            double[,] Js = ds_dtheta(objectHierarchy, frame, p, objectHierarchy.Count, keyCount, requiredKeyFrames);
+            return true;
+        }
 
+        public bool StepThree()
+        {
             double[,] DT_D = new double[p, p];
             //Root rotation tangents
             for (int i = 0; i < 12 * keyCount; i++)
@@ -118,29 +150,34 @@ namespace VRtist
             double wb = 1d;
             double wd = 1d;
 
-            double[,] Q_opt = Add(Add(Multiply(2d * wm, Multiply(Transpose(Js), Js)), Add(Multiply(2d * wd, DT_D), Multiply(2d * wb, TT_T))), Multiply((double)Mathf.Pow(10, -6), Identity(p)));
+            Q_opt = Add(Add(Multiply(2d * wm, Multiply(Transpose(Js), Js)), Add(Multiply(2d * wd, DT_D), Multiply(2d * wb, TT_T))), Multiply((double)Mathf.Pow(10, -6), Identity(p)));
+
             double[,] B_opt = Add(Multiply(-2d * wm, Multiply(Transpose(Js), Delta_s_prime)), Multiply(2d * wb, Multiply(TT_T, Theta)));
-            double[] b_opt = ArrayToColumnArray(B_opt);
+            b_opt = ArrayToColumnArray(B_opt);
+
             double[] u = InitializeUBound(n);
             double[] v = InitializeVBound(n);
 
-            double[] lowerBound = LowerBoundConstraints(theta, u, v, objectHierarchy.Count, p, keyCount, requiredKeyFrames);
-            double[] upperBound = UpperBoundConstraints(theta, u, v, objectHierarchy.Count, p, keyCount, requiredKeyFrames);
+            lowerBound = LowerBoundConstraints(theta, u, v, objectHierarchy.Count, p, keyCount, requiredKeyFrames);
+            upperBound = UpperBoundConstraints(theta, u, v, objectHierarchy.Count, p, keyCount, requiredKeyFrames);
 
-            double[] delta_theta_0 = new double[p];
-            double[] delta_theta;
-            double[] s = new double[p];
+            delta_theta_0 = new double[p];
+            s = new double[p];
             for (int i = 0; i < p; i++)
             {
                 s[i] = 1d;
                 delta_theta_0[i] = 0d;
             }
 
-            alglib.minqpstate state_opt;
-            alglib.minqpreport rep;
 
             alglib.minqpcreate(p, out state_opt);
             alglib.minqpsetquadraticterm(state_opt, Q_opt);
+
+            return true;
+        }
+
+        public bool StepFive()
+        {
             alglib.minqpsetlinearterm(state_opt, b_opt);
             alglib.minqpsetstartingpoint(state_opt, delta_theta_0);
             alglib.minqpsetbc(state_opt, lowerBound, upperBound);
@@ -187,7 +224,6 @@ namespace VRtist
                 }
             }
 
-            int K = requiredKeyFrames.Count;
             //Rotation curves
             for (int l = 0; l < objectHierarchy.Count; l++)
             {
@@ -197,10 +233,10 @@ namespace VRtist
                     AnimatableProperty property = (AnimatableProperty)i + 3;
                     Curve curve = anim.GetCurve(property);
 
-                    for (int k = 0; k < K; k++)
+                    for (int k = 0; k < keyCount; k++)
                     {
-                        Vector2 inTangent = new Vector2((float)new_theta[12 * K * l + 4 * (i * K + k) + 0], (float)new_theta[12 * K * l + 4 * (i * K + k) + 1]);
-                        Vector2 outTangent = new Vector2((float)new_theta[12 * K * l + 4 * (i * K + k) + 2], (float)new_theta[12 * K * l + 4 * (i * K + k) + 3]);
+                        Vector2 inTangent = new Vector2((float)new_theta[12 * keyCount * l + 4 * (i * keyCount + k) + 0], (float)new_theta[12 * keyCount * l + 4 * (i * keyCount + k) + 1]);
+                        Vector2 outTangent = new Vector2((float)new_theta[12 * keyCount * l + 4 * (i * keyCount + k) + 2], (float)new_theta[12 * keyCount * l + 4 * (i * keyCount + k) + 3]);
                         curve.SetTangents(requiredKeyFrames[k], inTangent, outTangent);
                     }
                 }
@@ -208,21 +244,18 @@ namespace VRtist
 
             AnimationSet rootAnim = objectHierarchy[0];
             //Position curves of the root
-            for (int i = 0; i < 3; i++)
+            for (int i = 3; i < 6; i++)
             {
-                AnimatableProperty property = (AnimatableProperty)i;
+                AnimatableProperty property = (AnimatableProperty)i - 3;
                 Curve curve = rootAnim.GetCurve(property);
 
-                for (int k = 0; k < K; k++)
+                for (int k = 0; k < keyCount; k++)
                 {
-                    Vector2 inTangent = new Vector2((float)new_theta[12 * K * objectHierarchy.Count + 4 * ((i - 3) * K + k) + 0], (float)new_theta[12 * K * objectHierarchy.Count + 4 * ((i - 3) * K + k) + 1]);
-                    Vector2 outTangent = new Vector2((float)new_theta[12 * K * objectHierarchy.Count + 4 * ((i - 3) * K + k) + 2], (float)new_theta[12 * K * objectHierarchy.Count + 4 * ((i - 3) * K + k) + 3]);
+                    Vector2 inTangent = new Vector2((float)new_theta[12 * keyCount * objectHierarchy.Count + 4 * ((i - 3) * keyCount + k) + 0], (float)new_theta[12 * keyCount * objectHierarchy.Count + 4 * ((i - 3) * keyCount + k) + 1]);
+                    Vector2 outTangent = new Vector2((float)new_theta[12 * keyCount * objectHierarchy.Count + 4 * ((i - 3) * keyCount + k) + 2], (float)new_theta[12 * keyCount * objectHierarchy.Count + 4 * ((i - 3) * keyCount + k) + 3]);
                     curve.SetTangents(requiredKeyFrames[k], inTangent, outTangent);
                 }
-
-
             }
-
             return true;
         }
 
@@ -232,10 +265,10 @@ namespace VRtist
             int nbPoints = animations.Count;
 
             //Root position curves
-            for (int i = 0; i < 3; i++)
+            for (int i = 3; i < 6; i++)
             {
                 AnimationSet anim = animations[0];
-                AnimatableProperty property = (AnimatableProperty)i;
+                AnimatableProperty property = (AnimatableProperty)i - 3;
                 Curve curve = anim.GetCurve(property);
 
                 for (int k = 0; k < K; k++)
@@ -250,10 +283,10 @@ namespace VRtist
             //Rotation curves
             for (int l = 0; l < nbPoints; l++)
             {
-                for (int i = 3; i < 6; i++)
+                for (int i = 0; i < 3; i++)
                 {
                     AnimationSet anim = animations[l];
-                    AnimatableProperty property = (AnimatableProperty)i;
+                    AnimatableProperty property = (AnimatableProperty)i + 3;
                     Curve curve = anim.GetCurve(property);
                     for (int k = 0; k < K; k++)
                     {
@@ -301,7 +334,7 @@ namespace VRtist
             curve.GetKeyIndex(lastFrame, out int lastKeyIndex);
             lastKeyIndex++;
 
-            for (int i = firstFrame; i <= lastFrame; i++)
+            for (int i = firstKeyIndex; i <= lastKeyIndex; i++)
             {
                 keys.Add(i);
             }
@@ -905,6 +938,18 @@ namespace VRtist
             }
             return response;
         }
+
+        void Multiply(double alpha, ref double[,] m)
+        {
+            for (int i = 0; i < m.GetUpperBound(0) + 1; i++)
+            {
+                for (int j = 0; j < m.GetUpperBound(1) + 1; j++)
+                {
+                    m[i, j] = alpha * m[i, j];
+                }
+            }
+        }
+
         double[,] Identity(int p)
         {
             double[,] response = new double[p, p];
@@ -958,5 +1003,6 @@ namespace VRtist
 
         #endregion
     }
+
 
 }

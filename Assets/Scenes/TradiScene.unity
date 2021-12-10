@@ -155,10 +155,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 471949ca93534524fa9c3b59b7500936, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clipJoleen: {fileID: -203655887218126122, guid: 772e45b6e8fcc5643b7d3e4f453efade,
-    type: 3}
-  clipAbe: {fileID: -203655887218126122, guid: f23cc80a172fc6b4b823b6e0b3cc50e5, type: 3}
-  clipBottle: {fileID: 7400000, guid: f0c6007f3a313ae498be67ce468e7135, type: 2}
+  Throw: {fileID: 7400000, guid: 021bd634af91a3948b2cad1e40efc6ca, type: 2}
+  Dye: {fileID: 7400000, guid: 54617b1d99a3629478ff635c177c01d2, type: 2}
+  BottleClip: {fileID: 7400000, guid: 8885e658aa0b747409efbd9a341e0f4c, type: 2}
+  controllerJoleen: {fileID: 9100000, guid: 44e0aafb814962b49aee87c059b5b2ef, type: 2}
+  controllerBottle: {fileID: 0}
+  controllerAbe: {fileID: 0}
 --- !u!4 &767845412
 Transform:
   m_ObjectHideFlags: 0
@@ -171,7 +173,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &767845413
 MonoBehaviour:
@@ -212,7 +214,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gostMaterial: {fileID: 2100000, guid: 7b333695d4efe3a4b94b9e9f8e97d65d, type: 2}
-  delta: 1
+  delta: 10.709
+  clipBottle: {fileID: 7400000, guid: 8885e658aa0b747409efbd9a341e0f4c, type: 2}
 --- !u!1 &1090069226
 GameObject:
   m_ObjectHideFlags: 0
@@ -655,82 +658,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1918054095
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 582309316043709833, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 582309316043709833, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -50.488678
-      objectReference: {fileID: 0}
-    - target: {fileID: 582309316043709833, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 22.119627
-      objectReference: {fileID: 0}
-    - target: {fileID: 582309316043709833, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -14.684077
-      objectReference: {fileID: 0}
-    - target: {fileID: 582309316043709833, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 582309316043709833, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
-        type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 582309316043709833, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
-        type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 582309316043709833, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
-        type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 582309316043709833, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 582309316043709833, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 582309316043709833, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 582309316043709834, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
-        type: 3}
-      propertyPath: m_Name
-      value: GostManager
-      objectReference: {fileID: 0}
-    - target: {fileID: 582309316043709834, guid: ff982bb7ddd1b074aa6ba96e8741c69a,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: ff982bb7ddd1b074aa6ba96e8741c69a, type: 3}
 --- !u!114 &5775237914502191458
 MonoBehaviour:
   m_ObjectHideFlags: 0

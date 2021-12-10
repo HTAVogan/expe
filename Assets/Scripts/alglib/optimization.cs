@@ -3216,12 +3216,10 @@ public partial class alglib
             
     public static void minqpsetquadraticterm(minqpstate state, double[,] a)
     {
-        bool isupper;
-        if( !alglib.ap.issymmetric(a) )
-            throw new alglibexception("'a' parameter is not symmetric matrix");
+        //if( !alglib.ap.issymmetric(a) )
+        //    throw new alglibexception("'a' parameter is not symmetric matrix");
     
-        isupper = false;
-        minqp.minqpsetquadraticterm(state.innerobj, a, isupper, null);
+        minqp.minqpsetquadraticterm(state.innerobj, a, false, null);
     
         return;
     }

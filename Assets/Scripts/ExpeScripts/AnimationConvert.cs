@@ -21,6 +21,9 @@ namespace VRtist
             public List<Keyframe> ScaleX = new List<Keyframe>();
             public List<Keyframe> ScaleY = new List<Keyframe>();
             public List<Keyframe> ScaleZ = new List<Keyframe>();
+            public List<Keyframe> EulerX = new List<Keyframe>();
+            public List<Keyframe> EulerY = new List<Keyframe>();
+            public List<Keyframe> EulerZ = new List<Keyframe>();
         }
 
         public AnimationClip clip;
@@ -47,19 +50,20 @@ namespace VRtist
                 }
 
                 AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, bindings[i]);
+                Debug.Log(bindings[i].propertyName);
                 List<Keyframe> target = GetPropertyList(_clipData[go], bindings[i].propertyName);
-                foreach(Keyframe key in curve.keys)
+                foreach (Keyframe key in curve.keys)
                 {
                     target.Add(key);
                 }
             }
 
-            foreach(KeyValuePair<GameObject, ClipData> animData in _clipData)
+            foreach (KeyValuePair<GameObject, ClipData> animData in _clipData)
             {
                 AnimationSet animationSet = new AnimationSet(animData.Key);
-                for(int iPos = 0; iPos < animData.Value.PositionX.Count; iPos++)
+                for (int iPos = 0; iPos < animData.Value.PositionX.Count; iPos++)
                 {
-                    int frame = Mathf.CeilToInt(animData.Value.PositionX[iPos].time * fps) +1;
+                    int frame = Mathf.CeilToInt(animData.Value.PositionX[iPos].time * fps) + 1;
                     animationSet.curves[AnimatableProperty.PositionX].AddKey(new AnimationKey(frame, animData.Value.PositionX[iPos].value));
                     animationSet.curves[AnimatableProperty.PositionY].AddKey(new AnimationKey(frame, animData.Value.PositionY[iPos].value));
                     animationSet.curves[AnimatableProperty.PositionZ].AddKey(new AnimationKey(frame, animData.Value.PositionZ[iPos].value));
@@ -84,7 +88,31 @@ namespace VRtist
                     animationSet.curves[AnimatableProperty.RotationZ].AddKey(new AnimationKey(frame, rotation.z));
                     previousRotation = rotation;
                 }
+                for (int i = 0; i < animData.Value.EulerX.Count; i++)
+                {
+
+                    float eX = previousRotation.x + Mathf.DeltaAngle(previousRotation.x, animData.Value.EulerX[i].value);
+                    float eY = previousRotation.y + Mathf.DeltaAngle(previousRotation.y, animData.Value.EulerY[i].value);
+                    float eZ = previousRotation.z + Mathf.DeltaAngle(previousRotation.z, animData.Value.EulerZ[i].value);
+                    int frame = Mathf.FloorToInt(animData.Value.EulerX[i].time * fps) + 1;
+                    animationSet.curves[AnimatableProperty.RotationX].AddKey(new AnimationKey(frame, eX));
+                    animationSet.curves[AnimatableProperty.RotationY].AddKey(new AnimationKey(frame, eY));
+                    animationSet.curves[AnimatableProperty.RotationZ].AddKey(new AnimationKey(frame, eZ));
+                    previousRotation = new Vector3(eX, eY, eZ);
+                }
                 GlobalStateTradi.Animation.SetObjectAnimations(animData.Key, animationSet);
+            }
+        }
+
+        public void ConvertSpecificProperty(string property, GameObject go = null)
+        {
+            EditorCurveBinding[] bindings = AnimationUtility.GetCurveBindings(clip);
+            for (int i = 0; i < bindings.Length; i++)
+            {
+                if(bindings[i].propertyName == property)
+                {
+                    //change 
+                }
             }
         }
 
@@ -112,6 +140,12 @@ namespace VRtist
                     return data.ScaleY;
                 case "m_LocalScale.z":
                     return data.ScaleZ;
+                case "localEulerAnglesRaw.x":
+                    return data.EulerX;
+                case "localEulerAnglesRaw.y":
+                    return data.EulerY;
+                case "localEulerAnglesRaw.z":
+                    return data.EulerZ;
                 default: return null;
             }
         }

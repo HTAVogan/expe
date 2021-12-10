@@ -100,7 +100,7 @@ namespace VRtist
             }
         }
 
-        private void ComputeCacheValuesAt(int keyIndex)
+        public void ComputeCacheValuesAt(int keyIndex)
         {
             // recompute value cache in range [index - 2 ; index + 2] (for bezier curves)            
             int startKeyIndex = keyIndex - 2;
@@ -293,7 +293,7 @@ namespace VRtist
             if (GetKeyIndex(key.frame, out int index))
             {
                 keys[index] = key;
-                InitializeTangents(index);
+                if (key.inTangent == Vector2.zero && key.outTangent == Vector2.zero) InitializeTangents(index);
                 ComputeCacheValuesAt(index);
             }
             else
@@ -321,7 +321,7 @@ namespace VRtist
                 for (int i = end + 1; i < cachedKeysIndices.Length; i++)
                     cachedKeysIndices[i]++;
 
-                InitializeTangents(index);
+                if (key.inTangent == Vector2.zero && key.outTangent == Vector2.zero) InitializeTangents(index);
                 ComputeCacheValuesAt(index);
             }
         }
@@ -569,6 +569,36 @@ namespace VRtist
             newKeys.Add(key);
         }
 
+        public void AddTangentKey(AnimationKey key, int zoneSize)
+        {
+            if (keys.Count == 0) return;
+
+            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, key.frame - zoneSize);
+            int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
+
+            int firstKeyIndex = cachedKeysIndices[startFrame - (GlobalState.Animation.StartFrame - 1)];
+            int lastKeyIndex = cachedKeysIndices[endFrame - (GlobalState.Animation.StartFrame - 1)];
+
+            if (keys[firstKeyIndex].frame != startFrame && Evaluate(startFrame, out float prevValue))
+            {
+                AddKey(new AnimationKey(startFrame, prevValue, Interpolation.Bezier));
+            }
+            if (keys[lastKeyIndex].frame != endFrame && Evaluate(endFrame, out float nextValue))
+            {
+                AddKey(new AnimationKey(endFrame, nextValue, Interpolation.Bezier));
+            }
+            List<AnimationKey> toRemove = keys.FindAll(x => x.frame > startFrame && x.frame < endFrame);
+            toRemove.ForEach(x => RemoveKey(x.frame));
+        }
+
+        public void GetTangentKeys(int frame, int zoneSize, ref List<AnimationKey> oldKeys)
+        {
+            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, frame - zoneSize);
+            int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, frame + zoneSize);
+
+            oldKeys = keys.FindAll(x => x.frame > startFrame && x.frame < endFrame);
+        }
+
         public void MoveKey(int oldFrame, int newFrame)
         {
             if (GetKeyIndex(oldFrame, out int index))
@@ -737,6 +767,7 @@ namespace VRtist
                         Vector2 C = D - nextKey.inTangent;
 
                         value = EvaluateBezier(A, B, C, D, frame);
+
                         return true;
                     }
 
@@ -747,7 +778,6 @@ namespace VRtist
 
         public void SetTangents(int index, Vector2 inTangent, Vector2 outTangent)
         {
-            index--;
             keys[index].inTangent = inTangent;
             keys[index].outTangent = outTangent;
             ComputeCacheValuesAt(index);

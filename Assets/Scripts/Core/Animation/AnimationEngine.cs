@@ -500,6 +500,24 @@ namespace VRtist
             if (updateCurves) onChangeCurve.Invoke(gobjet, property);
         }
 
+        public void AddFilteredKeyframeTangent(GameObject gobjet, AnimatableProperty property, AnimationKey key, int zoneSize, bool updateCurves = true)
+        {
+            AnimationSet animationSet = GetObjectAnimation(gobjet);
+            Curve curve = animationSet.GetCurve(property);
+            // Filter rotation
+            if (property == AnimatableProperty.RotationX || property == AnimatableProperty.RotationY || property == AnimatableProperty.RotationZ)
+            {
+                AnimationKey previousKey = curve.GetPreviousKey(key.frame);
+                if (null != previousKey)
+                {
+                    float delta = Mathf.DeltaAngle(previousKey.value, key.value);
+                    key.value = previousKey.value + delta;
+                }
+            }
+            curve.AddTangentKey(key, zoneSize);
+            if (updateCurves) onChangeCurve.Invoke(gobjet, property);
+        }
+
         private void RemoveEmptyAnimationSet(GameObject gobject)
         {
             AnimationSet animationSet = GetObjectAnimation(gobject);
