@@ -14,6 +14,8 @@ namespace VRtist
 
         [Range(0, 1)]
         public float stiffness;
+        public bool IsGoal;
+        public bool ShowCurve;
 
         public void SetPathToRoot(SkinMeshController controller, List<Transform> path)
         {
@@ -24,6 +26,7 @@ namespace VRtist
 
                 AnimToRoot.Add(anim);
             });
+            if (PathToRoot.Count == 0) PathToRoot.Add(transform);
             Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
             RootController = controller;
         }

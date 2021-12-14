@@ -1,0 +1,215 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51b5492dc04a1e34ca7c182d001363ff, type: 3}
+  m_Name: Mixamo
+  m_EditorClassIdentifier: 
+  JointsList:
+  - Name: Hips
+    stiffness: 1
+    isGoal: 1
+    showCurve: 1
+  - Name: Pelvis
+    stiffness: 1
+    isGoal: 0
+    showCurve: 0
+  - Name: LeftUpLeg
+    stiffness: 0
+    isGoal: 0
+    showCurve: 0
+  - Name: LeftLeg
+    stiffness: 0
+    isGoal: 1
+    showCurve: 1
+  - Name: LeftFoot
+    stiffness: 0
+    isGoal: 1
+    showCurve: 1
+  - Name: RightUpLeg
+    stiffness: 0
+    isGoal: 1
+    showCurve: 1
+  - Name: RightLeg
+    stiffness: 0
+    isGoal: 1
+    showCurve: 1
+  - Name: Spine
+    stiffness: 1
+    isGoal: 0
+    showCurve: 0
+  - Name: Spine1
+    stiffness: 1
+    isGoal: 0
+    showCurve: 0
+  - Name: Spine2
+    stiffness: 1
+    isGoal: 0
+    showCurve: 0
+  - Name: Neck
+    stiffness: 0
+    isGoal: 0
+    showCurve: 0
+  - Name: Head
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftShoulder
+    stiffness: 1
+    isGoal: 0
+    showCurve: 0
+  - Name: LeftArm
+    stiffness: 0
+    isGoal: 0
+    showCurve: 0
+  - Name: LeftForeArm
+    stiffness: 0
+    isGoal: 1
+    showCurve: 1
+  - Name: LeftHand
+    stiffness: 0
+    isGoal: 1
+    showCurve: 1
+  - Name: LeftHandThumb1
+    stiffness: 1
+    isGoal: 0
+    showCurve: 0
+  - Name: LeftHandThumb2
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftHandThumb3
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftHandIndex1
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftHandIndex2
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftHandIndex3
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftHandMiddle1
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftHandMiddle2
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftHandMiddle3
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftHandRing1
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftHandRing2
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftHandRing3
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftHandPinky1
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftHandPinky2
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: LeftHandPinky3
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightShoulder
+    stiffness: 1
+    isGoal: 0
+    showCurve: 0
+  - Name: RightArm
+    stiffness: 0
+    isGoal: 0
+    showCurve: 0
+  - Name: RightForeArm
+    stiffness: 0
+    isGoal: 1
+    showCurve: 1
+  - Name: RightHand
+    stiffness: 0
+    isGoal: 1
+    showCurve: 1
+  - Name: RightHandThumb1
+    stiffness: 1
+    isGoal: 0
+    showCurve: 0
+  - Name: RightHandThumb2
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightHandThumb3
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightHandIndex1
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightHandIndex2
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightHandIndex3
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightHandMiddle1
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightHandMiddle2
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightHandMiddle3
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightHandRing1
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightHandRing2
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightHandRing3
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightHandPinky1
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightHandPinky2
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0
+  - Name: RightHandPinky3
+    stiffness: 0
+    isGoal: 1
+    showCurve: 0

@@ -263,6 +263,7 @@ namespace VRtist
 
         private void GetAHumanAnimationCurve(HumanGoalController goalController)
         {
+            if (!goalController.ShowCurve) return;
             AnimationSet rootAnimation = GlobalState.Animation.GetObjectAnimation(goalController.gameObject);
             if (null == rootAnimation) return;
             Curve positionX = rootAnimation.GetCurve(AnimatableProperty.RotationX);
