@@ -649,10 +649,31 @@ namespace VRtist
                 new Vector4(node.Transform.A3, node.Transform.B3, node.Transform.C3, node.Transform.D3),
                 new Vector4(node.Transform.A4, node.Transform.B4, node.Transform.C4, node.Transform.D4)
                 );
-            mat *= cumulMatrix;
+            Vector3 position, scale;
+            Quaternion rotation;
+            Maths.DecomposeMatrix(mat, out position, out rotation, out scale);
+            Maths.DecomposeMatrix(cumulMatrix, out Vector3 cumulPos, out Quaternion cumulRot, out Vector3 cumulScale);
+            //position += cumulPos;
+
             if (node.Name.Contains("$AssimpFbx$") && node.HasChildren)
             {
-                Debug.Assert(node.ChildCount == 1, "Assimpfbx node has more than one children " + node.Name);
+                if (node.Name.Contains("Translation"))
+                {
+                    position = cumulRot * position;
+                }
+                else
+                {
+                    position += cumulPos;
+                }
+                if (node.Name.Contains("PreRotation"))
+                {
+                    rotation = cumulRot * rotation;
+                }
+                else
+                {
+                    rotation = cumulRot;
+                }
+                mat = Matrix4x4.TRS(position, rotation, scale);
                 if (blocking)
                     ImportHierarchy(node.Children[0], parent, go, mat).MoveNext();
                 else
@@ -660,12 +681,8 @@ namespace VRtist
             }
             else
             {
-                Vector3 position, scale;
-                Quaternion rotation;
-                Maths.DecomposeMatrix(mat, out position, out rotation, out scale);
-
+                position += cumulPos;
                 node.Transform.Decompose(out Assimp.Vector3D scale1, out Assimp.Quaternion rot, out Assimp.Vector3D trans);
-
                 AssignMeshes(node, go);
 
                 if (node.Parent != null)
@@ -690,15 +707,16 @@ namespace VRtist
                     ImportAnimation(node, go);
                 }
 
+                mat = Matrix4x4.TRS(Vector3.one, cumulRot * rotation, scale);
                 importCount++;
                 foreach (Assimp.Node assimpChild in node.Children)
                 {
                     GameObject child = new GameObject();
                     child.tag = "Goal";
                     if (blocking)
-                        ImportHierarchy(assimpChild, go.transform, child, Matrix4x4.identity).MoveNext();
+                        ImportHierarchy(assimpChild, go.transform, child, mat).MoveNext();
                     else
-                        yield return StartCoroutine(ImportHierarchy(assimpChild, go.transform, child, Matrix4x4.identity));
+                        yield return StartCoroutine(ImportHierarchy(assimpChild, go.transform, child, mat));
                 }
             }
         }
@@ -735,6 +753,13 @@ namespace VRtist
                     animationSet.curves[AnimatableProperty.ScaleZ].AddKey(new AnimationKey(frame, vectorKey.Value.Z, Interpolation.Bezier));
                 }
                 Vector3 previousRotation = Vector3.zero;
+                if (nodeChannel.NodeName.Contains("$AssimpFbx$") && nodeChannel.RotationKeyCount > 0)
+                {
+                    Assimp.QuaternionKey quatKey = nodeChannel.RotationKeys[0];
+                    Quaternion initQuaternion = new Quaternion(quatKey.Value.X, quatKey.Value.Y, quatKey.Value.X, quatKey.Value.W);
+                    previousRotation = initQuaternion.eulerAngles;
+
+                }
                 foreach (Assimp.QuaternionKey quaternionKey in nodeChannel.RotationKeys)
                 {
                     int frame = Mathf.RoundToInt((float)quaternionKey.Time * GlobalState.Animation.fps / (float)animation.TicksPerSecond) + 1;
