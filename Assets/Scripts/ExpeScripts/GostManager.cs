@@ -17,6 +17,7 @@ public class GostManager : MonoBehaviour
     public float delta;
 
     public AnimationClip clipBottle;
+    public RuntimeAnimatorController controllerGostBottle;
 
 
     private float time = 0f;
@@ -26,6 +27,7 @@ public class GostManager : MonoBehaviour
         if (gostJoleen == null)
         {
             joleen = GameObject.Find("Ch34_nonPBR@Throw Object.7818A175.695");
+        
             if (joleen != null)
             {
                 gostJoleen = Instantiate(joleen, joleen.transform.parent);
@@ -77,10 +79,14 @@ public class GostManager : MonoBehaviour
             bottleInit = GameObject.Find("bottle.7818A175.703"); 
             if (bottleInit != null)
             {
-                var converter = gameObject.GetComponent<AnimationConvert>();
-                converter.clip = clipBottle;
-                converter.Convert(bottleInit);
                 bottle = Instantiate(bottleInit, bottleInit.transform.parent);
+                DestroyImmediate(bottle.GetComponent<Animator>());
+                Animator gostBottleAnim = bottle.AddComponent<Animator>();
+                gostBottleAnim.runtimeAnimatorController = controllerGostBottle;
+                clipBottle.ClearCurves();
+                gameObject.GetComponent<ClipManager>().BindPropertiesToClip(bottle, clipBottle, bottle);
+                bottle.transform.position += Vector3.forward;
+                gameObject.GetComponent<ClipManager>().InitFirstKeyFrame(clipBottle, bottle);
                 var temp = bottle.GetComponentsInChildren<Renderer>();
                 Texture texture = bottleInit.GetComponentInChildren<Renderer>().material.GetTexture("_ColorMap");
                 foreach (var item in temp)
@@ -88,13 +94,9 @@ public class GostManager : MonoBehaviour
                     item.material = gostMaterial;
                     item.material.SetTexture("_ColorMap", texture);
                 }
-                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-                    GlobalState.Animation.CopyAnimation(bottleInit, bottle);
-                else
-                    GlobalStateTradi.Animation.CopyAnimation(bottleInit, bottle);
-                bottle.transform.position += Vector3.forward;
+                gostBottleAnim.enabled = false;
                 checkAnimationsOfGosts(bottle);
-                gameObject.GetComponent<AnimationManager>().ClearAnimationFormOrigin(bottle);
+                //gameObject.GetComponent<AnimationManager>().ClearAnimationFormOrigin(bottle);
 
             }
         }

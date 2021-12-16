@@ -157,10 +157,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Throw: {fileID: 7400000, guid: 021bd634af91a3948b2cad1e40efc6ca, type: 2}
   Dye: {fileID: 7400000, guid: 54617b1d99a3629478ff635c177c01d2, type: 2}
-  BottleClip: {fileID: 7400000, guid: 8885e658aa0b747409efbd9a341e0f4c, type: 2}
+  BottleClip: {fileID: 7400000, guid: 02e7938c16288fb48a28243d35abe848, type: 2}
   controllerJoleen: {fileID: 9100000, guid: 44e0aafb814962b49aee87c059b5b2ef, type: 2}
-  controllerBottle: {fileID: 0}
-  controllerAbe: {fileID: 0}
+  controllerBottle: {fileID: 9100000, guid: 01caa1ccf27a8494785fed1805afe721, type: 2}
+  controllerAbe: {fileID: 9100000, guid: 991a0c08d20f6ec419a6d4594f144c7a, type: 2}
 --- !u!4 &767845412
 Transform:
   m_ObjectHideFlags: 0
@@ -216,6 +216,8 @@ MonoBehaviour:
   gostMaterial: {fileID: 2100000, guid: 7b333695d4efe3a4b94b9e9f8e97d65d, type: 2}
   delta: 10.709
   clipBottle: {fileID: 7400000, guid: 8885e658aa0b747409efbd9a341e0f4c, type: 2}
+  controllerGostBottle: {fileID: 9100000, guid: 5e8264b4ab151f7479d6c17ed0a211c3,
+    type: 2}
 --- !u!1 &1090069226
 GameObject:
   m_ObjectHideFlags: 0

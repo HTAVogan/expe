@@ -20,11 +20,15 @@ public class ClipManager : MonoBehaviour
     public RuntimeAnimatorController controllerJoleen;
     public RuntimeAnimatorController controllerBottle;
     public RuntimeAnimatorController controllerAbe;
+
+
+
+
     private void OnEnable()
     {
         AnimationUtility.onCurveWasModified += OnClipModified;
         engine = GlobalStateTradi.Animation;
-
+        GlobalStateTradi.Animation.CurrentFrame = 0;
         converter = gameObject.GetComponent<AnimationConvert>();
     }
 
@@ -40,6 +44,13 @@ public class ClipManager : MonoBehaviour
                 animJoleen.runtimeAnimatorController = controllerJoleen;
                 Throw.ClearCurves();
                 BindPropertiesToClip(joleen, Throw, joleen);
+                foreach (Transform item in joleen.transform)
+                {
+                    if (item.gameObject.name.Contains("Hips"))
+                    {
+                        InitFirstKeyFrame(Throw, item.gameObject);
+                    }
+                }
                 animJoleen.Rebind();
                 animJoleen.enabled = false;
             }
@@ -53,6 +64,13 @@ public class ClipManager : MonoBehaviour
                 animAbe.runtimeAnimatorController = controllerAbe;
                 Dye.ClearCurves();
                 BindPropertiesToClip(abe, Dye, abe);
+                foreach (Transform item in abe.transform)
+                {
+                    if (item.gameObject.name.Contains("Hips"))
+                    {
+                        InitFirstKeyFrame(Dye, item.gameObject);
+                    }
+                }
                 animAbe.Rebind();
                 animAbe.enabled = false;
             }
@@ -66,6 +84,7 @@ public class ClipManager : MonoBehaviour
                 animBottle.runtimeAnimatorController = controllerBottle;
                 BottleClip.ClearCurves();
                 BindPropertiesToClip(bottle, BottleClip, bottle);
+                InitFirstKeyFrame(BottleClip, bottle);
                 animBottle.Rebind();
                 animBottle.enabled = false;
             }
@@ -75,47 +94,47 @@ public class ClipManager : MonoBehaviour
 
     private void OnClipModified(AnimationClip clip, EditorCurveBinding binding, AnimationUtility.CurveModifiedType type)
     {
-        //TODO VERIFY ANIMATION PROPERTY AND REBIND ONLY CURVES WITH THAT 
-        if (binding.propertyName.Contains("z") && type == AnimationUtility.CurveModifiedType.ClipModified)
+        if (binding != null)
         {
-            if (clip.name.Contains("Throw"))
+            if (binding.path != null)
             {
-                if (joleen != null)
+                String[] pathSplitted = binding.path.Split('/');
+                if (pathSplitted.Length > 0)
                 {
-                    Debug.Log(binding.propertyName + " and path is " + binding.path);
-                    //GlobalStateTradi.Animation.GetAllAnimations().ContainsKey();
-                    gameObject.GetComponent<AnimationManager>().ClearAnimationFormOrigin(joleen);
 
-                    converter.clip = clip;
-                    converter.Convert(joleen);
-                }
-            }
-            else if (clip.name.Contains("Dying"))
-            {
-                if (abe != null)
-                {
-                    gameObject.GetComponent<AnimationManager>().ClearAnimationFormOrigin(abe);
+                    string GameObjectName = pathSplitted[pathSplitted.Length - 1];
+                    GameObject go = GameObject.Find(GameObjectName);
+                    if (go != null)
+                    {
 
-                    converter.clip = clip;
-                    converter.Convert(abe);
+                        AnimatableProperty property = GetProperty(binding.propertyName);
+                        if (engine.GetAllAnimations().TryGetValue(go, out AnimationSet set))
+                        {
+                            AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);
+                            set.SetCurve(property, convertCurve(curve));
+                        }
+                        else
+                        {
+                            AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);
+                            AnimationSet animSet = new AnimationSet(go);
+                            //animSet.CreatePositionRotationCurves();
+                            animSet.SetCurve(property, convertCurve(curve));
+                            engine.SetObjectAnimations(go, animSet);
+                        }
+                    }
                 }
             }
-            else if (clip.name.Contains("Bottle"))
+            else
             {
-                if (bottle != null)
-                {
-                    gameObject.GetComponent<AnimationManager>().ClearAnimationFormOrigin(bottle);
-                    converter.clip = clip;
-                    converter.Convert(bottle);
-                }
+
             }
+
         }
 
     }
 
-    private void BindPropertiesToClip(GameObject go, AnimationClip clip, GameObject root)
+    public void BindPropertiesToClip(GameObject go, AnimationClip clip, GameObject root)
     {
-        Dictionary<EditorCurveBinding, AnimationCurve> _animationCurveBindings = new Dictionary<EditorCurveBinding, AnimationCurve>();
         EditorCurveBinding[] bindings = AnimationUtility.GetAnimatableBindings(go, root);
 
         foreach (EditorCurveBinding binding in bindings)
@@ -141,5 +160,80 @@ public class ClipManager : MonoBehaviour
         }
         return path;
     }
+
+    private AnimatableProperty GetProperty(String property)
+    {
+
+        switch (property)
+        {
+            case "m_LocalRotation.x":
+                return AnimatableProperty.RotationX;
+            case "m_LocalRotation.y":
+                return AnimatableProperty.RotationY;
+            case "m_LocalRotation.z":
+                return AnimatableProperty.RotationZ;
+            case "m_LocalPosition.x":
+                return AnimatableProperty.PositionX;
+            case "m_LocalPosition.y":
+                return AnimatableProperty.PositionY;
+            case "m_LocalPosition.z":
+                return AnimatableProperty.PositionZ;
+            case "m_LocalScale.x":
+                return AnimatableProperty.ScaleX;
+            case "m_LocalScale.y":
+                return AnimatableProperty.ScaleY;
+            case "m_LocalScale.z":
+                return AnimatableProperty.ScaleZ;
+            case "localEulerAnglesRaw.x":
+                return AnimatableProperty.RotationX;
+            case "localEulerAnglesRaw.y":
+                return AnimatableProperty.RotationY;
+            case "localEulerAnglesRaw.z":
+                return AnimatableProperty.RotationZ;
+            case "localEulerAngles.x":
+                return AnimatableProperty.RotationX;
+            case "localEulerAngles.y":
+                return AnimatableProperty.RotationY;
+            case "localEulerAngles.z":
+                return AnimatableProperty.RotationZ;
+                ;
+            default: return AnimatableProperty.Unknown;
+        }
+    }
+
+    private List<AnimationKey> convertCurve(AnimationCurve curve)
+    {
+        List<AnimationKey> ret = new List<AnimationKey>();
+        foreach (var item in curve.keys)
+        {
+            Debug.Log(item.time);
+            AnimationKey key = new AnimationKey(Mathf.CeilToInt((item.time * 60 * engine.fps)) + 1, item.value);
+            ret.Add(key);
+        }
+        return ret;
+    }
+
+    public void InitFirstKeyFrame(AnimationClip clip, GameObject go)
+    {
+        AnimationCurve curveX = new AnimationCurve();
+        AnimationCurve curveY = new AnimationCurve();
+        AnimationCurve curveZ = new AnimationCurve();
+        curveX.AddKey(new Keyframe(0, go.transform.localPosition.x));
+        curveY.AddKey(new Keyframe(0, go.transform.localPosition.y));
+        curveZ.AddKey(new Keyframe(0, go.transform.localPosition.z));
+        if (go.transform.childCount > 0)
+        { 
+            clip.SetCurve(go.name, typeof(Transform), "m_LocalPosition.x", curveX);
+            clip.SetCurve(go.name, typeof(Transform), "m_LocalPosition.y", curveY);
+            clip.SetCurve(go.name, typeof(Transform), "m_LocalPosition.z", curveZ);
+        }
+        else
+        {
+            clip.SetCurve("", typeof(Transform), "m_LocalPosition.x", curveX);
+            clip.SetCurve("",typeof(Transform), "m_LocalPosition.y", curveY);
+            clip.SetCurve("", typeof(Transform), "m_LocalPosition.z", curveZ);
+        }
+    }
+
 
 }

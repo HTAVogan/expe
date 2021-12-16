@@ -50,7 +50,6 @@ namespace VRtist
                 }
 
                 AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, bindings[i]);
-                Debug.Log(bindings[i].propertyName);
                 List<Keyframe> target = GetPropertyList(_clipData[go], bindings[i].propertyName);
                 foreach (Keyframe key in curve.keys)
                 {

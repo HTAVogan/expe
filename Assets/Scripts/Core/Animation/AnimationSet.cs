@@ -168,7 +168,7 @@ namespace VRtist
             curve.SetKeys(keys);
         }
 
-        private void CreatePositionRotationCurves()
+        public void CreatePositionRotationCurves()
         {
             curves.Add(AnimatableProperty.PositionX, new Curve(AnimatableProperty.PositionX));
             curves.Add(AnimatableProperty.PositionY, new Curve(AnimatableProperty.PositionY));
