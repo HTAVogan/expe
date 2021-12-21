@@ -667,6 +667,7 @@ namespace VRtist
                 }
                 if (node.Name.Contains("PreRotation"))
                 {
+                    Debug.Log(node.Name + " " + rotation.eulerAngles);
                     rotation = cumulRot * rotation;
                 }
                 else
@@ -704,7 +705,7 @@ namespace VRtist
 
                 if (scene.HasAnimations)
                 {
-                    ImportAnimation(node, go);
+                    ImportAnimation(node, go, cumulRot);
                 }
 
                 mat = Matrix4x4.TRS(Vector3.one, cumulRot * rotation, scale);
@@ -721,8 +722,64 @@ namespace VRtist
             }
         }
 
+        private IEnumerator ImportHierarchy(Assimp.Node node, Transform parent, GameObject go)
+        {
+            if (parent != null && parent != go.transform)
+                go.transform.parent = parent;
 
-        private void ImportAnimation(Assimp.Node node, GameObject go)
+            GlobalState.Instance.messageBox.ShowMessage("Importing Hierarchy : " + importCount);
+            // Do not use Assimp Decompose function, it does not work properly
+            // use unity decomposition instead
+            Matrix4x4 mat = new Matrix4x4(
+                new Vector4(node.Transform.A1, node.Transform.B1, node.Transform.C1, node.Transform.D1),
+                new Vector4(node.Transform.A2, node.Transform.B2, node.Transform.C2, node.Transform.D2),
+                new Vector4(node.Transform.A3, node.Transform.B3, node.Transform.C3, node.Transform.D3),
+                new Vector4(node.Transform.A4, node.Transform.B4, node.Transform.C4, node.Transform.D4)
+                );
+            Vector3 position, scale;
+            Quaternion rotation;
+            Maths.DecomposeMatrix(mat, out position, out rotation, out scale);
+
+            node.Transform.Decompose(out Assimp.Vector3D scale1, out Assimp.Quaternion rot, out Assimp.Vector3D trans);
+
+            AssignMeshes(node, go);
+
+            if (node.Parent != null)
+            {
+                go.transform.localPosition = position;
+                go.transform.localRotation = rotation;
+                go.transform.localScale = scale;
+                go.name = isHuman ? node.Name : Utils.CreateUniqueName(node.Name);
+                if (isHuman)
+                {
+                    if (bones.ContainsKey(node.Name))
+                    {
+                        bones[node.Name] = go.transform;
+                    }
+                    if (node.Name.Contains("Hips")) rootBone = go.transform;
+                }
+            }
+
+
+            if (scene.HasAnimations)
+            {
+                ImportAnimation(node, go, Quaternion.identity);
+            }
+
+            importCount++;
+            foreach (Assimp.Node assimpChild in node.Children)
+            {
+                GameObject child = new GameObject();
+                child.tag = "Goal";
+                if (blocking)
+                    ImportHierarchy(assimpChild, go.transform, child).MoveNext();
+                else
+                    yield return StartCoroutine(ImportHierarchy(assimpChild, go.transform, child));
+            }
+        }
+
+
+        private void ImportAnimation(Assimp.Node node, GameObject go, Quaternion initRotation)
         {
             Assimp.Animation animation = scene.Animations[0];
             if ((GlobalState.Animation.fps / (float)animation.TicksPerSecond) * animation.DurationInTicks > GlobalState.Animation.EndFrame)
@@ -733,6 +790,7 @@ namespace VRtist
             if (nodeChannel == null) nodeChannel = animation.NodeAnimationChannels.Find(x => x.NodeName.Split('_')[0] == node.Name);
             if (null != nodeChannel)
             {
+                //Debug.Log(node.Name);
                 AnimationSet animationSet = new AnimationSet(go);
                 animationSet.ComputeCache();
                 if (nodeChannel.PositionKeyCount > 1 || nodeChannel.RotationKeyCount == nodeChannel.PositionKeyCount)
@@ -753,13 +811,6 @@ namespace VRtist
                     animationSet.curves[AnimatableProperty.ScaleZ].AddKey(new AnimationKey(frame, vectorKey.Value.Z, Interpolation.Bezier));
                 }
                 Vector3 previousRotation = Vector3.zero;
-                if (nodeChannel.NodeName.Contains("$AssimpFbx$") && nodeChannel.RotationKeyCount > 0)
-                {
-                    Assimp.QuaternionKey quatKey = nodeChannel.RotationKeys[0];
-                    Quaternion initQuaternion = new Quaternion(quatKey.Value.X, quatKey.Value.Y, quatKey.Value.X, quatKey.Value.W);
-                    previousRotation = initQuaternion.eulerAngles;
-
-                }
                 foreach (Assimp.QuaternionKey quaternionKey in nodeChannel.RotationKeys)
                 {
                     int frame = Mathf.RoundToInt((float)quaternionKey.Time * GlobalState.Animation.fps / (float)animation.TicksPerSecond) + 1;
