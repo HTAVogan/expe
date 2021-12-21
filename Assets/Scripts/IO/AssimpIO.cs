@@ -54,8 +54,10 @@ namespace VRtist
 
         private List<string> GoalNames = new List<string>()
         {
-            "LeftLeg","LeftFoot","RightLeg","RightFoot","LeftForeArm","LeftHand","RightForeArm","RightHand","Head"
+            "LeftLeg","LeftFoot","RightLeg","RightFoot","LeftShoulder","RightShoulder","LeftForeArm","LeftHand","RightForeArm","RightHand","Head"
         };
+
+        public RigConfiguration rigConfiguration;
 
         // We consider that half of the total time is spent inside the assimp engine
         // A quarter of the total time is necessary to create meshes
@@ -544,6 +546,7 @@ namespace VRtist
             Dictionary<int, List<BoneWeight1>> VertexBonesWeights = new Dictionary<int, List<BoneWeight1>>();
             List<Transform[]> bonesArray = new List<Transform[]>();
             List<Matrix4x4[]> bindPoses = new List<Matrix4x4[]>();
+            Debug.Log(node.Name + " / " + parent.name);
 
             int previousVertexCount = 0;
             for (int iMesh = 0; iMesh < node.MeshIndices.Count; iMesh++)
@@ -634,6 +637,93 @@ namespace VRtist
         }
 
 
+        private IEnumerator ImportHierarchy(Assimp.Node node, Transform parent, GameObject go, Matrix4x4 cumulMatrix)
+        {
+            if (parent != null && parent != go.transform)
+                go.transform.parent = parent;
+
+            GlobalState.Instance.messageBox.ShowMessage("Importing Hierarchy : " + importCount);
+            // Do not use Assimp Decompose function, it does not work properly
+            // use unity decomposition instead
+            Matrix4x4 mat = new Matrix4x4(
+                new Vector4(node.Transform.A1, node.Transform.B1, node.Transform.C1, node.Transform.D1),
+                new Vector4(node.Transform.A2, node.Transform.B2, node.Transform.C2, node.Transform.D2),
+                new Vector4(node.Transform.A3, node.Transform.B3, node.Transform.C3, node.Transform.D3),
+                new Vector4(node.Transform.A4, node.Transform.B4, node.Transform.C4, node.Transform.D4)
+                );
+            Vector3 position, scale;
+            Quaternion rotation;
+            Maths.DecomposeMatrix(mat, out position, out rotation, out scale);
+            Maths.DecomposeMatrix(cumulMatrix, out Vector3 cumulPos, out Quaternion cumulRot, out Vector3 cumulScale);
+            //position += cumulPos;
+
+            if (node.Name.Contains("$AssimpFbx$") && node.HasChildren)
+            {
+                if (node.Name.Contains("Translation"))
+                {
+                    position = cumulRot * position;
+                }
+                else
+                {
+                    position += cumulPos;
+                }
+                if (node.Name.Contains("PreRotation"))
+                {
+                    Debug.Log(node.Name + " " + rotation.eulerAngles);
+                    rotation = cumulRot * rotation;
+                }
+                else
+                {
+                    rotation = cumulRot;
+                }
+                mat = Matrix4x4.TRS(position, rotation, scale);
+                if (blocking)
+                    ImportHierarchy(node.Children[0], parent, go, mat).MoveNext();
+                else
+                    yield return StartCoroutine(ImportHierarchy(node.Children[0], parent, go, mat));
+            }
+            else
+            {
+                position += cumulPos;
+                node.Transform.Decompose(out Assimp.Vector3D scale1, out Assimp.Quaternion rot, out Assimp.Vector3D trans);
+                AssignMeshes(node, go);
+
+                if (node.Parent != null)
+                {
+                    go.transform.localPosition = position;
+                    go.transform.localRotation = rotation;
+                    go.transform.localScale = scale;
+                    go.name = isHuman ? node.Name : Utils.CreateUniqueName(node.Name);
+                    if (isHuman)
+                    {
+                        if (bones.ContainsKey(node.Name))
+                        {
+                            bones[node.Name] = go.transform;
+                        }
+                        if (node.Name.Contains("Hips")) rootBone = go.transform;
+                    }
+                }
+
+
+                if (scene.HasAnimations)
+                {
+                    ImportAnimation(node, go, cumulRot);
+                }
+
+                mat = Matrix4x4.TRS(Vector3.one, cumulRot * rotation, scale);
+                importCount++;
+                foreach (Assimp.Node assimpChild in node.Children)
+                {
+                    GameObject child = new GameObject();
+                    child.tag = "Goal";
+                    if (blocking)
+                        ImportHierarchy(assimpChild, go.transform, child, mat).MoveNext();
+                    else
+                        yield return StartCoroutine(ImportHierarchy(assimpChild, go.transform, child, mat));
+                }
+            }
+        }
+
         private IEnumerator ImportHierarchy(Assimp.Node node, Transform parent, GameObject go)
         {
    
@@ -676,14 +766,14 @@ namespace VRtist
 
             if (scene.HasAnimations)
             {
-                ImportAnimation(node, go);
+                ImportAnimation(node, go, Quaternion.identity);
             }
 
             importCount++;
             foreach (Assimp.Node assimpChild in node.Children)
             {
                 GameObject child = new GameObject();
-                child.tag = "PhysicObject";
+                child.tag = "Goal";
                 if (blocking)
                     ImportHierarchy(assimpChild, go.transform, child).MoveNext();
                 else
@@ -691,7 +781,8 @@ namespace VRtist
             }
         }
 
-        private void ImportAnimation(Assimp.Node node, GameObject go)
+
+        private void ImportAnimation(Assimp.Node node, GameObject go, Quaternion initRotation)
         {
             Assimp.Animation animation = scene.Animations[0];
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
@@ -710,22 +801,36 @@ namespace VRtist
                 }
             }
             Assimp.NodeAnimationChannel nodeChannel = animation.NodeAnimationChannels.Find(x => x.NodeName == node.Name);
+            if (nodeChannel == null) nodeChannel = animation.NodeAnimationChannels.Find(x => x.NodeName.Split('_')[0] == node.Name);
             if (null != nodeChannel)
             {
+                //Debug.Log(node.Name);
                 AnimationSet animationSet = new AnimationSet(go);
                 animationSet.ComputeCache();
-                foreach (Assimp.VectorKey vectorKey in nodeChannel.PositionKeys)
+                if (nodeChannel.PositionKeyCount > 1 || nodeChannel.RotationKeyCount == nodeChannel.PositionKeyCount)
                 {
-                    int frame;
-                    if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-                         frame = Mathf.CeilToInt((float)vectorKey.Time * GlobalState.Animation.fps / (float)animation.TicksPerSecond) + 1;
-                    else
+                    foreach (Assimp.VectorKey vectorKey in nodeChannel.PositionKeys)
                     {
-                        frame = Mathf.CeilToInt((float)vectorKey.Time * GlobalStateTradi.Animation.fps / (float)animation.TicksPerSecond) + 1;
+                        int frame = 0;
+                        if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                             frame = Mathf.CeilToInt((float)vectorKey.Time * GlobalState.Animation.fps / (float)animation.TicksPerSecond) + 1;
+                        else
+                             frame = Mathf.CeilToInt((float)vectorKey.Time * GlobalStateTradi.Animation.fps / (float)animation.TicksPerSecond) + 1;
+                        animationSet.curves[AnimatableProperty.PositionX].AddKey(new AnimationKey(frame, vectorKey.Value.X, Interpolation.Bezier));
+                        animationSet.curves[AnimatableProperty.PositionY].AddKey(new AnimationKey(frame, vectorKey.Value.Y, Interpolation.Bezier));
+                        animationSet.curves[AnimatableProperty.PositionZ].AddKey(new AnimationKey(frame, vectorKey.Value.Z, Interpolation.Bezier));
                     }
-                    animationSet.curves[AnimatableProperty.PositionX].AddKey(new AnimationKey(frame, vectorKey.Value.X, Interpolation.Linear));
-                    animationSet.curves[AnimatableProperty.PositionY].AddKey(new AnimationKey(frame, vectorKey.Value.Y, Interpolation.Linear));
-                    animationSet.curves[AnimatableProperty.PositionZ].AddKey(new AnimationKey(frame, vectorKey.Value.Z, Interpolation.Linear));
+                }
+                foreach (Assimp.VectorKey vectorKey in nodeChannel.ScalingKeys)
+                {
+                    int frame = 0;
+                    if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                        frame = Mathf.CeilToInt((float)vectorKey.Time * GlobalState.Animation.fps / (float)animation.TicksPerSecond) + 1;
+                    else
+                        frame = Mathf.CeilToInt((float)vectorKey.Time * GlobalStateTradi.Animation.fps / (float)animation.TicksPerSecond) + 1;
+                    animationSet.curves[AnimatableProperty.ScaleX].AddKey(new AnimationKey(frame, vectorKey.Value.X, Interpolation.Bezier));
+                    animationSet.curves[AnimatableProperty.ScaleY].AddKey(new AnimationKey(frame, vectorKey.Value.Y, Interpolation.Bezier));
+                    animationSet.curves[AnimatableProperty.ScaleZ].AddKey(new AnimationKey(frame, vectorKey.Value.Z, Interpolation.Bezier));
                 }
                 Vector3 previousRotation = Vector3.zero;
                 foreach (Assimp.QuaternionKey quaternionKey in nodeChannel.RotationKeys)
@@ -780,9 +885,9 @@ namespace VRtist
 
             importCount = 1;
             if (blocking)
-                ImportHierarchy(scene.RootNode, root, objectRoot).MoveNext();
+                ImportHierarchy(scene.RootNode, root, objectRoot, Matrix4x4.identity).MoveNext();
             else
-                yield return StartCoroutine(ImportHierarchy(scene.RootNode, root, objectRoot));
+                yield return StartCoroutine(ImportHierarchy(scene.RootNode, root, objectRoot, Matrix4x4.identity));
 
             if (null == rootBone)
             {
@@ -810,25 +915,33 @@ namespace VRtist
                 skinMesh.Collider = objectCollider;
                 skinMesh.RootObject = rootBone;
 
-                GenerateSkeleton(rootBone);
+                GenerateSkeleton(rootBone, skinMesh);
             }
 
         }
 
-        private void GenerateSkeleton(Transform root)
+        private void GenerateSkeleton(Transform root, SkinMeshController rootController)
         {
-            GoalNames = new List<string>()
-            {"LeftLeg","LeftFoot","RightLeg","RightFoot","LeftForeArm","LeftHand","RightForeArm","RightHand","Head"};
+            rigConfiguration.GenerateGoalController(rootController, root, new List<Transform>());
+        }
+
+        private void GenerateSkeleton2(Transform root, SkinMeshController rootController)
+        {
+            GoalNames = new List<string>(){
+            "LeftLeg","LeftFoot","RightLeg","RightFoot","LeftShoulder","RightShoulder","LeftForeArm","LeftHand","RightForeArm","RightHand","Head"
+            };
 
             HumanGoalController controller = root.gameObject.AddComponent<HumanGoalController>();
-            controller.SetPathToRoot(new List<Transform>() { root });
+            SphereCollider collider = root.gameObject.AddComponent<SphereCollider>();
+            collider.isTrigger = true;
+            controller.SetPathToRoot(rootController, new List<Transform>() { root });
             foreach (Transform child in root)
             {
-                GenerateSkeletonRec(child, new List<Transform>() { root });
+                GenerateSkeletonRec(rootController, child, new List<Transform>() { root });
             }
         }
 
-        private void GenerateSkeletonRec(Transform transform, List<Transform> path)
+        private void GenerateSkeletonRec(SkinMeshController rootController, Transform transform, List<Transform> path)
         {
             string foundName = "";
             GoalNames.ForEach(x =>
@@ -841,18 +954,19 @@ namespace VRtist
             if (foundName != "")
             {
                 HumanGoalController controller = transform.gameObject.AddComponent<HumanGoalController>();
+                SphereCollider collider = transform.gameObject.AddComponent<SphereCollider>();
+                collider.isTrigger = true;
                 GoalNames.Remove(foundName);
-                controller.SetPathToRoot(path);
+                controller.SetPathToRoot(rootController, path);
             }
             path.Add(transform);
             if (transform.childCount > 0)
             {
                 foreach (Transform child in transform)
                 {
-                    GenerateSkeletonRec(child, new List<Transform>(path));
+                    GenerateSkeletonRec(rootController, child, new List<Transform>(path));
                 }
             }
-
         }
 
 

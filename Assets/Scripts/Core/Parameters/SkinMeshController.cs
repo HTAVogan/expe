@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -40,6 +41,35 @@ namespace VRtist
             else
                 GlobalStateTradi.Animation.onFrameEvent.RemoveListener(RefreshCollider);
 
+        }
+
+        internal void GetKeyList(SortedList<int, List<Dopesheet.AnimKey>> keys)
+        {
+            List<Curve> childCurves = new List<Curve>();
+            RecursiveAnimation(childCurves, transform);
+
+            childCurves.ForEach(curve =>
+            {
+                foreach (AnimationKey key in curve.keys)
+                {
+                    if (!keys.TryGetValue(key.frame, out List<Dopesheet.AnimKey> keylist))
+                    {
+                        keylist = new List<Dopesheet.AnimKey>();
+                        keys[key.frame] = keylist;
+                    }
+                    keylist.Add(new Dopesheet.AnimKey(key.value, key.interpolation));
+                }
+            });
+        }
+
+        private void RecursiveAnimation(List<Curve> curves, Transform target)
+        {
+            AnimationSet anim = GlobalState.Animation.GetObjectAnimation(target.gameObject);
+            if (null != anim) curves.Add(anim.GetCurve(AnimatableProperty.PositionX));
+            foreach (Transform child in target)
+            {
+                RecursiveAnimation(curves, child);
+            }
         }
     }
 }

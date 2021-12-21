@@ -10,8 +10,14 @@ namespace VRtist
         public List<Transform> PathToRoot = new List<Transform>();
         public List<AnimationSet> AnimToRoot = new List<AnimationSet>();
         public AnimationSet Animation;
+        public SkinMeshController RootController;
 
-        public void SetPathToRoot(List<Transform> path)
+        [Range(0, 1)]
+        public float stiffness;
+        public bool IsGoal;
+        public bool ShowCurve;
+
+        public void SetPathToRoot(SkinMeshController controller, List<Transform> path)
         {
             path.ForEach(x =>
             {
@@ -31,10 +37,19 @@ namespace VRtist
                 }
                    
             });
+           
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                if (PathToRoot.Count == 0) PathToRoot.Add(transform);
                 Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
+            }
             else
+            {
+                if (PathToRoot.Count == 0) PathToRoot.Add(transform);
                 Animation = GlobalStateTradi.Animation.GetObjectAnimation(this.gameObject);
+            }
+                
+            RootController = controller;
         }
 
         public Vector3 FramePosition(int frame)
@@ -54,10 +69,11 @@ namespace VRtist
             {
                 for (int i = 0; i < PathToRoot.Count; i++)
                 {
-                    trsMatrix = trsMatrix * GetBoneMatrix(AnimToRoot[i], frame);
+                    if (null != AnimToRoot[i])
+                        trsMatrix = trsMatrix * AnimToRoot[i].GetTranformMatrix(frame);
                 }
             }
-            trsMatrix = trsMatrix * GetBoneMatrix(Animation, frame);
+            trsMatrix = trsMatrix * Animation.GetTranformMatrix(frame);
 
             Maths.DecomposeMatrix(trsMatrix, out Vector3 parentPosition, out Quaternion quaternion, out Vector3 scale);
             return parentPosition;
@@ -107,54 +123,14 @@ namespace VRtist
             {
                 for (int i = 0; i < PathToRoot.Count; i++)
                 {
-                    trsMatrix = trsMatrix * GetBoneMatrix(AnimToRoot[i], frame);
+                    trsMatrix = trsMatrix * AnimToRoot[i].GetTranformMatrix(frame);
                 }
             }
-            trsMatrix = trsMatrix * GetBoneMatrix(Animation, frame);
+            trsMatrix = trsMatrix * Animation.GetTranformMatrix(frame);
             return trsMatrix;
         }
 
         private Matrix4x4 GetBoneMatrix(AnimationSet anim, int frame)
-        {
-            if (null == anim) return Matrix4x4.identity;
-
-            Vector3 position = Vector3.zero;
-            Curve posx = anim.GetCurve(AnimatableProperty.PositionX);
-            Curve posy = anim.GetCurve(AnimatableProperty.PositionY);
-            Curve posz = anim.GetCurve(AnimatableProperty.PositionZ);
-            if (null != posx && null != posy && null != posz )
-            {
-                if (posx.Evaluate(frame, out float px) && posy.Evaluate(frame, out float py) && posz.Evaluate(frame, out float pz))
-                {
-                    position = new Vector3(px, py, pz);
-                }
-            }
-            Quaternion rotation = Quaternion.identity;
-            Curve rotx = anim.GetCurve(AnimatableProperty.RotationX);
-            Curve roty = anim.GetCurve(AnimatableProperty.RotationY);
-            Curve rotz = anim.GetCurve(AnimatableProperty.RotationZ);
-            if (null != posx && null != roty && null != rotz)
-            {
-                if (rotx.Evaluate(frame, out float rx) && roty.Evaluate(frame, out float ry) && rotz.Evaluate(frame, out float rz))
-                {
-                    rotation = Quaternion.Euler(rx, ry, rz);
-                }
-            }
-            Vector3 scale = Vector3.one;
-            Curve scalex = anim.GetCurve(AnimatableProperty.ScaleX);
-            Curve scaley = anim.GetCurve(AnimatableProperty.ScaleY);
-            Curve scalez = anim.GetCurve(AnimatableProperty.ScaleZ);
-            if (null != scalex && null != scaley && null != scalez)
-            {
-                if (scalex.Evaluate(frame, out float sx) && scaley.Evaluate(frame, out float sy) && scalez.Evaluate(frame, out float sz))
-                {
-                    scale = new Vector3(sx, sy, sz);
-                }
-            }
-            return Matrix4x4.TRS(position, rotation, scale);
-        }
-
-        public void CheckAnimations()
         {
             AnimToRoot.Clear();
             PathToRoot.ForEach(x =>
@@ -168,32 +144,6 @@ namespace VRtist
                 Animation = GlobalState.Animation.GetObjectAnimation(gameObject);
             else
                 Animation = GlobalStateTradi.Animation.GetObjectAnimation(gameObject);
-        }
-
-        [ContextMenu("try solver")]
-        public void TestSolver()
-        {
-            CheckAnimations();
-            int currentFrame = 20;
-
-
-            TangentsSolver solver = new TangentsSolver(transform.localPosition + transform.forward, transform.rotation, AnimToRoot, currentFrame, 5,
-                new TangentsSolver.Constraint() { startFrames = new List<int>(), properties = new List<int>(), endFrames = new List<int>(), gameObjectIndices = new List<int>(), values = new List<float>() });
-        }
-
-        public IEnumerator TestSolver(Vector3 position, Quaternion rotation, int frame, int zoneSize)
-        {
-            CheckAnimations();
-            TangentsSolver solver = new TangentsSolver(position, rotation, AnimToRoot, frame, zoneSize,
-                new TangentsSolver.Constraint() { startFrames = new List<int>(), properties = new List<int>(), endFrames = new List<int>(), gameObjectIndices = new List<int>(), values = new List<float>() });
-            yield return false;
-            solver.StepOne();
-            yield return false;
-            solver.StepThree();
-            yield return false;
-            solver.StepFive();
-            GlobalState.Animation.onChangeCurve.Invoke(PathToRoot[0].gameObject, AnimatableProperty.PositionX);
-
         }
     }
 }

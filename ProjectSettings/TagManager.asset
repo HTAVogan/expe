@@ -9,6 +9,7 @@ TagManager:
   - UICollider
   - WindowAnchor
   - Curve
+  - Goal
   layers:
   - Default
   - TransparentFX

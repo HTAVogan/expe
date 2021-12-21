@@ -42456,12 +42456,12 @@ public partial class alglib
         {
             int i = 0;
 
-            alglib.ap.assert(alglib.ap.len(s)>=state.n, "MinQPSetScale: Length(S)<N");
-            for(i=0; i<=state.n-1; i++)
-            {
-                alglib.ap.assert(math.isfinite(s[i]), "MinQPSetScale: S contains infinite or NAN elements");
-                alglib.ap.assert((double)(s[i])!=(double)(0), "MinQPSetScale: S contains zero elements");
-            }
+            //alglib.ap.assert(alglib.ap.len(s)>=state.n, "MinQPSetScale: Length(S)<N");
+            //for(i=0; i<=state.n-1; i++)
+            //{
+            //    alglib.ap.assert(math.isfinite(s[i]), "MinQPSetScale: S contains infinite or NAN elements");
+            //    alglib.ap.assert((double)(s[i])!=(double)(0), "MinQPSetScale: S contains zero elements");
+            //}
             for(i=0; i<=state.n-1; i++)
             {
                 state.s[i] = Math.Abs(s[i]);
@@ -42596,13 +42596,13 @@ public partial class alglib
             int maxits,
             alglib.xparams _params)
         {
-            alglib.ap.assert(math.isfinite(epsg), "MinQPSetAlgoBLEIC: EpsG is not finite number");
-            alglib.ap.assert((double)(epsg)>=(double)(0), "MinQPSetAlgoBLEIC: negative EpsG");
-            alglib.ap.assert(math.isfinite(epsf), "MinQPSetAlgoBLEIC: EpsF is not finite number");
-            alglib.ap.assert((double)(epsf)>=(double)(0), "MinQPSetAlgoBLEIC: negative EpsF");
-            alglib.ap.assert(math.isfinite(epsx), "MinQPSetAlgoBLEIC: EpsX is not finite number");
-            alglib.ap.assert((double)(epsx)>=(double)(0), "MinQPSetAlgoBLEIC: negative EpsX");
-            alglib.ap.assert(maxits>=0, "MinQPSetAlgoBLEIC: negative MaxIts!");
+            //alglib.ap.assert(math.isfinite(epsg), "MinQPSetAlgoBLEIC: EpsG is not finite number");
+            //alglib.ap.assert((double)(epsg)>=(double)(0), "MinQPSetAlgoBLEIC: negative EpsG");
+            //alglib.ap.assert(math.isfinite(epsf), "MinQPSetAlgoBLEIC: EpsF is not finite number");
+            //alglib.ap.assert((double)(epsf)>=(double)(0), "MinQPSetAlgoBLEIC: negative EpsF");
+            //alglib.ap.assert(math.isfinite(epsx), "MinQPSetAlgoBLEIC: EpsX is not finite number");
+            //alglib.ap.assert((double)(epsx)>=(double)(0), "MinQPSetAlgoBLEIC: negative EpsX");
+            //alglib.ap.assert(maxits>=0, "MinQPSetAlgoBLEIC: negative MaxIts!");
             state.algokind = 2;
             if( (((double)(epsg)==(double)(0) && (double)(epsf)==(double)(0)) && (double)(epsx)==(double)(0)) && maxits==0 )
             {
@@ -44495,9 +44495,9 @@ public partial class alglib
         {
             int i = 0;
 
-            alglib.ap.assert(alglib.ap.len(state.xs)>=state.n, "MinQPResultsBuf: integrity check failed");
-            alglib.ap.assert(alglib.ap.len(state.replagbc)>=state.n, "MinQPResultsBuf: integrity check failed");
-            alglib.ap.assert(alglib.ap.len(state.replaglc)>=state.mdense+state.msparse, "MinQPResultsBuf: integrity check failed");
+            //alglib.ap.assert(alglib.ap.len(state.xs)>=state.n, "MinQPResultsBuf: integrity check failed");
+            //alglib.ap.assert(alglib.ap.len(state.replagbc)>=state.n, "MinQPResultsBuf: integrity check failed");
+            //alglib.ap.assert(alglib.ap.len(state.replaglc)>=state.mdense+state.msparse, "MinQPResultsBuf: integrity check failed");
             apserv.rvectorsetlengthatleast(ref x, state.n, _params);
             apserv.rvectorsetlengthatleast(ref rep.lagbc, state.n, _params);
             apserv.rvectorsetlengthatleast(ref rep.laglc, state.mdense+state.msparse, _params);

@@ -96,6 +96,7 @@ namespace VRtist
             if (controllers.Length > 0)
             {
                 UpdateHumanCurve(controllers);
+                return;
             }
             if (property != AnimatableProperty.PositionX && property != AnimatableProperty.PositionY && property != AnimatableProperty.PositionZ)
                 return;
@@ -111,20 +112,28 @@ namespace VRtist
         {
             if (!Selection.IsSelected(gObject))
                 return;
-
             UpdateCurve(gObject);
         }
 
         void OnAnimationRemoved(GameObject gObject)
         {
-            DeleteCurve(gObject);
+            if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+            {
+                RecursiveDeleteCurve(gObject.transform);
+            }
+            else
+            {
+                DeleteCurve(gObject);
+            }
         }
 
         void OnToolChanged(object sender, ToolChangedArgs args)
         {
             bool switchToAnim = args.toolName == "Animation";
-            if (!switchToAnim && !isAnimTool) return;
-            UpdateFromSelection();
+            if (switchToAnim && !isAnimTool)
+            {
+                UpdateFromSelection();
+            }
             isAnimTool = switchToAnim;
         }
 
@@ -141,6 +150,15 @@ namespace VRtist
             {
                 Destroy(curves[gObject]);
                 curves.Remove(gObject);
+            }
+        }
+
+        void RecursiveDeleteCurve(Transform target)
+        {
+            DeleteCurve(target.gameObject);
+            foreach (Transform child in target)
+            {
+                RecursiveDeleteCurve(child);
             }
         }
 
@@ -162,13 +180,13 @@ namespace VRtist
 
         void AddCurve(GameObject gObject)
         {
+            if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+            {
+                AddHumanCurve(gObject, controller);
+            }
             AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(gObject);
             if (null == animationSet)
             {
-                if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
-                {
-                    AddHumanCurve(gObject, controller);
-                }
                 return;
             }
 
@@ -245,9 +263,11 @@ namespace VRtist
 
         private void GetAHumanAnimationCurve(HumanGoalController goalController)
         {
+            if (!goalController.ShowCurve) return;
             AnimationSet rootAnimation = GlobalState.Animation.GetObjectAnimation(goalController.gameObject);
             if (null == rootAnimation) return;
             Curve positionX = rootAnimation.GetCurve(AnimatableProperty.RotationX);
+            if (positionX.keys.Count == 0) return;
             int frameStart = Mathf.Clamp(positionX.keys[0].frame, GlobalState.Animation.StartFrame, GlobalState.Animation.EndFrame);
             int frameEnd = Mathf.Clamp(positionX.keys[positionX.keys.Count - 1].frame, GlobalState.Animation.StartFrame, GlobalState.Animation.EndFrame);
 

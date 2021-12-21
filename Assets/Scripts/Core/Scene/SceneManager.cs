@@ -232,10 +232,10 @@ namespace VRtist
         }
 
         // Animation
-        public static void ClearObjectAnimations(GameObject gobject)
+        public static void ClearObjectAnimations(GameObject gobject, bool callEvent = true)
         {
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-                GlobalState.Animation.ClearAnimations(gobject);
+                GlobalState.Animation.ClearAnimations(gobject,callEvent);
             else
             {
                 GlobalStateTradi.Animation.ClearAnimations(gobject);
@@ -243,28 +243,28 @@ namespace VRtist
             Instance.scene.ClearObjectAnimations(gobject);
         }
 
-        public static void SetObjectAnimations(GameObject gobject, AnimationSet animationSet)
+        public static void SetObjectAnimations(GameObject gobject, AnimationSet animationSet, bool callEvent = true)
         {
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-                GlobalState.Animation.SetObjectAnimations(gobject, animationSet);
+                GlobalState.Animation.SetObjectAnimations(gobject, animationSet,callEvent);
             else
                 GlobalStateTradi.Animation.SetObjectAnimations(gobject, animationSet);
             Instance.scene.SetObjectAnimations(gobject, animationSet);
         }
 
-        public static void AddObjectKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true)
+        public static void AddObjectKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true, bool lockTangents = false)
         {
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-                GlobalState.Animation.AddFilteredKeyframe(gobject, property, key, updateCurves);
+                GlobalState.Animation.AddFilteredKeyframe(gobject, property, key, updateCurves,lockTangents);
             else
                 GlobalStateTradi.Animation.AddFilteredKeyframe(gobject, property, key, updateCurves);
             Instance.scene.AddKeyframe(gobject, property, key);
         }
 
-        public static void RemoveKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true)
+        public static void RemoveKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true, bool lockTangents = false)
         {
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-                GlobalState.Animation.RemoveKeyframe(gobject, property, key.frame, updateCurves);
+                GlobalState.Animation.RemoveKeyframe(gobject, property, key.frame, updateCurves,lockTangents);
             else
                 GlobalStateTradi.Animation.RemoveKeyframe(gobject, property, key.frame, updateCurves);
             Instance.scene.RemoveKeyframe(gobject, property, key);

@@ -34,6 +34,8 @@ namespace VRtist
     {
         public Transform transform;
         public readonly Dictionary<AnimatableProperty, Curve> curves = new Dictionary<AnimatableProperty, Curve>();
+        public int StartFrame;
+        public bool loop;
 
         public AnimationSet(GameObject gobject)
         {
@@ -58,6 +60,8 @@ namespace VRtist
 
         public void EvaluateAnimation(int currentFrame)
         {
+            currentFrame -= StartFrame;
+
             Vector3 position = transform.localPosition;
             Vector3 rotation = transform.localEulerAngles;
             Vector3 scale = transform.localScale;
@@ -217,6 +221,43 @@ namespace VRtist
         }
 
 
+        public Matrix4x4 GetTranformMatrix(int frame)
+        {
+            Vector3 position = Vector3.zero;
+            Curve posx = GetCurve(AnimatableProperty.PositionX);
+            Curve posy = GetCurve(AnimatableProperty.PositionY);
+            Curve posz = GetCurve(AnimatableProperty.PositionZ);
+            if (null != posx && null != posy && null != posz)
+            {
+                if (posx.Evaluate(frame, out float px) && posy.Evaluate(frame, out float py) && posz.Evaluate(frame, out float pz))
+                {
+                    position = new Vector3(px, py, pz);
+                }
+            }
+            Quaternion rotation = Quaternion.identity;
+            Curve rotx = GetCurve(AnimatableProperty.RotationX);
+            Curve roty = GetCurve(AnimatableProperty.RotationY);
+            Curve rotz = GetCurve(AnimatableProperty.RotationZ);
+            if (null != posx && null != roty && null != rotz)
+            {
+                if (rotx.Evaluate(frame, out float rx) && roty.Evaluate(frame, out float ry) && rotz.Evaluate(frame, out float rz))
+                {
+                    rotation = Quaternion.Euler(rx, ry, rz);
+                }
+            }
+            Vector3 scale = Vector3.one;
+            Curve scalex = GetCurve(AnimatableProperty.ScaleX);
+            Curve scaley = GetCurve(AnimatableProperty.ScaleY);
+            Curve scalez = GetCurve(AnimatableProperty.ScaleZ);
+            if (null != scalex && null != scaley && null != scalez)
+            {
+                if (scalex.Evaluate(frame, out float sx) && scaley.Evaluate(frame, out float sy) && scalez.Evaluate(frame, out float sz))
+                {
+                    scale = new Vector3(sx, sy, sz);
+                }
+            }
+            return Matrix4x4.TRS(position, rotation, scale);
+        }
     }
 
 }

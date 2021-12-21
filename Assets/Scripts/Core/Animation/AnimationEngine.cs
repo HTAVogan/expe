@@ -68,6 +68,15 @@ namespace VRtist
             this.outTangent = outTangent;
         }
 
+        public AnimationKey(AnimationKey key)
+        {
+            frame = key.frame;
+            value = key.value;
+            interpolation = key.interpolation;
+            inTangent = key.inTangent;
+            outTangent = key.outTangent;
+        }
+
         public int frame;
         public float value;
         public Vector2 inTangent;
@@ -388,12 +397,12 @@ namespace VRtist
             return animationSet;
         }
 
-        public void SetObjectAnimations(GameObject gobject, AnimationSet animationSet)
+        public void SetObjectAnimations(GameObject gobject, AnimationSet animationSet, bool callEvent = true)
         {
             animations[gobject] = animationSet;
             foreach (Curve curve in animationSet.curves.Values)
                 curve.ComputeCache();
-            onAddAnimation.Invoke(gobject);
+            if (callEvent) onAddAnimation.Invoke(gobject);
         }
 
         public bool ObjectHasAnimation(GameObject gobject)
@@ -413,9 +422,9 @@ namespace VRtist
             return false;
         }
 
-        public void ClearAnimations(GameObject gobject)
+        public void ClearAnimations(GameObject gobject, bool callEvent = true)
         {
-            if (animations.Remove(gobject))
+            if (animations.Remove(gobject) && callEvent)
                 onRemoveAnimation.Invoke(gobject);
         }
 
@@ -461,7 +470,7 @@ namespace VRtist
         }
 
         // To be used by in-app add key (not from networked keys)
-        public void AddFilteredKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true)
+        public void AddFilteredKeyframe(GameObject gobject, AnimatableProperty property, AnimationKey key, bool updateCurves = true, bool lockTangents = false)
         {
             AnimationSet animationSet = GetObjectAnimation(gobject);
             if (null == animationSet)
@@ -481,7 +490,8 @@ namespace VRtist
                     key.value = previousKey.value + delta;
                 }
             }
-            curve.AddKey(key);
+            curve.AddKey(key, lockTangents);
+
             if (updateCurves) onChangeCurve.Invoke(gobject, property);
         }
 
@@ -504,25 +514,8 @@ namespace VRtist
             if (updateCurves) onChangeCurve.Invoke(gobject, property);
         }
 
-        public void AddFilteredKeyframeSegment(GameObject gobjet, AnimatableProperty property, AnimationKey key, int zoneSize, bool updateCurves = true)
-        {
-            AnimationSet animationSet = GetObjectAnimation(gobjet);
-            Curve curve = animationSet.GetCurve(property);
-            // Filter rotation
-            if (property == AnimatableProperty.RotationX || property == AnimatableProperty.RotationY || property == AnimatableProperty.RotationZ)
-            {
-                AnimationKey previousKey = curve.GetPreviousKey(key.frame);
-                if (null != previousKey)
-                {
-                    float delta = Mathf.DeltaAngle(previousKey.value, key.value);
-                    key.value = previousKey.value + delta;
-                }
-            }
-            curve.AddKeySegment(key, zoneSize);
-            if (updateCurves) onChangeCurve.Invoke(gobjet, property);
-        }
 
-        public void AddFilteredKeyframeTangent(GameObject gobjet, AnimatableProperty property, AnimationKey key, int zoneSize, bool updateCurves = true)
+        public void AddFilteredKeyframeTangent(GameObject gobjet, AnimatableProperty property, AnimationKey key, int start, int end, bool updateCurves = true)
         {
             AnimationSet animationSet = GetObjectAnimation(gobjet);
             Curve curve = animationSet.GetCurve(property);
@@ -536,7 +529,7 @@ namespace VRtist
                     key.value = previousKey.value + delta;
                 }
             }
-            curve.AddTangentKey(key, zoneSize);
+            curve.AddTangentKey(key, start, end);
             if (updateCurves) onChangeCurve.Invoke(gobjet, property);
         }
 
@@ -554,13 +547,13 @@ namespace VRtist
             animations.Remove(gobject);
         }
 
-        public void RemoveKeyframe(GameObject gobject, AnimatableProperty property, int frame, bool updateCurves = true)
+        public void RemoveKeyframe(GameObject gobject, AnimatableProperty property, int frame, bool updateCurves = true, bool lockTangents = false)
         {
             AnimationSet animationSet = GetObjectAnimation(gobject);
             if (null == animationSet)
                 return;
             Curve curve = animationSet.GetCurve(property);
-            curve.RemoveKey(frame);
+            curve.RemoveKey(frame, lockTangents);
 
             RemoveEmptyAnimationSet(gobject);
 

@@ -262,23 +262,30 @@ namespace VRtist
 
             Clear();
 
-            AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(gObject);
-            if (null == animationSet)
+            if (!gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
             {
-                UpdateTrackName();
-                return;
-            }
 
-            // Take only one curve (the first one) to add keys
-            foreach (AnimationKey key in animationSet.curves[0].keys)
-            {
-                if (!keys.TryGetValue(key.frame, out List<AnimKey> keyList))
+                AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(gObject);
+                if (null == animationSet)
                 {
-                    keyList = new List<AnimKey>();
-                    keys[key.frame] = keyList;
+                    UpdateTrackName();
+                    return;
                 }
 
-                keyList.Add(new AnimKey(key.value, key.interpolation));
+                // Take only one curve (the first one) to add keys
+                foreach (AnimationKey key in animationSet.curves[0].keys)
+                {
+                    if (!keys.TryGetValue(key.frame, out List<AnimKey> keyList))
+                    {
+                        keyList = new List<AnimKey>();
+                        keys[key.frame] = keyList;
+                    }
+                    keyList.Add(new AnimKey(key.value, key.interpolation));
+                }
+            }
+            else
+            {
+                controller.GetKeyList(keys);
             }
 
             UpdateTrackName();
@@ -488,7 +495,7 @@ namespace VRtist
             {
                 foreach (GameObject item in Selection.SelectedObjects)
                 {
-                    new CommandAddKeyframes(item).Submit();
+                    new CommandAddKeyframes(item, false).Submit();
                 }
             }
             finally
@@ -504,9 +511,16 @@ namespace VRtist
             {
                 foreach (GameObject gObject in Selection.SelectedObjects)
                 {
-                    if (GlobalState.Animation.ObjectHasKeyframeAt(gObject, GlobalState.Animation.CurrentFrame))
+                    if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
                     {
-                        new CommandRemoveKeyframes(gObject).Submit();
+                        new CommandRemoveRecursiveKeyframes(gObject).Submit();
+                    }
+                    else
+                    {
+                        if (GlobalState.Animation.ObjectHasKeyframeAt(gObject, GlobalState.Animation.CurrentFrame))
+                        {
+                            new CommandRemoveKeyframes(gObject).Submit();
+                        }
                     }
                 }
             }
@@ -523,7 +537,14 @@ namespace VRtist
             {
                 foreach (GameObject gObject in Selection.SelectedObjects)
                 {
-                    new CommandClearAnimations(gObject).Submit();
+                    if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+                    {
+                        new CommandClearRecursiveAnimations(gObject).Submit();
+                    }
+                    else
+                    {
+                        new CommandClearAnimations(gObject).Submit();
+                    }
                 }
             }
             finally
@@ -531,6 +552,7 @@ namespace VRtist
                 group.Submit();
             }
         }
+
 
         public void OnEnableAutoKey(bool value)
         {
