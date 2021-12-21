@@ -636,6 +636,7 @@ namespace VRtist
 
         private IEnumerator ImportHierarchy(Assimp.Node node, Transform parent, GameObject go)
         {
+   
             if (parent != null && parent != go.transform)
                 go.transform.parent = parent;
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))

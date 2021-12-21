@@ -777,6 +777,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timeHooksEnabled: 1
+  GostManager: {fileID: 767845415}
   fps: 60
   loop: 1
   autoKeyEnabled: 0

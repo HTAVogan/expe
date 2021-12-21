@@ -102,15 +102,24 @@ namespace VRtist
 
         public static bool GetTransformRelativePathTo(Transform child, Transform root, out string path)
         {
-            path = "";
-            Transform current = child;
-            while (null != current.parent && current.name != root.name)
+            if (child != null && root != null)
             {
-                path = current.name + "/" + path;
-                current = current.parent;
+                path = "";
+                Transform current = child;
+                while (null != current.parent && current.name != root.name)
+                {
+                    path = current.name + "/" + path;
+                    current = current.parent;
+                }
+                if (path.Length > 0) { path = path.Substring(0, path.Length - 1); }  // remove trailing slash
+                return current != null;
             }
-            if (path.Length > 0) { path = path.Substring(0, path.Length - 1); }  // remove trailing slash
-            return current != null;
+            else
+            {
+                path = "";
+
+                return false;
+            }
         }
 
         public static string BuildTransformPath(GameObject gobject)

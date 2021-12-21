@@ -141,7 +141,7 @@ namespace VRtist
             set
             {
                 currentFrame = Mathf.Clamp(value, startFrame, endFrame);
-
+                
                 if (animationState != AnimationState.Playing && animationState != AnimationState.AnimationRecording)
                 {
                     EvaluateAnimations();
@@ -276,6 +276,22 @@ namespace VRtist
             }
         }
 
+        public void ClearAnimationsOnDeletedObject()
+        {
+            List<GameObject> toDelete = new List<GameObject>();
+            foreach (var item in animations)
+            {
+                if(item.Key == null)
+                {
+                    toDelete.Add(item.Key);
+                }
+            }
+            foreach (var item in toDelete)
+            {
+                animations.Remove(item);
+            }
+        }
+
         public void CopyAnimation(GameObject source, GameObject target)
         {
             if (animations.TryGetValue(source, out AnimationSet sourceAnim))
@@ -350,6 +366,7 @@ namespace VRtist
         {
             foreach (AnimationSet animationSet in animations.Values)
             {
+          
                 animationSet.EvaluateAnimation(CurrentFrame);
             }
         }
@@ -402,6 +419,11 @@ namespace VRtist
                 onRemoveAnimation.Invoke(gobject);
         }
 
+        [ContextMenu("clear ALL animations")]
+        public void ClearAllAnimations()
+        {
+            animations.Clear();
+        }
         public void MoveKeyframe(GameObject gobject, AnimatableProperty property, int frame, int newFrame)
         {
             AnimationSet animationSet = GetObjectAnimation(gobject);

@@ -75,21 +75,24 @@ namespace VRtist
         private void ComputeCacheValues(int startIndex, int endIndex)
         {
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
                 if (null == cachedValues || cachedValues.Length != GlobalState.Animation.EndFrame - GlobalState.Animation.StartFrame + 1)
                 {
                     cachedValues = new float[GlobalState.Animation.EndFrame - GlobalState.Animation.StartFrame + 1];
                     startIndex = 0;
                     endIndex = cachedValues.Length - 1;
                 }
-                else
+            }
+
+            else
+            {
+                if (null == cachedValues || cachedValues.Length != GlobalStateTradi.Animation.EndFrame - GlobalStateTradi.Animation.StartFrame + 1)
                 {
-                    if (null == cachedValues || cachedValues.Length != GlobalStateTradi.Animation.EndFrame - GlobalStateTradi.Animation.StartFrame + 1)
-                    {
-                        cachedValues = new float[GlobalStateTradi.Animation.EndFrame - GlobalStateTradi.Animation.StartFrame + 1];
-                        startIndex = 0;
-                        endIndex = cachedValues.Length - 1;
-                    }
+                    cachedValues = new float[GlobalStateTradi.Animation.EndFrame - GlobalStateTradi.Animation.StartFrame + 1];
+                    startIndex = 0;
+                    endIndex = cachedValues.Length - 1;
                 }
+            }
 
             for (int i = startIndex; i <= endIndex; i++)
             {
@@ -125,15 +128,20 @@ namespace VRtist
         private void ComputeCacheIndices()
         {
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+
                 if (null == cachedKeysIndices || cachedKeysIndices.Length != GlobalState.Animation.EndFrame - GlobalState.Animation.StartFrame + 1)
                 {
                     cachedKeysIndices = new int[GlobalState.Animation.EndFrame - GlobalState.Animation.StartFrame + 1];
                 }
-                else
-            if (null == cachedKeysIndices || cachedKeysIndices.Length != GlobalStateTradi.Animation.EndFrame - GlobalStateTradi.Animation.StartFrame + 1)
+            }
+            else
+            {
+                if (null == cachedKeysIndices || cachedKeysIndices.Length != GlobalStateTradi.Animation.EndFrame - GlobalStateTradi.Animation.StartFrame + 1)
                 {
                     cachedKeysIndices = new int[GlobalStateTradi.Animation.EndFrame - GlobalStateTradi.Animation.StartFrame + 1];
                 }
+            }
             if (keys.Count == 0)
             {
                 for (int i = 0; i < cachedKeysIndices.Length; i++)
@@ -664,7 +672,7 @@ namespace VRtist
             {
                 if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                     value = cachedValues[frame - GlobalState.Animation.StartFrame];
-                else 
+                else
                     value = cachedValues[frame - GlobalStateTradi.Animation.StartFrame];
                 return value != float.NaN;
             }
@@ -725,7 +733,7 @@ namespace VRtist
             }
             int prevIndex;
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-                 prevIndex = cachedKeysIndices[frame - GlobalState.Animation.StartFrame];
+                prevIndex = cachedKeysIndices[frame - GlobalState.Animation.StartFrame];
             else
                 prevIndex = cachedKeysIndices[frame - GlobalStateTradi.Animation.StartFrame];
             if (prevIndex == -1)

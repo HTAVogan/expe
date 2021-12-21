@@ -94,7 +94,7 @@ namespace VRtist.Serialization
 
             defaultSaveFolder = saveFolder = Application.persistentDataPath + "/saves/";
             cameraRig = Utils.FindRootGameObject("Camera Rig").transform;
-            rootTransform = Utils.FindWorld().transform.Find("  ");
+            rootTransform = Utils.FindWorld().transform.Find("RightHanded");
         }
         #endregion
 
@@ -687,15 +687,15 @@ namespace VRtist.Serialization
             gobject.transform.localScale = data.scale;
             gobject.name = data.name;
 
+            ParametersController controller = gobject.GetComponent<ParametersController>();
             if (data.lockPosition || data.lockRotation || data.lockScale)
             {
-                ParametersController controller = gobject.GetComponent<ParametersController>();
                 if (null == controller)
                     controller = gobject.AddComponent<ParametersController>();
                 controller.lockPosition = data.lockPosition;
                 controller.lockRotation = data.lockRotation;
                 controller.lockScale = data.lockScale;
-            }
+            }   
         }
 
         private Material[] LoadMaterials(ObjectData data)

@@ -44,7 +44,7 @@ namespace VRtist
 
         readonly List<TimeHook> timeHooks = new List<TimeHook>();
         public bool timeHooksEnabled = true;
-
+        public GostManager gostManager;
         public float fps = 60f;
         float playStartTime;
         int playStartFrame;

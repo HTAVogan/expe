@@ -50,10 +50,20 @@ public class AnimationWindows : EditorWindow
                 }
             }
             GUILayout.EndHorizontal();
+            GUILayout.BeginVertical();
+            if (GUILayout.Button("Generate Gosts", GUILayout.ExpandWidth(false), GUILayout.Height(20)))
+            {
+                GenerateGosts();
+            }
             GUILayout.EndArea();
         }
    
 
+    }
+
+    private void GenerateGosts()
+    {
+        GlobalStateTradi.Animation.gostManager.CreateGost();
     }
 
     private void PauseAnimation()
