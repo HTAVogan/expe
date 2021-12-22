@@ -20,7 +20,9 @@ namespace VRtist
 
         public void GenerateGoalController(SkinMeshController rootController, Transform transform, List<Transform> path)
         {
-            Joint joint = JointsList.Find(x => x.Name == transform.name);
+            string boneName = transform.name;
+            if (boneName.Contains("mixamorig:")) boneName = boneName.Split(':')[1];
+            Joint joint = JointsList.Find(x => x.Name == boneName);
             if (null != joint)
             {
                 HumanGoalController controller = transform.gameObject.AddComponent<HumanGoalController>();

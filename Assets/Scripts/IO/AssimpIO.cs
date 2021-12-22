@@ -635,7 +635,7 @@ namespace VRtist
         }
 
 
-        private IEnumerator ImportHierarchy(Assimp.Node node, Transform parent, GameObject go, Matrix4x4 cumulMatrix)
+        private IEnumerator ImportHierarchy(Assimp.Node node, Transform parent, GameObject go, Matrix4x4 cumulMatrix, Quaternion preRotation)
         {
             if (parent != null && parent != go.transform)
                 go.transform.parent = parent;
@@ -667,7 +667,7 @@ namespace VRtist
                 }
                 if (node.Name.Contains("PreRotation"))
                 {
-                    Debug.Log(node.Name + " " + rotation.eulerAngles);
+                    preRotation = rotation;
                     rotation = cumulRot * rotation;
                 }
                 else
@@ -676,13 +676,13 @@ namespace VRtist
                 }
                 mat = Matrix4x4.TRS(position, rotation, scale);
                 if (blocking)
-                    ImportHierarchy(node.Children[0], parent, go, mat).MoveNext();
+                    ImportHierarchy(node.Children[0], parent, go, mat, preRotation).MoveNext();
                 else
-                    yield return StartCoroutine(ImportHierarchy(node.Children[0], parent, go, mat));
+                    yield return StartCoroutine(ImportHierarchy(node.Children[0], parent, go, mat, preRotation));
             }
             else
             {
-                position += cumulPos;
+                position = (cumulRot * position) + cumulPos;
                 node.Transform.Decompose(out Assimp.Vector3D scale1, out Assimp.Quaternion rot, out Assimp.Vector3D trans);
                 AssignMeshes(node, go);
 
@@ -705,19 +705,19 @@ namespace VRtist
 
                 if (scene.HasAnimations)
                 {
-                    ImportAnimation(node, go, cumulRot);
+                    ImportAnimation(node, go, preRotation);
                 }
 
-                mat = Matrix4x4.TRS(Vector3.one, cumulRot * rotation, scale);
+                mat = Matrix4x4.TRS(Vector3.zero, cumulRot * rotation, scale);
                 importCount++;
                 foreach (Assimp.Node assimpChild in node.Children)
                 {
                     GameObject child = new GameObject();
                     child.tag = "Goal";
                     if (blocking)
-                        ImportHierarchy(assimpChild, go.transform, child, mat).MoveNext();
+                        ImportHierarchy(assimpChild, go.transform, child, mat, Quaternion.identity).MoveNext();
                     else
-                        yield return StartCoroutine(ImportHierarchy(assimpChild, go.transform, child, mat));
+                        yield return StartCoroutine(ImportHierarchy(assimpChild, go.transform, child, mat, Quaternion.identity));
                 }
             }
         }
@@ -811,10 +811,24 @@ namespace VRtist
                     animationSet.curves[AnimatableProperty.ScaleZ].AddKey(new AnimationKey(frame, vectorKey.Value.Z, Interpolation.Bezier));
                 }
                 Vector3 previousRotation = Vector3.zero;
+                int t = 7;
                 foreach (Assimp.QuaternionKey quaternionKey in nodeChannel.RotationKeys)
                 {
                     int frame = Mathf.RoundToInt((float)quaternionKey.Time * GlobalState.Animation.fps / (float)animation.TicksPerSecond) + 1;
                     Quaternion uQuaternion = new Quaternion(quaternionKey.Value.X, quaternionKey.Value.Y, quaternionKey.Value.Z, quaternionKey.Value.W);
+                    switch (t)
+                    {
+                        case 1: uQuaternion = uQuaternion * initRotation; break;
+                        case 2: uQuaternion = uQuaternion * Quaternion.Inverse(initRotation); break;
+                        case 3: uQuaternion = Quaternion.Inverse(uQuaternion) * initRotation; break;
+                        case 4: uQuaternion = Quaternion.Inverse(uQuaternion) * Quaternion.Inverse(initRotation); break;
+
+                        case 5: uQuaternion = initRotation * uQuaternion; break;
+                        case 6: uQuaternion = initRotation * Quaternion.Inverse(uQuaternion); break;
+                        case 7: uQuaternion = Quaternion.Inverse(initRotation) * uQuaternion; break;
+                        case 8: uQuaternion = Quaternion.Inverse(initRotation) * Quaternion.Inverse(uQuaternion); break;
+
+                    }
                     Vector3 eulerValue = uQuaternion.eulerAngles;
                     eulerValue.x = previousRotation.x + Mathf.DeltaAngle(previousRotation.x, eulerValue.x);
                     eulerValue.y = previousRotation.y + Mathf.DeltaAngle(previousRotation.y, eulerValue.y);
@@ -828,6 +842,8 @@ namespace VRtist
                 GlobalState.Animation.SetObjectAnimations(go, animationSet);
             }
         }
+
+        public bool debug;
 
         private IEnumerator ImportScene(string fileName, Transform root = null)
         {
@@ -856,10 +872,20 @@ namespace VRtist
             }
 
             importCount = 1;
-            if (blocking)
-                ImportHierarchy(scene.RootNode, root, objectRoot, Matrix4x4.identity).MoveNext();
+            if (debug)
+            {
+                if (blocking)
+                    ImportHierarchy(scene.RootNode, root, objectRoot).MoveNext();
+                else
+                    yield return StartCoroutine(ImportHierarchy(scene.RootNode, root, objectRoot));
+            }
             else
-                yield return StartCoroutine(ImportHierarchy(scene.RootNode, root, objectRoot, Matrix4x4.identity));
+            {
+                if (blocking)
+                    ImportHierarchy(scene.RootNode, root, objectRoot, Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one), Quaternion.identity).MoveNext();
+                else
+                    yield return StartCoroutine(ImportHierarchy(scene.RootNode, root, objectRoot, Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one), Quaternion.identity));
+            }
 
             if (null == rootBone)
             {
@@ -892,7 +918,7 @@ namespace VRtist
 
         }
 
-        private void GenerateSkeleton(Transform root, SkinMeshController rootController)
+        public void GenerateSkeleton(Transform root, SkinMeshController rootController)
         {
             rigConfiguration.GenerateGoalController(rootController, root, new List<Transform>());
         }

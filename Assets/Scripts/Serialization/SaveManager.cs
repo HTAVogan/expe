@@ -217,6 +217,7 @@ namespace VRtist.Serialization
             currentProjectName = projectName;
             meshes.Clear();
             materials.Clear();
+            skinMeshes.Clear();
             SceneData.Current.Clear();
 
             stopwatch.Stop();
@@ -296,6 +297,12 @@ namespace VRtist.Serialization
                     continue;
                 }
 
+                SkinMeshController skinController = currentTransform.GetComponent<SkinMeshController>();
+                if (null != skinController && !skinController.isImported)
+                {
+                    SceneData.Current.rigs.Add(new RigData(skinController));
+                }
+
                 // Do this one at the end, because other controllers inherits from ParametersController
                 ParametersController controller = currentTransform.GetComponent<ParametersController>();
                 ObjectData data = new ObjectData();
@@ -328,6 +335,7 @@ namespace VRtist.Serialization
 
         private void SaveMeshes()
         {
+
             System.Diagnostics.Stopwatch timer = System.Diagnostics.Stopwatch.StartNew();
             foreach (var meshInfo in meshes.Values)
             {
@@ -656,6 +664,8 @@ namespace VRtist.Serialization
                     LoadCamera(data);
                 }
 
+
+
                 foreach (KeyValuePair<GameObject, SkinMeshData> pair in loadedSkinMeshes)
                 {
                     SkinnedMeshRenderer renderer = pair.Key.AddComponent<SkinnedMeshRenderer>();
@@ -671,6 +681,11 @@ namespace VRtist.Serialization
                 foreach (AnimationData data in sceneData.animations)
                 {
                     LoadAnimation(data);
+                }
+
+                foreach (RigData data in sceneData.rigs)
+                {
+                    LoadRig(data);
                 }
 
                 foreach (ConstraintData data in sceneData.constraints)
@@ -822,7 +837,6 @@ namespace VRtist.Serialization
                         }
                     }
                 }
-
             }
 
             SceneManager.AddObject(gobject);
@@ -832,7 +846,10 @@ namespace VRtist.Serialization
 
             if (data.isImported)
             {
-                ParametersController controller = gobject.AddComponent<ParametersController>();
+                if (!gobject.TryGetComponent<ParametersController>(out ParametersController controller))
+                {
+                    controller = gobject.AddComponent<ParametersController>();
+                }
                 controller.isImported = true;
                 controller.importPath = data.meshPath;
 
@@ -989,6 +1006,34 @@ namespace VRtist.Serialization
                 enabled = data.enabled,
                 camera = cam
             });
+        }
+
+        private void LoadRig(RigData data)
+        {
+            GameObject obj = rootTransform.Find(data.ObjectName).gameObject;
+            if (null != obj)
+            {
+                GameObject rendererObj = obj.transform.Find(data.meshPath).gameObject;
+                if (null != rendererObj)
+                {
+                    if (rendererObj.TryGetComponent<SkinnedMeshRenderer>(out SkinnedMeshRenderer renderer))
+                    {
+                        SkinMeshController controller = obj.AddComponent<SkinMeshController>();
+                        controller.SkinMesh = renderer;
+                        controller.RootObject = renderer.rootBone;
+
+                        obj.tag = "PhysicObject";
+                        BoxCollider objectCollider = obj.AddComponent<BoxCollider>();
+                        objectCollider.center = renderer.bounds.center;
+                        objectCollider.size = renderer.bounds.size;
+                        renderer.updateWhenOffscreen = true;
+                        controller.Collider = objectCollider;
+
+                        GlobalState.GeometryImporter.GenerateImportSkeleton(controller.RootObject, controller);
+
+                    }
+                }
+            }
         }
         #endregion
 
