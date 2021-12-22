@@ -801,7 +801,7 @@ namespace VRtist
                 }
             }
             Assimp.NodeAnimationChannel nodeChannel = animation.NodeAnimationChannels.Find(x => x.NodeName == node.Name);
-            if (nodeChannel == null) nodeChannel = animation.NodeAnimationChannels.Find(x => x.NodeName.Split('_')[0] == node.Name);
+            //if (nodeChannel == null) nodeChannel = animation.NodeAnimationChannels.Find(x => x.NodeName.Split('_')[0] == node.Name);
             if (null != nodeChannel)
             {
                 //Debug.Log(node.Name);
@@ -885,9 +885,9 @@ namespace VRtist
 
             importCount = 1;
             if (blocking)
-                ImportHierarchy(scene.RootNode, root, objectRoot, Matrix4x4.identity).MoveNext();
+                ImportHierarchy(scene.RootNode, root, objectRoot/*, Matrix4x4.identity*/).MoveNext();
             else
-                yield return StartCoroutine(ImportHierarchy(scene.RootNode, root, objectRoot, Matrix4x4.identity));
+                yield return StartCoroutine(ImportHierarchy(scene.RootNode, root, objectRoot/*, Matrix4x4.identity*/));
 
             if (null == rootBone)
             {

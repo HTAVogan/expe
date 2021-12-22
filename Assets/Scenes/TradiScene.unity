@@ -749,6 +749,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 134cc6aabfcafce44b6ccb282ff010e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rigConfiguration: {fileID: 11400000, guid: 0c00c836364c5bd4d95ca5b5ba158786, type: 2}
 --- !u!114 &5775237914502191485
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -777,7 +778,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timeHooksEnabled: 1
-  GostManager: {fileID: 767845415}
+  gostManager: {fileID: 767845415}
   fps: 60
   loop: 1
   autoKeyEnabled: 0

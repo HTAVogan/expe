@@ -116,7 +116,7 @@ public class GostManager : MonoBehaviour
     {
         if (gostJoleen == null)
         {
-            joleen = GameObject.Find("Ch34_nonPBR@Throw Object.7818A175.695");
+            joleen = GameObject.Find("Ch34_nonPBR@Throw Object.1D267DE4.2");
             if (joleen != null)
             {
                 gostJoleen = Instantiate(joleen, joleen.transform.parent);

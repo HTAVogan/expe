@@ -13,6 +13,8 @@ public class Loader : MonoBehaviour
     string pathToScene = "";
     private readonly Dictionary<string, Mesh> loadedMeshes = new Dictionary<string, Mesh>();
     public GameObject rootTransform;
+    private readonly Dictionary<GameObject, SkinMeshData> loadedSkinMeshes = new Dictionary<GameObject, SkinMeshData>();
+    private readonly Dictionary<GameObject, Material[]> skinMeshMaterials = new Dictionary<GameObject, Material[]>();
     // Update is called once per frame
 
     private void Awake()
@@ -29,18 +31,12 @@ public class Loader : MonoBehaviour
             SceneData sceneData = new SceneData();
                 SerializationManager.Load(pathToScene, sceneData);
 
-
-            // Objects            
+            int coiunter = 0;
+        
             foreach (ObjectData data in sceneData.objects)
             {
                 LoadObject(data);
             }
-
-            // Lights
-     
-
-   
-
             // Load animations & constraints
             AnimationEngineTradi.Instance.fps = sceneData.fps;
             AnimationEngineTradi.Instance.StartFrame = sceneData.startFrame;
@@ -49,6 +45,7 @@ public class Loader : MonoBehaviour
             foreach (AnimationData data in sceneData.animations)
             {
                 LoadAnimation(data);
+           
             }
 
             AnimationEngineTradi.Instance.CurrentFrame = sceneData.currentFrame;
@@ -95,7 +92,7 @@ public class Loader : MonoBehaviour
         // Mesh
         if (null != data.meshPath && data.meshPath.Length > 0)
         {
-            if (!data.isImported)
+            if (!data.isImported && !data.isSkinMesh)
             {
                 if (!loadedMeshes.TryGetValue(absoluteMeshPath, out Mesh mesh))
                 {
@@ -107,6 +104,13 @@ public class Loader : MonoBehaviour
                 gobject.AddComponent<MeshFilter>().sharedMesh = mesh;
                 gobject.AddComponent<MeshRenderer>().materials = LoadMaterials(data);
                 gobject.AddComponent<MeshCollider>();
+            }
+            if (data.isSkinMesh)
+            {
+                SkinMeshData skinData = new SkinMeshData();
+                SerializationManager.Load(absoluteMeshPath, skinData);
+                loadedSkinMeshes.Add(gobject, skinData);
+                skinMeshMaterials.Add(gobject, LoadMaterials(data));
             }
 
             if (!data.visible)

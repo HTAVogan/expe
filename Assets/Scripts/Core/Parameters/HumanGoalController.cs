@@ -97,10 +97,10 @@ namespace VRtist
                 for (int i = 0; i < PathToRoot.Count; i++)
                 {
                    
-                    trsMatrix = trsMatrix * GetBoneMatrix(AnimToRoot[i], frame);
+                    trsMatrix = trsMatrix * AnimToRoot[i].GetTranformMatrix(frame);
                 }
             }
-            trsMatrix = trsMatrix * GetBoneMatrix(Animation, frame);
+            trsMatrix = trsMatrix * Animation.GetTranformMatrix(frame);
 
             Maths.DecomposeMatrix(trsMatrix, out Vector3 parentPosition, out Quaternion quaternion, out Vector3 scale);
             return parentPosition;
@@ -130,20 +130,16 @@ namespace VRtist
             return trsMatrix;
         }
 
-        private Matrix4x4 GetBoneMatrix(AnimationSet anim, int frame)
+      
+
+        public void CheckAnimations()
         {
             AnimToRoot.Clear();
             PathToRoot.ForEach(x =>
             {
-                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-                    AnimToRoot.Add(GlobalState.Animation.GetObjectAnimation(x.gameObject));
-                else
-                    AnimToRoot.Add(GlobalStateTradi.Animation.GetObjectAnimation(x.gameObject));
+                AnimToRoot.Add(GlobalState.Animation.GetObjectAnimation(x.gameObject));
             });
-            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-                Animation = GlobalState.Animation.GetObjectAnimation(gameObject);
-            else
-                Animation = GlobalStateTradi.Animation.GetObjectAnimation(gameObject);
+            Animation = GlobalState.Animation.GetObjectAnimation(gameObject);
         }
     }
 }

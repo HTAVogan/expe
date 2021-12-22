@@ -106,9 +106,21 @@ namespace VRtist
 
         private void ComputeCacheValues2(int startIndex, int endIndex)
         {
-            if (null == cachedValues || cachedValues.Length != GlobalState.Animation.EndFrame - GlobalState.Animation.StartFrame + 1)
+            int start, end;
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
             {
-                cachedValues = new float[GlobalState.Animation.EndFrame - GlobalState.Animation.StartFrame + 1];
+                start = GlobalState.Animation.StartFrame;
+                end = GlobalState.Animation.EndFrame;
+            }
+            else
+            {
+                end = GlobalStateTradi.Animation.EndFrame;
+                start = GlobalStateTradi.Animation.StartFrame;
+
+            }
+            if (null == cachedValues || cachedValues.Length != end - start + 1)
+            {
+                cachedValues = new float[end - start + 1];
                 startIndex = 0;
                 endIndex = cachedValues.Length - 1;
             }
@@ -120,7 +132,7 @@ namespace VRtist
             {
                 Keys = keysStructs,
                 CachedKeysIndices = keysIndices,
-                StartFrame = startIndex + GlobalState.Animation.StartFrame,
+                StartFrame = startIndex + start,
                 Value = vals
             };
 

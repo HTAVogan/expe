@@ -217,6 +217,7 @@ namespace VRtist.Serialization
             currentProjectName = projectName;
             meshes.Clear();
             materials.Clear();
+            skinMeshes.Clear();
             SceneData.Current.Clear();
 
             stopwatch.Stop();
@@ -638,9 +639,11 @@ namespace VRtist.Serialization
                 // Sky
                 GlobalState.Instance.SkySettings = sceneData.skyData;
 
-                // Objects            
+                // Objects
+                
                 foreach (ObjectData data in sceneData.objects)
                 {
+                    Debug.Log( "current :" + data.name );
                     LoadObject(data);
                 }
 
