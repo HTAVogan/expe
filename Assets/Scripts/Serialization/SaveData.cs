@@ -555,7 +555,7 @@ namespace VRtist.Serialization
 
         private string GetPathToRoot(Transform root, Transform target)
         {
-            if (root != target.parent)
+            if (root != target.parent && null != root && null != target)
             {
                 return GetPathToRoot(root, target.parent) + "/" + target.name;
             }
@@ -810,6 +810,7 @@ namespace VRtist.Serialization
         }
     }
 
+
     public class ShotData : IBlob
     {
         public string name;
@@ -986,6 +987,45 @@ namespace VRtist.Serialization
         }
     }
 
+    public class RigData : IBlob
+    {
+        public string ObjectName;
+        public string meshPath;
+
+        public RigData() { }
+
+        public RigData(SkinMeshController controller)
+        {
+            ObjectName = controller.name;
+            meshPath = GetPathToRoot(controller.transform, controller.SkinMesh.transform);
+        }
+
+        public void FromBytes(byte[] bytes, ref int index)
+        {
+            ObjectName = Converter.GetString(bytes, ref index);
+            meshPath = Converter.GetString(bytes, ref index);
+        }
+
+        public byte[] ToBytes()
+        {
+            byte[] nameBuffer = Converter.StringToBytes(ObjectName);
+            byte[] pathBuffer = Converter.StringToBytes(meshPath);
+            byte[] bytes = Converter.ConcatenateBuffers(new List<byte[]>() { nameBuffer, pathBuffer });
+            return bytes;
+        }
+
+        private string GetPathToRoot(Transform root, Transform target)
+        {
+            if (root != target.parent && null != root && null != target)
+            {
+                return GetPathToRoot(root, target.parent) + "/" + target.name;
+            }
+            else
+            {
+                return target.name;
+            }
+        }
+    }
 
     public class PlayerData : IBlob
     {
@@ -1037,6 +1077,9 @@ namespace VRtist.Serialization
         public List<ShotData> shots = new List<ShotData>();
         public List<AnimationData> animations = new List<AnimationData>();
 
+        //**
+        public List<RigData> rigs = new List<RigData>();
+
         private readonly byte[] headerBuffer = new byte[6] { (byte)'V', (byte)'R', (byte)'t', (byte)'i', (byte)'s', (byte)'t' };
         public static int version = 1;
         public static int fileVersion;
@@ -1058,6 +1101,8 @@ namespace VRtist.Serialization
             lights.Clear();
             cameras.Clear();
             shots.Clear();
+            rigs.Clear();
+            animations.Clear();
         }
 
         public void FromBytes(byte[] buffer, ref int index)
@@ -1115,6 +1160,14 @@ namespace VRtist.Serialization
                 AnimationData data = new AnimationData();
                 data.FromBytes(buffer, ref index);
                 animations.Add(data);
+            }
+
+            int rigCount = Converter.GetInt(buffer, ref index);
+            for (int i = 0; i < rigCount; i++)
+            {
+                RigData data = new RigData();
+                data.FromBytes(buffer, ref index);
+                rigs.Add(data);
             }
 
             fps = Converter.GetFloat(buffer, ref index);
@@ -1182,6 +1235,14 @@ namespace VRtist.Serialization
             }
             byte[] animationsBuffer = Converter.ConcatenateBuffers(animationsBufferList);
 
+            byte[] rigCountBuffer = Converter.IntToBytes(rigs.Count);
+            List<byte[]> rigBufferList = new List<byte[]>();
+            foreach (RigData data in rigs)
+            {
+                rigBufferList.Add(data.ToBytes());
+            }
+            byte[] rigsBuffer = Converter.ConcatenateBuffers(rigBufferList);
+
             byte[] fpsBuffer = Converter.FloatToBytes(fps);
             byte[] startFrameBuffer = Converter.IntToBytes(startFrame);
             byte[] endFrameBuffer = Converter.IntToBytes(endFrame);
@@ -1224,6 +1285,10 @@ namespace VRtist.Serialization
 
                 animationsCountBuffer,
                 animationsBuffer,
+
+                rigCountBuffer,
+                rigsBuffer,
+
                 fpsBuffer,
                 startFrameBuffer,
                 endFrameBuffer,
