@@ -313,14 +313,14 @@ namespace VRtist
             int k = hierarchySize * 3;
             rootTransform.localPosition = new Vector3((float)new_theta[k], (float)new_theta[k + 1], (float)new_theta[k + 2]);
 
-            if (Vector3.Distance(currentState.position, desiredState.position) < Vector3.Distance(oTransform.position, desiredState.position))
-            {
-                rootTransform.localPosition = endPositions[0];
-                for (int l = 0; l < hierarchySize; l++)
-                {
-                    fullHierarchy[l].localRotation = endRotations[l];
-                }
-            }
+            //if (Vector3.Distance(currentState.position, desiredState.position) < Vector3.Distance(oTransform.position, desiredState.position))
+            //{
+            //    rootTransform.localPosition = endPositions[0];
+            //    for (int l = 0; l < hierarchySize; l++)
+            //    {
+            //        fullHierarchy[l].localRotation = endRotations[l];
+            //    }
+            //}
 
             for (int c = 0; c < fullHierarchy.Count; c++)
             {
@@ -529,49 +529,97 @@ namespace VRtist
             }
         }
 
+        private Vector3 bounds = new Vector3(90, 90, 90);
+
         double[] InitializeUBound(int n)
         {
-
             double[] u = new double[n];
-            for (int i = 0; i < hierarchySize * 3; i++)
+            for (int i = 0; i < hierarchySize; i++)
             {
-                //u[i] = theta[i] < -90 ? 0 : -10;
-                if (theta[i] < -90) u[i] = 0;
-                else u[i] = -10;
-
-                //Vector3 rotation = Vector3.zero;
-                //rotation[i % 3] = -10;
-                //Vector3 maxRotation = Quaternion.Euler(rotation) * new Vector3((float)theta[(i / 3) * 3], (float)theta[(i / 3) * 3 + 1], (float)theta[(i / 3) * 3 + 2]);
-                //if (Mathf.Abs(maxRotation.x) > 90 || Mathf.Abs(maxRotation.y) > 90 || Mathf.Abs(maxRotation.z) > 90) u[i] = 0;
-                //else u[i] = -5;
+                Quaternion currentRotation = fullHierarchy[i].rotation;
+                int index = i * 3;
+                Vector3 rotBounds = rotationBounds(currentRotation, -bounds);
+                u[index] = Mathf.Min(0, rotBounds[0]);
+                u[index + 1] = Mathf.Min(0, rotBounds[1]);
+                u[index + 2] = Mathf.Min(0, rotBounds[2]);
             }
-            for (int j = hierarchySize * 3; j < hierarchySize * 3 + 3; j++)
+            for (int j = 0; j < 3; j++)
             {
-                u[j] = -10d;
+                int index = hierarchySize * 3 + j;
+                u[index] = -10;
             }
             return u;
         }
+
         double[] InitializeVBound(int n)
         {
             double[] v = new double[n];
-            for (int i = 0; i < hierarchySize * 3; i++)
+            for (int i = 0; i < hierarchySize; i++)
             {
-                //v[i] = theta[i] > 90 ? 0 : 10;
-                if (theta[i] > 90) v[i] = 0;
-                else v[i] = 10;
-
-                //Vector3 rotation = Vector3.zero;
-                //rotation[i % 3] = 10;
-                //Vector3 currentRotation = new Vector3((float)theta[(i / 3) * 3], (float)theta[(i / 3) * 3 + 1], (float)theta[(i / 3) * 3 + 2]);
-                //Vector3 maxRotation = Quaternion.Euler(rotation) * currentRotation;
-                //if (Mathf.Abs(maxRotation.x) > 90 || Mathf.Abs(maxRotation.y) > 90 || Mathf.Abs(maxRotation.z) > 90) v[i] = 0;
-                //else v[i] = 5;
+                Quaternion currentRotation = fullHierarchy[i].rotation;
+                int index = i * 3;
+                Vector3 rotBounds = rotationBounds(currentRotation, bounds);
+                v[index] = Mathf.Max(0, rotBounds[0]);
+                v[index + 1] = Mathf.Max(0, rotBounds[1]);
+                v[index + 2] = Mathf.Max(0, rotBounds[2]);
             }
-            for (int j = hierarchySize * 3; j < hierarchySize * 3 + 3; j++)
+            for (int j = 0; j < 3; j++)
             {
-                v[j] = 10d;
+                int index = hierarchySize * 3 + j;
+                v[index] = 10;
             }
             return v;
         }
+
+
+        public Vector3 rotationBounds(Quaternion rotation, Vector3 bound)
+        {
+            Vector3 res = new Vector3();
+            rotation.x /= rotation.w;
+            rotation.y /= rotation.w;
+            rotation.z /= rotation.w;
+            rotation.w = 1;
+
+            float angleX = 2f * Mathf.Rad2Deg * Mathf.Atan(rotation.x);
+            res.x = bound.x - angleX;
+
+            float angleY = 2f * Mathf.Rad2Deg * Mathf.Atan(rotation.y);
+            res.y = bound.y - angleY;
+
+            float angleZ = 2f * Mathf.Rad2Deg * Mathf.Atan(rotation.z);
+            res.z = bound.z - angleZ;
+
+            return res;
+        }
+
+        //double[] InitializeUBound(int n)
+        //{
+
+        //    double[] u = new double[n];
+        //    for (int i = 0; i < hierarchySize * 3; i++)
+        //    {
+        //        if (theta[i] < -90) u[i] = 0;
+        //        else u[i] = -10;
+        //    }
+        //    for (int j = hierarchySize * 3; j < hierarchySize * 3 + 3; j++)
+        //    {
+        //        u[j] = -10d;
+        //    }
+        //    return u;
+        //}
+        //double[] InitializeVBound(int n)
+        //{
+        //    double[] v = new double[n];
+        //    for (int i = 0; i < hierarchySize * 3; i++)
+        //    {
+        //        if (theta[i] > 90) v[i] = 0;
+        //        else v[i] = 10;
+        //    }
+        //    for (int j = hierarchySize * 3; j < hierarchySize * 3 + 3; j++)
+        //    {
+        //        v[j] = 10d;
+        //    }
+        //    return v;
+        //}
     }
 }
