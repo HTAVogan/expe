@@ -48,6 +48,7 @@ namespace VRtist
         private GameObject debugTarget;
 
         private List<GameObject> movedObjects;
+        private List<HumanGoalController> controllers;
         private List<Vector3> startPositions;
         private List<Quaternion> startRotations;
         private List<Vector3> startScales;
@@ -69,6 +70,13 @@ namespace VRtist
             InitialParentMatrixWorldToLocal = oTransform.parent.worldToLocalMatrix;
             InitialTRS = Matrix4x4.TRS(oTransform.localPosition, oTransform.localRotation, oTransform.localScale);
             initialTransformMatrix = oTransform.localToWorldMatrix;
+
+            controllers = new List<HumanGoalController>();
+            for (int i = 0; i < hierarchySize; i++)
+            {
+                controllers.Add(fullHierarchy[i].GetComponent<HumanGoalController>());
+            }
+
             if (mode == AnimationTool.PoseEditMode.FK)
             {
 
@@ -100,6 +108,7 @@ namespace VRtist
             }
             else
             {
+
                 movedObjects = new List<GameObject>();
                 startPositions = new List<Vector3>();
                 endPositions = new List<Vector3>();
@@ -200,6 +209,7 @@ namespace VRtist
             // hierarchy * rotation + root position
             p = 3 * hierarchySize + 3;
             theta = GetAllValues(p);
+
 
 
             currentState = new State()
@@ -529,7 +539,6 @@ namespace VRtist
             }
         }
 
-        private Vector3 bounds = new Vector3(90, 90, 90);
 
         double[] InitializeUBound(int n)
         {
@@ -538,7 +547,7 @@ namespace VRtist
             {
                 Quaternion currentRotation = fullHierarchy[i].rotation;
                 int index = i * 3;
-                Vector3 rotBounds = rotationBounds(currentRotation, -bounds);
+                Vector3 rotBounds = rotationBounds(currentRotation, -controllers[i].AngleLimits);
                 u[index] = Mathf.Min(0, rotBounds[0]);
                 u[index + 1] = Mathf.Min(0, rotBounds[1]);
                 u[index + 2] = Mathf.Min(0, rotBounds[2]);
@@ -558,7 +567,7 @@ namespace VRtist
             {
                 Quaternion currentRotation = fullHierarchy[i].rotation;
                 int index = i * 3;
-                Vector3 rotBounds = rotationBounds(currentRotation, bounds);
+                Vector3 rotBounds = rotationBounds(currentRotation, controllers[i].AngleLimits);
                 v[index] = Mathf.Max(0, rotBounds[0]);
                 v[index + 1] = Mathf.Max(0, rotBounds[1]);
                 v[index + 2] = Mathf.Max(0, rotBounds[2]);
@@ -581,13 +590,13 @@ namespace VRtist
             rotation.w = 1;
 
             float angleX = 2f * Mathf.Rad2Deg * Mathf.Atan(rotation.x);
-            res.x = bound.x - angleX;
+            res.x = -(angleX) + bound.x;
 
             float angleY = 2f * Mathf.Rad2Deg * Mathf.Atan(rotation.y);
-            res.y = bound.y - angleY;
+            res.y = -(angleY) + bound.y;
 
             float angleZ = 2f * Mathf.Rad2Deg * Mathf.Atan(rotation.z);
-            res.z = bound.z - angleZ;
+            res.z = -(angleZ) + bound.z;
 
             return res;
         }
