@@ -545,9 +545,9 @@ namespace VRtist
             double[] u = new double[n];
             for (int i = 0; i < hierarchySize; i++)
             {
-                Quaternion currentRotation = fullHierarchy[i].rotation;
+                Quaternion currentRotation = fullHierarchy[i].localRotation;
                 int index = i * 3;
-                Vector3 rotBounds = rotationBounds(currentRotation, -controllers[i].AngleLimits);
+                Vector3 rotBounds = rotationBounds(currentRotation, controllers[i].LowerAngleBound);
                 u[index] = Mathf.Min(0, rotBounds[0]);
                 u[index + 1] = Mathf.Min(0, rotBounds[1]);
                 u[index + 2] = Mathf.Min(0, rotBounds[2]);
@@ -560,14 +560,17 @@ namespace VRtist
             return u;
         }
 
+        private List<Vector3> currentRots = new List<Vector3>();
+
         double[] InitializeVBound(int n)
         {
+            currentRots = new List<Vector3>();
             double[] v = new double[n];
             for (int i = 0; i < hierarchySize; i++)
             {
-                Quaternion currentRotation = fullHierarchy[i].rotation;
+                Quaternion currentRotation = fullHierarchy[i].localRotation;
                 int index = i * 3;
-                Vector3 rotBounds = rotationBounds(currentRotation, controllers[i].AngleLimits);
+                Vector3 rotBounds = rotationBounds(currentRotation, controllers[i].UpperAngleBound);
                 v[index] = Mathf.Max(0, rotBounds[0]);
                 v[index + 1] = Mathf.Max(0, rotBounds[1]);
                 v[index + 2] = Mathf.Max(0, rotBounds[2]);
@@ -597,6 +600,8 @@ namespace VRtist
 
             float angleZ = 2f * Mathf.Rad2Deg * Mathf.Atan(rotation.z);
             res.z = -(angleZ) + bound.z;
+
+            currentRots.Add(new Vector3(angleX, angleY, angleZ));
 
             return res;
         }

@@ -13,7 +13,8 @@ namespace VRtist
             public float stiffness;
             public bool isGoal;
             public bool showCurve;
-            public Vector3 angleLimits;
+            public Vector3 LowerAngleBound;
+            public Vector3 UpperAngleBound;
         }
 
         public List<Joint> JointsList;
@@ -33,7 +34,8 @@ namespace VRtist
                 controller.stiffness = joint.stiffness;
                 controller.IsGoal = joint.isGoal;
                 controller.ShowCurve = joint.showCurve;
-                controller.AngleLimits = joint.angleLimits;
+                controller.LowerAngleBound = joint.LowerAngleBound;
+                controller.UpperAngleBound = joint.UpperAngleBound;
             }
             path.Add(transform);
             foreach (Transform child in transform)
