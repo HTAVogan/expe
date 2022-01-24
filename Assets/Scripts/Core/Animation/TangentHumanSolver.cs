@@ -148,9 +148,9 @@ namespace VRtist
             p = 12 * animationCount * K + 12 * K;
             pinsNB = constraints.gameObjectIndices.Count;
 
-            Profiler.BeginSample("get all tan");
+            //Profiler.BeginSample("get all tan");
             theta = GetAllTangents(p, K);
-            Profiler.EndSample();
+            //Profiler.EndSample();
             Theta = ColumnArrayToArray(theta);
 
             currentState = GetCurrentState(currentFrame);
@@ -223,10 +223,10 @@ namespace VRtist
             double[] u = InitializeUBound(n);
             double[] v = InitializeVBound(n);
 
-            Profiler.BeginSample("constraints");
+            //Profiler.BeginSample("constraints");
             lowerBound = LowerBoundConstraints(theta, u, v, p, K, totalKeyframes);
             upperBound = UpperBoundConstraints(theta, u, v, p, K, totalKeyframes);
-            Profiler.EndSample();
+            //Profiler.EndSample();
 
             delta_theta_0 = new double[p];
 
@@ -243,7 +243,7 @@ namespace VRtist
         {
             //Debug.Log("compute");
 
-            Profiler.BeginSample("compute");
+            //Profiler.BeginSample("compute");
             double wm = 100d;
             double wb = 1d;
             double wd = 1d;
@@ -283,7 +283,7 @@ namespace VRtist
                 alglib.minqpsetlc(state_opt, C, CT, K_size);
             }
 
-            Profiler.BeginSample("alglib");
+            //Profiler.BeginSample("alglib");
             alglib.minqpsetscale(state_opt, s);
 
             //alglib.minqpsetalgoquickqp(state_opt, 0.0, 0.0, 0.0, 0, true);
@@ -291,8 +291,8 @@ namespace VRtist
             alglib.minqpoptimize(state_opt);
             alglib.minqpresults(state_opt, out delta_theta, out rep);
 
-            Profiler.EndSample();
-            Profiler.EndSample();
+            //Profiler.EndSample();
+            //Profiler.EndSample();
 
             return true;
         }

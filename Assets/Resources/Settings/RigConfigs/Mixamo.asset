@@ -239,83 +239,83 @@ MonoBehaviour:
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: -30, z: 0}
     UpperAngleBound: {x: 0, y: 0, z: 0}
   - Name: RightHandThumb3
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: -50, z: 0}
     UpperAngleBound: {x: 0, y: 0, z: 0}
   - Name: RightHandIndex1
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
-    UpperAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: -10, z: -75}
+    UpperAngleBound: {x: 0, y: 10, z: 10}
   - Name: RightHandIndex2
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: 0, z: -60}
     UpperAngleBound: {x: 0, y: 0, z: 0}
   - Name: RightHandIndex3
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: 0, z: -60}
     UpperAngleBound: {x: 0, y: 0, z: 0}
   - Name: RightHandMiddle1
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
-    UpperAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: -10, z: -75}
+    UpperAngleBound: {x: 0, y: 10, z: 10}
   - Name: RightHandMiddle2
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: 0, z: -60}
     UpperAngleBound: {x: 0, y: 0, z: 0}
   - Name: RightHandMiddle3
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: 0, z: -60}
     UpperAngleBound: {x: 0, y: 0, z: 0}
   - Name: RightHandRing1
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
-    UpperAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: -10, z: -75}
+    UpperAngleBound: {x: 0, y: 10, z: 10}
   - Name: RightHandRing2
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: 0, z: -60}
     UpperAngleBound: {x: 0, y: 0, z: 0}
   - Name: RightHandRing3
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: 0, z: -60}
     UpperAngleBound: {x: 0, y: 0, z: 0}
   - Name: RightHandPinky1
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
-    UpperAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: -10, z: -75}
+    UpperAngleBound: {x: 0, y: 10, z: 10}
   - Name: RightHandPinky2
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: 0, z: -60}
     UpperAngleBound: {x: 0, y: 0, z: 0}
   - Name: RightHandPinky3
     stiffness: 0
     isGoal: 1
     showCurve: 0
-    LowerAngleBound: {x: 0, y: 0, z: 0}
+    LowerAngleBound: {x: 0, y: 0, z: -60}
     UpperAngleBound: {x: 0, y: 0, z: 0}
