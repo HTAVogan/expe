@@ -14,6 +14,7 @@ namespace VRtist
         private Vector3 positionTarget;
         private Quaternion rotationTarget;
         private List<AnimationSet> animationList;
+        private List<HumanGoalController> controllers;
         private int currentFrame;
         private int size;
         private AnimationSet objectAnimation;
@@ -77,11 +78,17 @@ namespace VRtist
             positionTarget = targetPosition;
             rotationTarget = targetRotation;
             animationList = new List<AnimationSet>();
+            controllers = new List<HumanGoalController>();
             animation.ForEach(x =>
             {
-                if (x != null) animationList.Add(x);
+                if (x != null)
+                {
+                    animationList.Add(x);
+                    controllers.Add(x.transform.GetComponent<HumanGoalController>());
+                }
             });
             animationList.Add(objectAnim);
+            controllers.Add(objectAnim.transform.GetComponent<HumanGoalController>());
             objectAnimation = animationList[animationList.Count - 1];
             animationCount = animationList.Count;
             currentFrame = frame;
@@ -140,6 +147,7 @@ namespace VRtist
                     }
                 }
             }
+            Debug.Log("setup true");
 
             requiredKeyframe = FindRequiredTangents(firstFrame, lastFrame, objectAnimation.GetCurve(AnimatableProperty.PositionX));
             K = requiredKeyframe.Count;
@@ -161,10 +169,10 @@ namespace VRtist
                 time = currentFrame
             };
 
-            Profiler.BeginSample("ds dtheta");
+            //Profiler.BeginSample("ds dtheta");
             //double[,] Js = ds_dtheta(p, K);
             ds_thetaJob(p, K);
-            Profiler.EndSample();
+            //Profiler.EndSample();
             //Stiffness
             DT_D = new double[p, p];
             //Root rotation tangents
@@ -241,7 +249,7 @@ namespace VRtist
 
         public bool Compute()
         {
-            //Debug.Log("compute");
+            Debug.Log("compute");
 
             //Profiler.BeginSample("compute");
             double wm = 100d;
@@ -335,42 +343,42 @@ namespace VRtist
                 }
             }
 
-            State finalState = GetCurrentState(currentFrame);
-            //Debug.Log("result " + finalState.position.x + " , " + finalState.position.y + " , " + finalState.position.z + " - " + finalState.rotation);
+            //State finalState = GetCurrentState(currentFrame);
+            ////Debug.Log("result " + finalState.position.x + " , " + finalState.position.y + " , " + finalState.position.z + " - " + finalState.rotation);
 
-            if (Vector3.Distance(finalState.position, desiredState.position) > Vector3.Distance(currentState.position, desiredState.position))
-            {
-                for (int l = 0; l < animationCount; l++)
-                {
-                    AnimationSet currentAnim = animationList[l];
-                    for (int i = 0; i < 3; i++)
-                    {
+            //if (Vector3.Distance(finalState.position, desiredState.position) > Vector3.Distance(currentState.position, desiredState.position))
+            //{
+            //    for (int l = 0; l < animationCount; l++)
+            //    {
+            //        AnimationSet currentAnim = animationList[l];
+            //        for (int i = 0; i < 3; i++)
+            //        {
 
-                        AnimatableProperty property = (AnimatableProperty)i + 3;
-                        Curve curve = currentAnim.GetCurve(property);
+            //            AnimatableProperty property = (AnimatableProperty)i + 3;
+            //            Curve curve = currentAnim.GetCurve(property);
 
-                        for (int k = 0; k < K; k++)
-                        {
-                            curve.GetKeyIndex(requiredKeyframe[k], out int index);
-                            Vector2 inTangent = new Vector2((float)theta[12 * K * l + 4 * (i * K + k) + 0], (float)theta[12 * K * l + 4 * (i * K + k) + 1]);
-                            Vector2 outTangent = new Vector2((float)theta[12 * K * l + 4 * (i * K + k) + 2], (float)theta[12 * K * l + 4 * (i * K + k) + 3]);
-                            ModifyTangents(curve, index, inTangent, outTangent);
-                        }
-                    }
-                }
-                for (int i = 3; i < 6; i++)
-                {
-                    Curve curve = animationList[0].GetCurve((AnimatableProperty)i - 3);
+            //            for (int k = 0; k < K; k++)
+            //            {
+            //                curve.GetKeyIndex(requiredKeyframe[k], out int index);
+            //                Vector2 inTangent = new Vector2((float)theta[12 * K * l + 4 * (i * K + k) + 0], (float)theta[12 * K * l + 4 * (i * K + k) + 1]);
+            //                Vector2 outTangent = new Vector2((float)theta[12 * K * l + 4 * (i * K + k) + 2], (float)theta[12 * K * l + 4 * (i * K + k) + 3]);
+            //                ModifyTangents(curve, index, inTangent, outTangent);
+            //            }
+            //        }
+            //    }
+            //    for (int i = 3; i < 6; i++)
+            //    {
+            //        Curve curve = animationList[0].GetCurve((AnimatableProperty)i - 3);
 
-                    for (int k = 0; k < K; k++)
-                    {
-                        curve.GetKeyIndex(requiredKeyframe[k], out int index);
-                        Vector2 inTangent = new Vector2((float)theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0], (float)theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1]);
-                        Vector2 outTangent = new Vector2((float)theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2], (float)theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3]);
-                        ModifyTangents(curve, index, inTangent, outTangent);
-                    }
-                }
-            }
+            //        for (int k = 0; k < K; k++)
+            //        {
+            //            curve.GetKeyIndex(requiredKeyframe[k], out int index);
+            //            Vector2 inTangent = new Vector2((float)theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0], (float)theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1]);
+            //            Vector2 outTangent = new Vector2((float)theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2], (float)theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3]);
+            //            ModifyTangents(curve, index, inTangent, outTangent);
+            //        }
+            //    }
+            //}
 
             return true;
         }
@@ -527,7 +535,7 @@ namespace VRtist
 
         double[,] ThetaFromJob(int p)
         {
-            Profiler.BeginSample("theta from job");
+            //Profiler.BeginSample("theta from job");
             double[,] Js = new double[7, p];
 
             jData.Handle.Complete();
@@ -539,16 +547,18 @@ namespace VRtist
                 }
             }
             jData.jsValues.ForEach(x => x.Dispose());
+            jData.jsValues.Clear();
             jData.postFrames.Dispose();
             jData.prevFrames.Dispose();
             activeJob = false;
-            Profiler.EndSample();
+            //Profiler.EndSample();
 
             return Js;
         }
 
         public void ClearJob()
         {
+            Debug.Log("clear job");
             if (activeJob)
             {
                 jData.Handle.Complete();
@@ -848,25 +858,107 @@ namespace VRtist
         }
         double[] InitializeUBound(int n)
         {
-
             double[] u = new double[n];
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < (n - 1) / 3; i++)
             {
-                u[i] = -1000d;
+                u[i * 3] = controllers[i].LowerAngleBound.x;
+                u[i * 3 + 1] = controllers[i].LowerAngleBound.y;
+                u[i * 3 + 2] = controllers[i].LowerAngleBound.z;
             }
-
+            for (int j = n - 3; j < n; j++)
+            {
+                u[j] = -1000f;
+            }
             return u;
         }
+
         double[] InitializeVBound(int n)
         {
 
             double[] v = new double[n];
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < (n - 1) / 3; i++)
             {
-                v[i] = 1000d;
+                v[i * 3] = controllers[i].UpperAngleBound.x;
+                v[i * 3 + 1] = controllers[i].UpperAngleBound.y;
+                v[i * 3 + 2] = controllers[i].UpperAngleBound.z;
+            }
+            for (int j = n - 3; j < n; j++)
+            {
+                v[j] = 1000f;
             }
 
             return v;
+        }
+
+        double[] LowerBound(double[] theta, double[] uBound, double[] vBound, int p, int K, int globalKeyframes)
+        {
+            double[] lowerBound = new double[p];
+
+            for (int aIndex = 0; aIndex < animationCount; aIndex++)
+            {
+                AnimationSet animation = animationList[aIndex];
+
+                for (int pIndex = 0; p < 3; pIndex++)
+                {
+                    AnimatableProperty property = (AnimatableProperty)pIndex + 3;
+
+                    Matrix4x4 rtsMatrix = animation.GetTranformMatrix(currentFrame);
+                    Maths.DecomposeMatrix(rtsMatrix, out Vector3 pos, out Quaternion rotation, out Vector3 scale);
+                    Vector3 bound = rotationBounds(rotation, controllers[aIndex].LowerAngleBound);
+
+                    //k- in.x -> not used
+                    lowerBound[12 * K * aIndex + 4 * (pIndex * K) + 0] = 0;
+                    //k- in.y -> not used
+                    lowerBound[12 * K * aIndex + 4 * (pIndex * K) + 1] = 0;
+                    //k- out.x -> 0
+                    lowerBound[12 * K * aIndex + 4 * (pIndex * K) + 2] = 0;
+                    //k- out.y  
+                    lowerBound[12 * K * aIndex + 4 * (pIndex * K) + 3] = 0;
+                    //k+ in.x
+                    lowerBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 0] = 0;
+                    //k+ in.y
+                    lowerBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 1] = 0;
+                    //k+ out.x
+                    lowerBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 2] = 0;
+                    //k+ out.y
+                    lowerBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 3] = 0;
+                }
+            }
+
+            AnimationSet rootAnim = animationList[0];
+            for (int pIndex = 3; pIndex < 6; pIndex++)
+            {
+                AnimatableProperty property = (AnimatableProperty)pIndex - 3;
+                for (int kIndex = 0; kIndex < K; kIndex++)
+                {
+                    lowerBound[12 * K * animationCount + 4 * ((pIndex - 3) * K + kIndex) + 0] = 0;
+                    lowerBound[12 * K * animationCount + 4 * ((pIndex - 3) * K + kIndex) + 1] = 0;
+                    lowerBound[12 * K * animationCount + 4 * ((pIndex - 3) * K + kIndex) + 2] = 0;
+                    lowerBound[12 * K * animationCount + 4 * ((pIndex - 3) * K + kIndex) + 3] = 0;
+                }
+            }
+
+            return lowerBound;
+        }
+
+        private Vector3 rotationBounds(Quaternion rotation, Vector3 bound)
+        {
+            Vector3 res = new Vector3();
+            rotation.x /= rotation.w;
+            rotation.y /= rotation.w;
+            rotation.z /= rotation.w;
+            rotation.w = 1;
+
+            float angleX = 2f * Mathf.Rad2Deg * Mathf.Atan(rotation.x);
+            res.x = -(angleX) + bound.x;
+
+            float angleY = 2f * Mathf.Rad2Deg * Mathf.Atan(rotation.y);
+            res.y = -(angleY) + bound.y;
+
+            float angleZ = 2f * Mathf.Rad2Deg * Mathf.Atan(rotation.z);
+            res.z = -(angleZ) + bound.z;
+
+            return res;
         }
 
         double[] LowerBoundConstraints(double[] theta, double[] u, double[] v, int p, int K, int globalKeyframes)
@@ -886,10 +978,14 @@ namespace VRtist
 
                     for (int k = 0; k < K; k++)
                     {
-                        lowerBound[12 * K * l + 4 * (i * K + k) + 0] = -theta[12 * K * l + 4 * (i * K + k) + 0];
-                        lowerBound[12 * K * l + 4 * (i * K + k) + 1] = -psi(v[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * l + 4 * (i * K + k) + 1];
-                        lowerBound[12 * K * l + 4 * (i * K + k) + 2] = -theta[12 * K * l + 4 * (i * K + k) + 2];
-                        lowerBound[12 * K * l + 4 * (i * K + k) + 3] = phi(u[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * l + 4 * (i * K + k) + 3];
+                        //in .x
+                        lowerBound[12 * K * l + 4 * (i * K + k) + 0] = 0;//-theta[12 * K * l + 4 * (i * K + k) + 0];
+                        //in.y
+                        lowerBound[12 * K * l + 4 * (i * K + k) + 1] = psi(v[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * l + 4 * (i * K + k) + 1];
+                        //out.x
+                        lowerBound[12 * K * l + 4 * (i * K + k) + 2] = 0;// -theta[12 * K * l + 4 * (i * K + k) + 2];
+                        //out.y
+                        lowerBound[12 * K * l + 4 * (i * K + k) + 3] = -phi(u[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * l + 4 * (i * K + k) + 3];
                     }
                 }
             }
@@ -903,9 +999,9 @@ namespace VRtist
                 for (int k = 0; k < K; k++)
                 {
                     lowerBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0] = -theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 0];
-                    lowerBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1] = -psi(v[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1];
+                    lowerBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1] = psi(v[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 1];
                     lowerBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2] = -theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 2];
-                    lowerBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3] = phi(u[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3];
+                    lowerBound[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3] = -phi(u[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * animationCount + 4 * ((i - 3) * K + k) + 3];
                 }
             }
 
@@ -937,9 +1033,9 @@ namespace VRtist
                             int tkm1 = curve.keys[index - 1].frame;
 
                             upperBound[12 * K * l + 4 * (i * K + k) + 0] = tk - tkm1 - theta[12 * K * l + 4 * (i * K + k) + 0];
-                            upperBound[12 * K * l + 4 * (i * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * l + 4 * (i * K + k) + 1];
+                            upperBound[12 * K * l + 4 * (i * K + k) + 1] = phi(u[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * l + 4 * (i * K + k) + 1];
                             upperBound[12 * K * l + 4 * (i * K + k) + 2] = tkp1 - tk - theta[12 * K * l + 4 * (i * K + k) + 2];
-                            upperBound[12 * K * l + 4 * (i * K + k) + 3] = psi(v[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * l + 4 * (i * K + k) + 3];
+                            upperBound[12 * K * l + 4 * (i * K + k) + 3] = -psi(v[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * l + 4 * (i * K + k) + 3];
                         }
 
                         else if (index == 0)
@@ -948,9 +1044,9 @@ namespace VRtist
                             int tkp1 = curve.keys[index + 1].frame;
 
                             upperBound[12 * K * l + 4 * (i * K + k) + 0] = tkp1 - tk - theta[12 * K * l + 4 * (i * K + k) + 0];
-                            upperBound[12 * K * l + 4 * (i * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * l + 4 * (i * K + k) + 1];
+                            upperBound[12 * K * l + 4 * (i * K + k) + 1] = phi(u[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * l + 4 * (i * K + k) + 1];
                             upperBound[12 * K * l + 4 * (i * K + k) + 2] = tkp1 - tk - theta[12 * K * l + 4 * (i * K + k) + 2];
-                            upperBound[12 * K * l + 4 * (i * K + k) + 3] = psi(v[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * l + 4 * (i * K + k) + 3];
+                            upperBound[12 * K * l + 4 * (i * K + k) + 3] = -psi(v[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * l + 4 * (i * K + k) + 3];
                         }
 
                         else
@@ -959,9 +1055,9 @@ namespace VRtist
                             int tkm1 = curve.keys[index - 1].frame;
 
                             upperBound[12 * K * l + 4 * (i * K + k) + 0] = tk - tkm1 - theta[12 * K * l + 4 * (i * K + k) + 0];
-                            upperBound[12 * K * l + 4 * (i * K + k) + 1] = -phi(u[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * l + 4 * (i * K + k) + 1];
+                            upperBound[12 * K * l + 4 * (i * K + k) + 1] = phi(u[i], animation, property, requiredKeyframe[k], false) - theta[12 * K * l + 4 * (i * K + k) + 1];
                             upperBound[12 * K * l + 4 * (i * K + k) + 2] = tk - tkm1 - theta[12 * K * l + 4 * (i * K + k) + 2];
-                            upperBound[12 * K * l + 4 * (i * K + k) + 3] = psi(v[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * l + 4 * (i * K + k) + 3];
+                            upperBound[12 * K * l + 4 * (i * K + k) + 3] = -psi(v[i], animation, property, requiredKeyframe[k], true) - theta[12 * K * l + 4 * (i * K + k) + 3];
                         }
 
                     }
@@ -1030,13 +1126,13 @@ namespace VRtist
                 {
                     float cik = curve.keys[index].value;
                     float cikp1 = curve.keys[index + 1].value;
-                    return (double)((3f / 4f) * ((float)v - Mathf.Max(cik, cikp1)));
+                    return (double)((4f / 3f) * ((float)v - Mathf.Max(cik, cikp1)));
                 }
 
                 else
                 {
                     float cik = curve.keys[index].value;
-                    return (double)((3f / 4f) * ((float)v - cik));
+                    return (double)((4f / 3f) * ((float)v - cik));
                 }
 
             }
@@ -1048,13 +1144,13 @@ namespace VRtist
                 {
                     float cik = curve.keys[index].value;
                     float cikm1 = curve.keys[index - 1].value;
-                    return (double)((3f / 4f) * ((float)v - Mathf.Max(cik, cikm1)));
+                    return (double)((4f / 3f) * ((float)v - Mathf.Max(cik, cikm1)));
                 }
 
                 else
                 {
                     float cik = curve.keys[index].value;
-                    return (double)((3f / 4f) * ((float)v - cik));
+                    return (double)((4f / 3f) * ((float)v - cik));
                 }
 
             }
@@ -1072,13 +1168,13 @@ namespace VRtist
                 {
                     float cik = curve.keys[index].value;
                     float cikp1 = curve.keys[index + 1].value;
-                    return (double)((3f / 4f) * ((float)u - Mathf.Min(cik, cikp1)));
+                    return (double)((4f / 3f) * ((float)u - Mathf.Min(cik, cikp1)));
                 }
 
                 else
                 {
                     float cik = curve.keys[index].value;
-                    return (double)((3f / 4f) * ((float)u - cik));
+                    return (double)((4f / 3f) * ((float)u - cik));
                 }
 
             }
@@ -1090,13 +1186,13 @@ namespace VRtist
                 {
                     float cik = curve.keys[index].value;
                     float cikm1 = curve.keys[index - 1].value;
-                    return (double)((3f / 4f) * ((float)u - Mathf.Min(cik, cikm1)));
+                    return (double)((4f / 3f) * ((float)u - Mathf.Min(cik, cikm1)));
                 }
 
                 else
                 {
                     float cik = curve.keys[index].value;
-                    return (double)((3f / 4f) * ((float)u - cik));
+                    return (double)((4f / 3f) * ((float)u - cik));
                 }
 
             }
