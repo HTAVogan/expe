@@ -913,6 +913,14 @@ namespace VRtist
                 for (int pIndex = 0; pIndex < 3; pIndex++)
                 {
                     AnimatableProperty property = (AnimatableProperty)pIndex + 3;
+
+                    //animation.GetCurve(property).Evaluate(firstFrame, out float valueM);
+                    //animation.GetCurve(property).Evaluate(currentFrame, out float valueC);
+                    //animation.GetCurve(property).Evaluate(lastFrame, out float valueP);
+                    float valueM = axesM[pIndex];
+                    float valueC = axesC[pIndex];
+                    float valueP = axesP[pIndex];
+
                     tanNames[1, 12 * K * aIndex + 4 * (pIndex * K) + 0] = animation.transform.name + " " + property + "k- in.x";
                     tanNames[1, 12 * K * aIndex + 4 * (pIndex * K) + 1] = animation.transform.name + " " + property + "k- in.y";
                     tanNames[1, 12 * K * aIndex + 4 * (pIndex * K) + 2] = animation.transform.name + " " + property + "k- out.x";
@@ -930,12 +938,12 @@ namespace VRtist
                     //k- out.x -> 0
                     lowerBound[12 * K * aIndex + 4 * (pIndex * K) + 2] = 0;
                     //k- out.y -> -psi(vi, k-)
-                    lowerBound[12 * K * aIndex + 4 * (pIndex * K) + 3] = Mathf.Min(0, -Psi(v[pIndex], axesC[pIndex], axesM[pIndex]));
+                    lowerBound[12 * K * aIndex + 4 * (pIndex * K) + 3] = Mathf.Min(0, -Psi(v[pIndex], valueC, valueM));
 
                     //k+ in.x -> 0
                     lowerBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 0] = 0;
                     //k+ in.y -> phi(ui, k+)
-                    lowerBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 1] = Mathf.Min(0, Phi(u[pIndex], axesC[pIndex], axesP[pIndex]));
+                    lowerBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 1] = Mathf.Min(0, Phi(u[pIndex], valueC, valueP));
 
                     //k+ out.x -> not used
                     lowerBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 2] = -100d;
@@ -986,6 +994,13 @@ namespace VRtist
                 {
                     AnimatableProperty property = (AnimatableProperty)pIndex + 3;
 
+                    //animation.GetCurve(property).Evaluate(firstFrame, out float valueM);
+                    //animation.GetCurve(property).Evaluate(currentFrame, out float valueC);
+                    //animation.GetCurve(property).Evaluate(lastFrame, out float valueP);
+                    float valueM = axesM[pIndex];
+                    float valueC = axesC[pIndex];
+                    float valueP = axesP[pIndex];
+
                     //k- in.x -> not used
                     upperBound[12 * K * aIndex + 4 * (pIndex * K) + 0] = 100d;
                     //k- in.y -> not used
@@ -994,12 +1009,12 @@ namespace VRtist
                     //k- out.x -> tk - tk-1
                     upperBound[12 * K * aIndex + 4 * (pIndex * K) + 2] = currentFrame - firstFrame;
                     //k- out.y -> -phi(ui, k-)
-                    upperBound[12 * K * aIndex + 4 * (pIndex * K) + 3] = Mathf.Max(-Phi(u[pIndex], axesC[pIndex], axesM[pIndex]));
+                    upperBound[12 * K * aIndex + 4 * (pIndex * K) + 3] = Mathf.Max(0, -Phi(u[pIndex], valueC, valueM));
 
                     //k+ in.x -> tk+1 - tk
                     upperBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 0] = lastFrame - currentFrame;
                     //k+ in.y -> psi(vi, k+)
-                    upperBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 1] = Mathf.Max(0, Psi(v[pIndex], axesC[pIndex], axesP[pIndex]));
+                    upperBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 1] = Mathf.Max(0, Psi(v[pIndex], valueC, valueP));
 
                     //k+ out.x -> not used
                     upperBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 2] = 100d;
@@ -1025,11 +1040,11 @@ namespace VRtist
 
         private float Phi(float u, float citk, float citkp)
         {
-            return (4f / 3f) * (u - citk);
+            return (4f / 3f) * (u - Mathf.Min(citk, citkp));
         }
         private float Psi(float v, float citk, float citkp)
         {
-            return (4f / 3f) * (v - citk);
+            return (4f / 3f) * (v - Mathf.Max(citk, citkp));
         }
 
 
