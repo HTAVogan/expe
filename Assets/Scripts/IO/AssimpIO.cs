@@ -544,7 +544,7 @@ namespace VRtist
             Dictionary<int, List<BoneWeight1>> VertexBonesWeights = new Dictionary<int, List<BoneWeight1>>();
             List<Transform[]> bonesArray = new List<Transform[]>();
             List<Matrix4x4[]> bindPoses = new List<Matrix4x4[]>();
-            Debug.Log(node.Name + " / " + parent.name);
+            //Debug.Log(node.Name + " / " + parent.name);
 
             int previousVertexCount = 0;
             for (int iMesh = 0; iMesh < node.MeshIndices.Count; iMesh++)
