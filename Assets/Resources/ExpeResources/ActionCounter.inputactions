@@ -1,0 +1,71 @@
+{
+    "name": "ActionCounter",
+    "maps": [
+        {
+            "name": "CounterInGame",
+            "id": "1fb37b73-3c5b-46bf-8182-772a95e01f4c",
+            "actions": [
+                {
+                    "name": "New action",
+                    "type": "Button",
+                    "id": "7a300aaf-8f81-4396-b594-dc64c3ad27a7",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "RighClick",
+                    "type": "Button",
+                    "id": "a6f87a02-b805-45c1-80f9-f39d603e4053",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "ScrollClick",
+                    "type": "Button",
+                    "id": "db84a7b4-674d-427b-9477-bb9e7436a712",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "f42aa585-894f-455a-829e-e48546a72c8f",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f340a895-2c31-424c-991c-f3fcc442b6b8",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "RighClick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f66501a1-d407-47e6-96fe-4e63b0c2847b",
+                    "path": "<Mouse>/middleButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ScrollClick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

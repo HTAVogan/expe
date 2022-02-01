@@ -45,6 +45,7 @@ namespace VRtist
         readonly List<TimeHook> timeHooks = new List<TimeHook>();
         public bool timeHooksEnabled = true;
         public GostManager gostManager;
+        public ActionCountTradi ActionCountTradi;
         public float fps = 60f;
         float playStartTime;
         int playStartFrame;
@@ -212,6 +213,8 @@ namespace VRtist
                 }
                 CurrentFrame = newFrame;
             }
+            fps = 60;
+
         }
 
         public void CopyAnimation(GameObject source, GameObject target)
@@ -273,7 +276,7 @@ namespace VRtist
             disabledAnimations.Clear();
             recordingObjects.Clear();
             oldAnimations.Clear();
-            fps = 24f;
+            fps = 60f;
             StartFrame = 1;
             EndFrame = 250;
             CurrentFrame = 1;

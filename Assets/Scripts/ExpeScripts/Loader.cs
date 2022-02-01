@@ -30,12 +30,17 @@ public class Loader : MonoBehaviour
            
             SceneData sceneData = new SceneData();
                 SerializationManager.Load(pathToScene, sceneData);
-
-            int coiunter = 0;
         
             foreach (ObjectData data in sceneData.objects)
             {
                 LoadObject(data);
+            }
+
+            foreach (KeyValuePair<GameObject, SkinMeshData> pair in loadedSkinMeshes)
+            {
+                SkinnedMeshRenderer renderer = pair.Key.AddComponent<SkinnedMeshRenderer>();
+                pair.Value.SetSkinnedMeshRenderer(renderer, pair.Key.transform.parent);
+                renderer.materials = skinMeshMaterials[pair.Key];
             }
             // Load animations & constraints
             AnimationEngineTradi.Instance.fps = sceneData.fps;
@@ -47,10 +52,40 @@ public class Loader : MonoBehaviour
                 LoadAnimation(data);
            
             }
+            foreach (RigData data in sceneData.rigs)
+            {
+                LoadRig(data);
+            }
+
 
             AnimationEngineTradi.Instance.CurrentFrame = sceneData.currentFrame;
             rootTransform.transform.Rotate(Vector3.right, -90);
         }  
+    }
+
+    private void LoadRig(RigData data)
+    {
+        GameObject obj = rootTransform.transform.Find(data.ObjectName).gameObject;
+        if (null != obj)
+        {
+            GameObject rendererObj = obj.transform.Find(data.meshPath).gameObject;
+            if (null != rendererObj)
+            {
+                if (rendererObj.TryGetComponent<SkinnedMeshRenderer>(out SkinnedMeshRenderer renderer))
+                {
+                    SkinMeshController controller = obj.AddComponent<SkinMeshController>();
+                    controller.SkinMesh = renderer;
+                    controller.RootObject = renderer.rootBone;
+
+                    obj.tag = "PhysicObject";
+                    BoxCollider objectCollider = obj.AddComponent<BoxCollider>();
+                    objectCollider.center = renderer.bounds.center;
+                    objectCollider.size = renderer.bounds.size;
+                    renderer.updateWhenOffscreen = true;
+                    controller.Collider = objectCollider;
+                }
+            }
+        }
     }
 
     private void LoadObject(ObjectData data)
@@ -76,7 +111,7 @@ public class Loader : MonoBehaviour
             }
             catch (System.Exception e)
             {
-                Debug.LogError("Failed to load external object: " + e.Message);
+                Debug.LogError("Failed to load external object: " + e.Message + e.StackTrace);
                 return;
             }
         }

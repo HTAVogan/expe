@@ -171,6 +171,15 @@ namespace VRtist
             }
             curve.SetKeys(keys);
         }
+        public void SetCurveWithAdd(AnimatableProperty property, List<AnimationKey> keys)
+        {
+            if (!curves.TryGetValue(property, out Curve curve))
+            {
+                Debug.LogError("Curve not found : " + transform.name + " " + property.ToString());
+                return;
+            }
+            curve.SetKeysWithAdd(keys);
+        }
 
         public void CreatePositionRotationCurves()
         {

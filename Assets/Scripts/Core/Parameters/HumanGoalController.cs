@@ -35,9 +35,9 @@ namespace VRtist
 
                     AnimToRoot.Add(anim);
                 }
-                   
+
             });
-           
+
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
             {
                 if (PathToRoot.Count == 0) PathToRoot.Add(transform);
@@ -48,14 +48,15 @@ namespace VRtist
                 if (PathToRoot.Count == 0) PathToRoot.Add(transform);
                 Animation = GlobalStateTradi.Animation.GetObjectAnimation(this.gameObject);
             }
-                
+
             RootController = controller;
         }
 
         public Vector3 FramePosition(int frame)
         {
 
-            if (null == Animation) {
+            if (null == Animation)
+            {
                 if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                     Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
                 else
@@ -96,7 +97,7 @@ namespace VRtist
             {
                 for (int i = 0; i < PathToRoot.Count; i++)
                 {
-                   
+                    if(AnimToRoot[i] != null)
                     trsMatrix = trsMatrix * AnimToRoot[i].GetTranformMatrix(frame);
                 }
             }
@@ -130,16 +131,28 @@ namespace VRtist
             return trsMatrix;
         }
 
-      
+
 
         public void CheckAnimations()
         {
             AnimToRoot.Clear();
-            PathToRoot.ForEach(x =>
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                PathToRoot.ForEach(x =>
             {
                 AnimToRoot.Add(GlobalState.Animation.GetObjectAnimation(x.gameObject));
             });
-            Animation = GlobalState.Animation.GetObjectAnimation(gameObject);
+                Animation = GlobalState.Animation.GetObjectAnimation(gameObject);
+
+            }
+            else
+            {
+                PathToRoot.ForEach(x =>
+                {
+                    AnimToRoot.Add(GlobalStateTradi.Animation.GetObjectAnimation(x.gameObject));
+                });
+                Animation = GlobalStateTradi.Animation.GetObjectAnimation(gameObject);
+            }
         }
     }
 }

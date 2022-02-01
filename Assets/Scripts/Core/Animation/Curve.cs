@@ -327,6 +327,11 @@ namespace VRtist
             ComputeCache();
         }
 
+        public void SetKeysWithAdd(List<AnimationKey> k)
+        {
+            k.ForEach(x =>AddKey(new AnimationKey(x),true));
+        }
+
         public void RemoveKey(int frame, bool lockTangents = false)
         {
             if (GetKeyIndex(frame, out int index))

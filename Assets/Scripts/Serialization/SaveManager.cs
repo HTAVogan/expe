@@ -650,7 +650,6 @@ namespace VRtist.Serialization
                 
                 foreach (ObjectData data in sceneData.objects)
                 {
-                    Debug.Log( "current :" + data.name );
                     LoadObject(data);
                 }
 

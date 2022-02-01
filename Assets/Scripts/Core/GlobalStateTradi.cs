@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Rendering.HighDefinition;
+using UnityEditor;
 
 namespace VRtist
 {
@@ -47,6 +48,9 @@ namespace VRtist
         private static int[] fpsBuffer = null;
         private static int fpsBufferIndex = 0;
         public bool isReadyToLoad;
+        private Vector3 previousPos;
+        private GameObject previousGameObject;
+
 
 
 
@@ -78,10 +82,33 @@ namespace VRtist
         void Awake()
         {
             instance = Instance;
-
-        
-
             geometryImporter = GetComponent<GeometryImporter>();
+        }
+
+        private void Update()
+        {if(UnityEditor.Selection.activeGameObject != null)
+            {
+                if (UnityEditor.Selection.activeGameObject != null && UnityEditor.Selection.activeGameObject != previousGameObject)
+                {
+                    previousGameObject = UnityEditor.Selection.activeGameObject;
+                    previousPos = previousGameObject.transform.position;
+                }
+                else if (UnityEditor.Selection.activeGameObject.transform.position != previousPos)
+                {
+                    Vector3 diff = UnityEditor.Selection.activeGameObject.transform.position - previousPos;
+                    previousPos = UnityEditor.Selection.activeGameObject.transform.position;
+
+                    if (translations.TryGetValue(UnityEditor.Selection.activeGameObject, out List<Vector3> list))
+                    {
+                        list.Add(diff);
+                    }
+                    else
+                    {
+                        translations.Add(UnityEditor.Selection.activeGameObject, new List<Vector3> { diff });
+                    }
+                }
+            }
+            
         }
 
 

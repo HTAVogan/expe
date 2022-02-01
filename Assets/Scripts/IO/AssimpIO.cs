@@ -546,7 +546,7 @@ namespace VRtist
             Dictionary<int, List<BoneWeight1>> VertexBonesWeights = new Dictionary<int, List<BoneWeight1>>();
             List<Transform[]> bonesArray = new List<Transform[]>();
             List<Matrix4x4[]> bindPoses = new List<Matrix4x4[]>();
-            Debug.Log(node.Name + " / " + parent.name);
+
 
             int previousVertexCount = 0;
             for (int iMesh = 0; iMesh < node.MeshIndices.Count; iMesh++)
@@ -641,8 +641,8 @@ namespace VRtist
         {
             if (parent != null && parent != go.transform)
                 go.transform.parent = parent;
-
-            GlobalState.Instance.messageBox.ShowMessage("Importing Hierarchy : " + importCount);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                GlobalState.Instance.messageBox.ShowMessage("Importing Hierarchy : " + importCount);
             // Do not use Assimp Decompose function, it does not work properly
             // use unity decomposition instead
             Matrix4x4 mat = new Matrix4x4(
@@ -833,7 +833,7 @@ namespace VRtist
                     animationSet.curves[AnimatableProperty.ScaleZ].AddKey(new AnimationKey(frame, vectorKey.Value.Z, Interpolation.Bezier));
                 }
                 Vector3 previousRotation = Vector3.zero;
-                int t = 7;
+                int t = 0;
                 foreach (Assimp.QuaternionKey quaternionKey in nodeChannel.RotationKeys)
                 {
                     int frame;
