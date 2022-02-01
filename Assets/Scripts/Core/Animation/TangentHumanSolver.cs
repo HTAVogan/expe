@@ -193,7 +193,7 @@ namespace VRtist
                     for (int i = 0; i < 12; i++)
                     {
                         val = (12 * K) * l + i + (k * 12);
-                        DT_D[val, val] = l > 3 ? 0d : 0.5d;
+                        DT_D[val, val] = controllers[l].stiffness;
                     }
                 }
             }
@@ -938,12 +938,12 @@ namespace VRtist
                     //k- out.x -> 0
                     lowerBound[12 * K * aIndex + 4 * (pIndex * K) + 2] = 0;
                     //k- out.y -> -psi(vi, k-)
-                    lowerBound[12 * K * aIndex + 4 * (pIndex * K) + 3] = Mathf.Min(0, -Psi(v[pIndex], valueC, valueM));
+                    lowerBound[12 * K * aIndex + 4 * (pIndex * K) + 3] = (4d / 3d) * (u[pIndex] - valueC);
 
                     //k+ in.x -> 0
                     lowerBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 0] = 0;
                     //k+ in.y -> phi(ui, k+)
-                    lowerBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 1] = Mathf.Min(0, Phi(u[pIndex], valueC, valueP));
+                    lowerBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 1] = -(4d / 3d) * (v[pIndex] - valueC);
 
                     //k+ out.x -> not used
                     lowerBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 2] = -100d;
@@ -1009,12 +1009,12 @@ namespace VRtist
                     //k- out.x -> tk - tk-1
                     upperBound[12 * K * aIndex + 4 * (pIndex * K) + 2] = currentFrame - firstFrame;
                     //k- out.y -> -phi(ui, k-)
-                    upperBound[12 * K * aIndex + 4 * (pIndex * K) + 3] = Mathf.Max(0, -Phi(u[pIndex], valueC, valueM));
+                    upperBound[12 * K * aIndex + 4 * (pIndex * K) + 3] = (4d / 3d) * (v[pIndex] - valueC);
 
                     //k+ in.x -> tk+1 - tk
                     upperBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 0] = lastFrame - currentFrame;
                     //k+ in.y -> psi(vi, k+)
-                    upperBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 1] = Mathf.Max(0, Psi(v[pIndex], valueC, valueP));
+                    upperBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 1] = -(4d / 3d) * (u[pIndex] - valueC);
 
                     //k+ out.x -> not used
                     upperBound[12 * K * aIndex + 4 * (pIndex * K + 1) + 2] = 100d;

@@ -58,7 +58,7 @@ namespace VRtist
 
                     case 4: nextFrame.rotX.inTanX += dtheta; break;
                     case 5: nextFrame.rotX.inTanY += dtheta; break;
-                    case 6: nextFrame.rotX.outTanY += dtheta; break;
+                    case 6: nextFrame.rotX.outTanX += dtheta; break;
                     case 7: nextFrame.rotX.outTanY += dtheta; break;
 
                     case 8: prevFrame.rotY.inTanX += dtheta; break;
@@ -68,7 +68,7 @@ namespace VRtist
 
                     case 12: nextFrame.rotY.inTanX += dtheta; break;
                     case 13: nextFrame.rotY.inTanY += dtheta; break;
-                    case 14: nextFrame.rotY.outTanY += dtheta; break;
+                    case 14: nextFrame.rotY.outTanX += dtheta; break;
                     case 15: nextFrame.rotY.outTanY += dtheta; break;
 
                     case 16: prevFrame.rotZ.inTanX += dtheta; break;
@@ -78,7 +78,7 @@ namespace VRtist
 
                     case 20: nextFrame.rotZ.inTanX += dtheta; break;
                     case 21: nextFrame.rotZ.inTanY += dtheta; break;
-                    case 22: nextFrame.rotZ.outTanY += dtheta; break;
+                    case 22: nextFrame.rotZ.outTanX += dtheta; break;
                     case 23: nextFrame.rotZ.outTanY += dtheta; break;
                 }
             }
@@ -93,7 +93,7 @@ namespace VRtist
 
                     case 4: nextFrame.posX.inTanX += dtheta; break;
                     case 5: nextFrame.posX.inTanY += dtheta; break;
-                    case 6: nextFrame.posX.outTanY += dtheta; break;
+                    case 6: nextFrame.posX.outTanX += dtheta; break;
                     case 7: nextFrame.posX.outTanY += dtheta; break;
 
                     case 8: prevFrame.posY.inTanX += dtheta; break;
@@ -103,7 +103,7 @@ namespace VRtist
 
                     case 12: nextFrame.posY.inTanX += dtheta; break;
                     case 13: nextFrame.posY.inTanY += dtheta; break;
-                    case 14: nextFrame.posY.outTanY += dtheta; break;
+                    case 14: nextFrame.posY.outTanX += dtheta; break;
                     case 15: nextFrame.posY.outTanY += dtheta; break;
 
                     case 16: prevFrame.posZ.inTanX += dtheta; break;
@@ -113,7 +113,7 @@ namespace VRtist
 
                     case 20: nextFrame.posZ.inTanX += dtheta; break;
                     case 21: nextFrame.posZ.inTanY += dtheta; break;
-                    case 22: nextFrame.posZ.outTanY += dtheta; break;
+                    case 22: nextFrame.posZ.outTanX += dtheta; break;
                     case 23: nextFrame.posZ.outTanY += dtheta; break;
                 }
             }
