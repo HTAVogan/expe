@@ -569,15 +569,20 @@ namespace VRtist
         public void OnSetStartOffset()
         {
             AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(currentObject);
-            if (null == animationSet) return;
-            if (animationSet.StartFrame == 0) animationOffset = GlobalState.Animation.CurrentFrame;
-            else animationOffset = 0;
+
+
+            //if (animationSet.StartFrame == 0)
+            animationOffset = GlobalState.Animation.CurrentFrame;
+            //else animationOffset = 0;
             if (currentObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
             {
                 RecursiveStartOffset(currentObject.transform, animationOffset);
             }
 
-            animationSet.StartFrame = animationOffset;
+            if (null != animationSet)
+            {
+                animationSet.StartFrame = animationOffset;
+            }
             UpdateKeyframes();
         }
 
