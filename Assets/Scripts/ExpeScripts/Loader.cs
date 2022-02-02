@@ -216,6 +216,7 @@ public class Loader : MonoBehaviour
     private void LoadAnimation(AnimationData data)
     {
         Transform animTransform = rootTransform.transform.Find(data.objectPath);
+        
         if (null == animTransform)
         {
             Debug.LogWarning($"Object name not found for animation: {data.objectPath}");
@@ -225,6 +226,7 @@ public class Loader : MonoBehaviour
 
         // Create animation
         AnimationSet animSet = new AnimationSet(gobject);
+        animSet.StartFrame = data.startFrame;
         foreach (CurveData curve in data.curves)
         {
             List<AnimationKey> keys = new List<AnimationKey>();
@@ -232,7 +234,7 @@ public class Loader : MonoBehaviour
             {
                 keys.Add(new AnimationKey(keyData.frame, keyData.value, keyData.interpolation));
             }
-
+        
             animSet.SetCurve(curve.property, keys);
         }
         SceneManager.SetObjectAnimations(gobject, animSet);

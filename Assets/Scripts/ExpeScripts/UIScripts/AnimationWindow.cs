@@ -47,7 +47,7 @@ public class AnimationWindows : EditorWindow
             {
                 PauseAnimation();
             }
-            hSbarValue = GUILayout.HorizontalScrollbar(hSbarValue, 0.10f, 0.10f, 15.0f);
+            hSbarValue = GUILayout.HorizontalScrollbar(hSbarValue, 0.10f, 0.10f, 30.0f);
             if (isPlaying)
             {
                 this.Focus();

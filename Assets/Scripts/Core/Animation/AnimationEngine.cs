@@ -128,7 +128,7 @@ namespace VRtist
             }
         }
 
-        private int endFrame = 250;
+        private int endFrame = 500;
         public int EndFrame
         {
             get { return endFrame; }
@@ -310,6 +310,7 @@ namespace VRtist
                 {
                     targetAnim.SetCurve(curve.Key, curve.Value.keys);
                 }
+                targetAnim.StartFrame = sourceAnim.StartFrame;
                 SetObjectAnimations(target, targetAnim);
             }
             for (int i = 0; i < source.transform.childCount; i++)
