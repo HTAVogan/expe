@@ -1077,7 +1077,6 @@ namespace VRtist.Serialization
         public List<ShotData> shots = new List<ShotData>();
         public List<AnimationData> animations = new List<AnimationData>();
 
-        //**
         public List<RigData> rigs = new List<RigData>();
 
         private readonly byte[] headerBuffer = new byte[6] { (byte)'V', (byte)'R', (byte)'t', (byte)'i', (byte)'s', (byte)'t' };

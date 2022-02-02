@@ -16,6 +16,8 @@ namespace VRtist
         public float stiffness;
         public bool IsGoal;
         public bool ShowCurve;
+        public Vector3 LowerAngleBound;
+        public Vector3 UpperAngleBound;
 
         public void SetPathToRoot(SkinMeshController controller, List<Transform> path)
         {

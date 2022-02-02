@@ -54,6 +54,7 @@ namespace VRtist
 
         private int localFirstFrame = 0;
         private int localLastFrame = 250;
+        private int animationOffset = 0;
 
         public int LocalFirstFrame { get { return localFirstFrame; } set { localFirstFrame = value; UpdateFirstFrame(); } }
         public int LocalLastFrame { get { return localLastFrame; } set { localLastFrame = value; UpdateLastFrame(); } }
@@ -262,10 +263,11 @@ namespace VRtist
 
             Clear();
 
+            AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(gObject);
+            if (null != animationSet) animationOffset = animationSet.StartFrame;
+
             if (!gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
             {
-
-                AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(gObject);
                 if (null == animationSet)
                 {
                     UpdateTrackName();
@@ -322,7 +324,7 @@ namespace VRtist
             {
                 GameObject keyframe = keyframes.GetChild(i++).gameObject;
 
-                float time = key.Key;
+                float time = key.Key + animationOffset;
                 float currentValue = (float)time;
                 float pct = (float)(currentValue - localFirstFrame) / (float)(localLastFrame - localFirstFrame);
 
@@ -564,5 +566,32 @@ namespace VRtist
             return GlobalState.Animation.autoKeyEnabled;
         }
 
+        public void OnSetStartOffset()
+        {
+            AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(currentObject);
+            if (null == animationSet) return;
+            if (animationSet.StartFrame == 0) animationOffset = GlobalState.Animation.CurrentFrame;
+            else animationOffset = 0;
+            if (currentObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+            {
+                RecursiveStartOffset(currentObject.transform, animationOffset);
+            }
+
+            animationSet.StartFrame = animationOffset;
+            UpdateKeyframes();
+        }
+
+        public void RecursiveStartOffset(Transform obj, int value)
+        {
+            AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(obj.gameObject);
+            if (null != animationSet) animationSet.StartFrame = value;
+            foreach (Transform child in obj)
+            {
+                RecursiveStartOffset(child, value);
+            }
+        }
+
     }
+
 }
+

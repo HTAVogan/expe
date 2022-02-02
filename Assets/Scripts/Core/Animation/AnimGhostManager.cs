@@ -92,13 +92,13 @@ namespace VRtist
 
         public void OnCurveChanged(GameObject gObject, AnimatableProperty property)
         {
-            Debug.Log("on curve changed " + gObject);
+            //Debug.Log("on curve changed " + gObject);
             if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
             {
-                Debug.Log("curve humang controller " + controller);
+                //Debug.Log("curve humang controller " + controller);
                 if (ghostDictionary.TryGetValue(controller.RootObject.gameObject, out Dictionary<int, Node> value))
                 {
-                    Debug.Log("has value");
+                    //Debug.Log("has value");
                     foreach (KeyValuePair<int, Node> pair in value)
                     {
                         pair.Value.UpdateNode(controller.transform.localToWorldMatrix);

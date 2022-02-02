@@ -35,7 +35,6 @@ namespace VRtist
         public Transform transform;
         public readonly Dictionary<AnimatableProperty, Curve> curves = new Dictionary<AnimatableProperty, Curve>();
         public int StartFrame;
-        public bool loop;
 
         public AnimationSet(GameObject gobject)
         {
@@ -60,7 +59,7 @@ namespace VRtist
 
         public void EvaluateAnimation(int currentFrame)
         {
-            currentFrame -= StartFrame;
+            currentFrame = Mathf.Max(1, currentFrame - StartFrame);
 
             Vector3 position = transform.localPosition;
             Vector3 rotation = transform.localEulerAngles;

@@ -272,11 +272,7 @@ namespace VRtist
             List<GameObject> objectList = new List<GameObject>();
             List<Dictionary<AnimatableProperty, List<AnimationKey>>> keyframesLists = new List<Dictionary<AnimatableProperty, List<AnimationKey>>>();
 
-            if (humanData.Solver != null)
-            {
-                humanData.Solver.ClearJob();
-                Debug.Log("cleared job");
-            }
+            humanData.Solver.ClearJob();
 
             int index = 0;
             for (int i = 0; i < humanData.Controller.PathToRoot.Count; i++)
