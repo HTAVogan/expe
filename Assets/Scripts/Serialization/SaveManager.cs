@@ -790,6 +790,7 @@ namespace VRtist.Serialization
                 catch (System.Exception e)
                 {
                     Debug.LogError("Failed to load external object: " + e.Message);
+                    Debug.LogError("Trace :" + e.StackTrace);
                     return;
                 }
             }

@@ -16,6 +16,10 @@ public class ExpeVRWindow : MonoBehaviour
         {
             ExpeWindow.transform.position = gameObject.transform.position;
         }
+        foreach(Transform t in ExpeWindow.transform)
+        {
+            t.gameObject.SetActive(isActive);
+        }
     }
 
  
