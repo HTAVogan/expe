@@ -155,7 +155,6 @@ namespace VRtist
 
             requiredKeyframe = FindRequiredTangents(firstFrame, lastFrame, objectAnimation.GetCurve(AnimatableProperty.PositionX));
             K = requiredKeyframe.Count;
-            int totalKeyframes = objectAnimation.GetCurve(AnimatableProperty.PositionX).keys.Count;
             int n = 3 * animationCount + 3;
             p = 12 * animationCount * K + 12 * K;
             pinsNB = constraints.gameObjectIndices.Count;
@@ -887,6 +886,22 @@ namespace VRtist
             }
             return v;
         }
+
+        double[,] MinMax(int p)
+        {
+            double[,] extrems = new double[p, 4];
+
+            for (int aIndex = 0; aIndex < animationCount; aIndex++)
+            {
+                for (int pIndex = 0; pIndex < 3; pIndex++)
+                {
+
+                }
+            }
+
+            return extrems;
+        }
+
 
         double[] LowerBound(int p, int K)
         {
