@@ -364,7 +364,7 @@ namespace VRtist
             //k+ in.y
             upperBound[curveIndex * 8 + 5] = Mathf.Max(0, -(4 / 3f) * (Min - (nextKey.value - (3 / 4f) * nextKey.inTangent.y)));
             //k+ out.x
-            upperBound[curveIndex * 8 + 6] = nnKey.frame - currentFrame;
+            upperBound[curveIndex * 8 + 6] = nnKey.frame - nextKey.frame;
             //k+ out.y
             upperBound[curveIndex * 8 + 7] = Mathf.Max(0, Max - Mathf.Max(CurveMinMax[curveIndex, 1].x, CurveMinMax[curveIndex, 1].y));
         }

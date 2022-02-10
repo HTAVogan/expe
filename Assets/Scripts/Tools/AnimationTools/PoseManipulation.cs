@@ -58,6 +58,7 @@ namespace VRtist
 
         public PoseManipulation(Transform objectTransform, List<Transform> objectHierarchy, Transform mouthpiece, AnimationTool.PoseEditMode mode)
         {
+            Debug.Log(objectTransform.name + " " + objectTransform.rotation);
             poseMode = mode;
             oTransform = objectTransform;
             fullHierarchy = new List<Transform>(objectHierarchy);
@@ -257,13 +258,15 @@ namespace VRtist
             {
                 Delta_s_prime[i, 0] = desiredState.position[i] - currentState.position[i];
             }
+            if (/*Mathf.Sign(desiredState.rotation.w) != Mathf.Sign(currentState.rotation.w) &&*/ (currentState.rotation * Quaternion.Inverse(desiredState.rotation)).w < 0)
+                desiredState.rotation = new Quaternion(-desiredState.rotation.x, -desiredState.rotation.y, -desiredState.rotation.z, -desiredState.rotation.w);
             for (int i = 0; i < 4; i++)
             {
                 Delta_s_prime[i + 3, 0] = desiredState.rotation[i] - currentState.rotation[i];
             }
 
-            double wm = 100f;
-            double wd = 1f;
+            double wm = 10f;
+            double wd = 10f;
 
             Q_opt = Add(Add(Multiply(2d * wm, Multiply(Transpose(Js), Js)), Multiply(2d * wd, DT_D)), Multiply((double)Mathf.Pow(10, -6), Identity(p)));
 

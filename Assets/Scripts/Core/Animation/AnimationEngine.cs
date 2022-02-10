@@ -462,6 +462,11 @@ namespace VRtist
                     float delta = Mathf.DeltaAngle(previousKey.value, key.value);
                     key.value = previousKey.value + delta;
                 }
+                else
+                {
+                    float delta = Mathf.DeltaAngle(0, key.value);
+                    key.value = delta;
+                }
             }
             curve.AddKey(key, lockTangents);
 
