@@ -51,7 +51,7 @@ public class ClipManager : MonoBehaviour
                 //        InitFirstKeyFrameRecursif(Throw, item.gameObject);
                 //    }
                 //}
-          
+                animJoleen.enabled = true;
             }
         }
         if (abe == null)
@@ -70,7 +70,7 @@ public class ClipManager : MonoBehaviour
                 //        InitFirstKeyFrame(Dye, item.gameObject);
                 //    }
                 //}
-             
+                animAbe.enabled = true;
             }
         }
         if (bottle == null)
@@ -84,9 +84,10 @@ public class ClipManager : MonoBehaviour
                 BindPropertiesToClip(bottle, BottleClip, bottle);
                 //InitFirstKeyFrame(BottleClip, bottle);
 
+            animBottle.enabled = true;
             }
-
         }
+
 
     }
 
