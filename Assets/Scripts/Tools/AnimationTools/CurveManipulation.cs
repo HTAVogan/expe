@@ -28,7 +28,7 @@ namespace VRtist
             public List<AnimationSet> Animations;
             public AnimationSet ObjectAnimation;
             public Matrix4x4 InitFrameMatrix;
-            public TangentHumanSolver Solver;
+            public HumanSolver Solver;
         }
         private HumanData humanData;
 
@@ -155,7 +155,7 @@ namespace VRtist
         {
             Matrix4x4 target = transformation * humanData.InitFrameMatrix;
             Maths.DecomposeMatrix(target, out Vector3 targetPos, out Quaternion targetRot, out Vector3 targetScale);
-            TangentHumanSolver solver = new TangentHumanSolver(targetPos, targetRot, humanData.Controller.Animation, humanData.Controller.AnimToRoot, Frame, zoneSize);
+            HumanSolver solver = new HumanSolver(targetPos, targetRot, humanData.Controller.Animation, humanData.Controller.AnimToRoot, Frame, zoneSize, continuity);
             solver.TrySolver();
             humanData.Solver = solver;
             GlobalState.Animation.onChangeCurve.Invoke(humanData.Controller.RootController.gameObject, AnimatableProperty.PositionX);
@@ -284,7 +284,7 @@ namespace VRtist
                     AnimatableProperty property = (AnimatableProperty)prop;
                     List<AnimationKey> keys = new List<AnimationKey>();
                     Curve curve = humanData.Controller.AnimToRoot[i].GetCurve(property);
-                    Debug.Log(humanData.Controller.AnimToRoot[i].transform + " / " + property);
+                    //Debug.Log(humanData.Controller.AnimToRoot[i].transform + " / " + property);
 
                     curve.GetKeyIndex(humanData.Solver.requiredKeyframe[0], out int beforKey);
                     if (beforKey > 0) keys.Add(curve.keys[beforKey - 1]);

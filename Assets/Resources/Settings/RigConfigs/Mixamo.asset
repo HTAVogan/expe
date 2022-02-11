@@ -108,7 +108,7 @@ MonoBehaviour:
     isGoal: 1
     showCurve: 1
     LowerAngleBound: {x: -30, y: -150, z: 0}
-    UpperAngleBound: {x: 30, y: 0, z: 0}
+    UpperAngleBound: {x: 30, y: 5, z: 0}
   - Name: LeftHand
     stiffness: 0
     isGoal: 1
@@ -221,7 +221,7 @@ MonoBehaviour:
     stiffness: 0
     isGoal: 1
     showCurve: 1
-    LowerAngleBound: {x: -30, y: 0, z: 0}
+    LowerAngleBound: {x: -30, y: 5, z: 0}
     UpperAngleBound: {x: 30, y: 150, z: 0}
   - Name: RightHand
     stiffness: 0
