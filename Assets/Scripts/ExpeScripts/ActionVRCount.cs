@@ -11,96 +11,108 @@ public class ActionVRCount : MonoBehaviour
     bool isprimGripped = false;
     bool issecondaryGripped = false;
     bool needToUpTranslation = false;
+    GostManager gostManager;
+
+    private void Start()
+    {
+        gostManager = GameObject.Find("GostManager").GetComponent<GostManager>();
+    }
     // Update is called once per frame
     void Update()
     {
-        VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.grip, onPress :() => Onpressed(VRInput.primaryController),onRelease: () =>
+        if (gostManager.areGostGenerated)
         {
-            numberOfAction++;
-            if (needToUpTranslation)
+
+            VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.grip, onPress: () => Onpressed(VRInput.primaryController), onRelease: () =>
             {
-                if (inputsDone.TryGetValue("gripMove", out int number))
+                numberOfAction++;
+                if (needToUpTranslation)
+                {
+                    if (inputsDone.TryGetValue("gripMove", out int number))
+                    {
+                        number++;
+                    }
+                    else
+                    {
+                        inputsDone.Add("gripMove", 1);
+                    }
+                }
+                else if (inputsDone.TryGetValue("grip", out int number))
                 {
                     number++;
                 }
-                else
-                {
-                    inputsDone.Add("gripMove", 1);
-                }
-            }
-            else if (inputsDone.TryGetValue("grip", out int number )) {
-                number++;
-            }
-            else { inputsDone.Add("grip", 1); }
-            isprimGripped = false;
-        });
-        VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.trigger, onRelease: () =>
-        {
-            numberOfAction++;
-            if (inputsDone.TryGetValue("trigger", out int number)) { number++; }
-            else { inputsDone.Add("trigger", 1); }
-        });
-        VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.primaryButton, onRelease: () =>
-        {
-            numberOfAction++;
-            if (inputsDone.TryGetValue("primaryButton", out int number)) { number++; }
-            else
-            { inputsDone.Add("primaryButton", 1); }
-        });
-        VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.primary2DAxisClick, onRelease: () =>
-        {
-            numberOfAction++;
-            if (inputsDone.TryGetValue("joystick", out int number)) { number++; }
-            else { inputsDone.Add("joystick", 1); }
-        });
-        VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.secondaryButton, onRelease: () =>
-        {
-            numberOfAction++;
-            if (inputsDone.TryGetValue("secondaryButton", out int number)) { number++; }
-            else { inputsDone.Add("secondaryButton", 1); }
-        });
-        VRInput.ButtonEvent(VRInput.secondaryController, CommonUsages.grip, onPress : () => Onpressed(VRInput.primaryController),onRelease: () =>
-        {
-            numberOfAction++;
-            if (needToUpTranslation)
+                else { inputsDone.Add("grip", 1); }
+                isprimGripped = false;
+            });
+            VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.trigger, onRelease: () =>
             {
-                if (inputsDone.TryGetValue("gripMove", out int number))
-                {
-                    number++;
-                }
+                numberOfAction++;
+                if (inputsDone.TryGetValue("trigger", out int number)) { number++; }
+                else { inputsDone.Add("trigger", 1); }
+            });
+            VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.primaryButton, onRelease: () =>
+            {
+                numberOfAction++;
+                if (inputsDone.TryGetValue("primaryButton", out int number)) { number++; }
                 else
+                { inputsDone.Add("primaryButton", 1); }
+            });
+            VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.primary2DAxisClick, onRelease: () =>
+            {
+                numberOfAction++;
+                if (inputsDone.TryGetValue("joystick", out int number)) { number++; }
+                else { inputsDone.Add("joystick", 1); }
+            });
+            VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.secondaryButton, onRelease: () =>
+            {
+                numberOfAction++;
+                if (inputsDone.TryGetValue("secondaryButton", out int number)) { number++; }
+                else { inputsDone.Add("secondaryButton", 1); }
+            });
+            VRInput.ButtonEvent(VRInput.secondaryController, CommonUsages.grip, onPress: () => Onpressed(VRInput.primaryController), onRelease: () =>
+            {
+                numberOfAction++;
+                if (needToUpTranslation)
                 {
-                    inputsDone.Add("gripMove", 1);
+                    if (inputsDone.TryGetValue("gripMove", out int number))
+                    {
+                        number++;
+                    }
+                    else
+                    {
+                        inputsDone.Add("gripMove", 1);
+                    }
                 }
-            }
-            else if (inputsDone.TryGetValue("secondaryCGrip", out int number)) { number++; }
-            else { inputsDone.Add("secondaryCGrip", 1); }
-            issecondaryGripped = false;
-        });
-        VRInput.ButtonEvent(VRInput.secondaryController, CommonUsages.trigger, onRelease: () =>
-        {
-            numberOfAction++;
-            if (inputsDone.TryGetValue("secondaryCtrigger", out int number)) { number++; }
-            else { inputsDone.Add("secondaryCtrigger", 1); }
-        });
-        VRInput.ButtonEvent(VRInput.secondaryController, CommonUsages.primaryButton, onRelease: () =>
-        {
-            numberOfAction++;
-            if (inputsDone.TryGetValue("secondaryCprimaryButton", out int number)) { number++; }
-            else { inputsDone.Add("secondaryCprimaryButton", 1); }
-        });
-        VRInput.ButtonEvent(VRInput.secondaryController, CommonUsages.primary2DAxisClick, onRelease: () =>
-        {
-            numberOfAction++;
-            if (inputsDone.TryGetValue("secondaryCjoystick", out int number)) { number++; }
-            else { inputsDone.Add("secondaryCjoystick", 1); }
-        });
-        VRInput.ButtonEvent(VRInput.secondaryController, CommonUsages.secondaryButton, onRelease: () =>
-        {
-            numberOfAction++;
-            if (inputsDone.TryGetValue("secondaryCsecondaryButton", out int number)) { number++; }
-            else { inputsDone.Add("secondaryCsecondaryButton", 1); }
-        });
+                else if (inputsDone.TryGetValue("secondaryCGrip", out int number)) { number++; }
+                else { inputsDone.Add("secondaryCGrip", 1); }
+                issecondaryGripped = false;
+            });
+            VRInput.ButtonEvent(VRInput.secondaryController, CommonUsages.trigger, onRelease: () =>
+            {
+                numberOfAction++;
+                if (inputsDone.TryGetValue("secondaryCtrigger", out int number)) { number++; }
+                else { inputsDone.Add("secondaryCtrigger", 1); }
+            });
+            VRInput.ButtonEvent(VRInput.secondaryController, CommonUsages.primaryButton, onRelease: () =>
+            {
+                numberOfAction++;
+                if (inputsDone.TryGetValue("secondaryCprimaryButton", out int number)) { number++; }
+                else { inputsDone.Add("secondaryCprimaryButton", 1); }
+            });
+            VRInput.ButtonEvent(VRInput.secondaryController, CommonUsages.primary2DAxisClick, onRelease: () =>
+            {
+                numberOfAction++;
+                if (inputsDone.TryGetValue("secondaryCjoystick", out int number)) { number++; }
+                else { inputsDone.Add("secondaryCjoystick", 1); }
+            });
+            VRInput.ButtonEvent(VRInput.secondaryController, CommonUsages.secondaryButton, onRelease: () =>
+            {
+                numberOfAction++;
+                if (inputsDone.TryGetValue("secondaryCsecondaryButton", out int number)) { number++; }
+                else { inputsDone.Add("secondaryCsecondaryButton", 1); }
+            });
+        }
+
     }
 
     private void Onpressed(InputDevice device)

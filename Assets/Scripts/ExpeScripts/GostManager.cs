@@ -56,6 +56,7 @@ public class GostManager : MonoBehaviour
         {
             timeSinceGost += Time.deltaTime;
         }
+        Debug.Log(0f / 40f);
     }
 
 
@@ -137,7 +138,11 @@ public class GostManager : MonoBehaviour
                     BottleAnimationClip.SampleAnimation(bottleInit, i / 60);
                     foreach (var joleenController in gostJoleenHumanGoalControllers)
                     {
-                        if (gostAndOrigin.TryGetValue(joleenController.gameObject, out GameObject origin) && joleenController.Animation != null)
+                        int start, end;
+                        KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
+                        start = startend.Key;
+                        end = startend.Value;
+                        if (gostAndOrigin.TryGetValue(joleenController.gameObject, out GameObject origin) && joleenController.Animation != null && i>=start && i<=end)
                         {
                             Vector3 vecByHips = joleen.transform.InverseTransformPoint(origin.transform.position);
                             Vector3 diff = vecByHips - joleenController.LocalFramePosition(i);
@@ -156,11 +161,17 @@ public class GostManager : MonoBehaviour
                         }
 
                     }
+                    if(counterJoleen !=0)
                     AllFrameSumJoleen += joleenDiffSum / counterJoleen;
                     // dye
                     foreach (var abeController in gostAbebeHumanGoalControllers)
                     {
-                        if (gostAndOrigin.TryGetValue(abeController.gameObject, out GameObject origin) && abeController.Animation != null)
+                        int start, end;
+                        KeyValuePair<int, int> startend = GetStartAndEndFrame(abeController);
+                        start = startend.Key;
+                        end = startend.Value;
+                        Debug.Log("Abe controller anim = " + abeController.Animation + " i is " + i + "start is " + start + " end is " + end);
+                        if (gostAndOrigin.TryGetValue(abeController.gameObject, out GameObject origin) && abeController.Animation != null && i >= start && i <= end)
                         {
                             Vector3 vecByHips = abe.transform.InverseTransformPoint(origin.transform.position);
                             Vector3 diff = vecByHips - abeController.LocalFramePosition(i);
@@ -177,10 +188,18 @@ public class GostManager : MonoBehaviour
                         }
 
                     }
+                    if(counterAbe!=0)
                     AllFrameSumAbe += abeDiffSum / counterAbe;
                     //bouteille
-                    Vector3 diffBottle = joleen.transform.InverseTransformPoint(bottleInit.transform.position) - gostJoleen.transform.InverseTransformPoint(bottle.transform.localPosition);
-                    AllFrameSumBottle += 1 - Mathf.Clamp01(diffBottle.magnitude / delta);
+                    int startBottle, endBottle;
+                    KeyValuePair<int, int> startendBottle = GetStartAndEndFrame(bottle);
+                    startBottle = startendBottle.Key;
+                    endBottle = startendBottle.Value;
+                    if (i<= endBottle && i >= startBottle)
+                    {
+                        Vector3 diffBottle = joleen.transform.InverseTransformPoint(bottleInit.transform.position) - gostJoleen.transform.InverseTransformPoint(bottle.transform.localPosition);
+                        AllFrameSumBottle += 1 - Mathf.Clamp01(diffBottle.magnitude / delta);
+                    }
                 }
                 #endregion
                 #region VR
@@ -189,7 +208,11 @@ public class GostManager : MonoBehaviour
                     foreach (var joleenController in gostJoleenHumanGoalControllers)
                     {
                         Vector3 diff = Vector3.zero;
-                        if(joleenController.Animation != null)
+                        int start, end;
+                        KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
+                        start = startend.Key;
+                        end = startend.Value;
+                        if (joleenController.Animation != null && i >= start && i <= end)
                         {
                              diff = joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i)- joleenController.LocalFramePosition(i);
                             joleenDiffSum += 1 - Mathf.Clamp01(diff.magnitude / delta);
@@ -204,12 +227,17 @@ public class GostManager : MonoBehaviour
                             }
                         }
                     }
+                    if(counterJoleen!=0)
                     AllFrameSumJoleen += joleenDiffSum / counterJoleen;
                     // dye
                     foreach (var abeController in gostAbebeHumanGoalControllers)
                     {
                         Vector3 diff = Vector3.zero;
-                        if (abeController.Animation != null)
+                        int start, end;
+                        KeyValuePair<int, int> startend = GetStartAndEndFrame(abeController);
+                        start = startend.Key;
+                        end = startend.Value;
+                        if (abeController.Animation != null && i >= start && i <= end)
                         {
                              diff = abeHumanGoalControllers[counterAbe].LocalFramePosition(i) - abeController.LocalFramePosition(i);
                             abeDiffSum += 1 - Mathf.Clamp01(diff.magnitude / delta);
@@ -225,11 +253,16 @@ public class GostManager : MonoBehaviour
                         }
 
                     }
+                    if(counterAbe!=0)
                     AllFrameSumAbe += abeDiffSum / counterAbe;
                     //bouteille
                     AnimationSet set = GlobalState.Animation.GetObjectAnimation(bottleInit);
                     Vector3 diffBottle = Vector3.zero;
-                    if (set != null)
+                    int startBottle, endBottle;
+                    KeyValuePair<int, int> startendBottle = GetStartAndEndFrame(bottle);
+                    startBottle = startendBottle.Key;
+                    endBottle = startendBottle.Value;
+                    if (set != null && i <= endBottle && i >= startBottle)
                     {
                         Matrix4x4 matrixInit = set.GetTranformMatrix(i);
                         Matrix4x4 matrixGost = GlobalState.Animation.GetObjectAnimation(bottle).GetTranformMatrix(i);
@@ -242,11 +275,12 @@ public class GostManager : MonoBehaviour
                         Maths.DecomposeMatrix(matrixInit, out initPos, out initQuaternion, out initScale);
                         Maths.DecomposeMatrix(matrixGost, out gostPos, out gostQuaternion, out gostScale);
                         diffBottle = (initPos - joleenHumanGoalControllers[0].LocalFramePosition(i)) - (gostPos - gostJoleenHumanGoalControllers[0].LocalFramePosition(i));
+                        AllFrameSumBottle += 1 - Mathf.Clamp01(diffBottle.magnitude / delta);
                     }
 
 
 
-                    AllFrameSumBottle += 1 - Mathf.Clamp01(diffBottle.magnitude / delta);
+                   
                 }
                 #endregion
             }
@@ -321,6 +355,68 @@ public class GostManager : MonoBehaviour
         writer.Close();
     }
 
+
+    private KeyValuePair<int,int> GetStartAndEndFrame(HumanGoalController controller)
+    {
+        int start, end;
+        AnimationSet set;
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+        {
+            set = GlobalStateTradi.Animation.GetObjectAnimation(controller.gameObject);
+        }
+        else
+        {
+            set = GlobalState.Animation.GetObjectAnimation(controller.gameObject);
+        }
+        if (set != null)
+        {
+            Curve curve = set.GetCurve(AnimatableProperty.PositionX);
+            start = set.StartFrame;
+            end = curve.keys[curve.keys.Count - 1].frame;
+        }
+        else
+        {
+            set = controller.Animation;
+            if(set == null)
+            {
+                start = 0;
+                end = 1;
+            }
+            else
+            {
+                start = controller.Animation.StartFrame;
+                Curve curve = set.GetCurve(AnimatableProperty.PositionX);
+                end = curve.keys[curve.keys.Count - 1].frame;
+            }
+        }
+        return new KeyValuePair<int, int>(start, end);
+    }
+
+    private KeyValuePair<int, int> GetStartAndEndFrame(GameObject controller)
+    {
+        int start, end;
+        AnimationSet set;
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+        {
+            set = GlobalStateTradi.Animation.GetObjectAnimation(controller);
+        }
+        else
+        {
+            set = GlobalState.Animation.GetObjectAnimation(controller);
+        }
+        if (set != null)
+        {
+            Curve curve = set.GetCurve(AnimatableProperty.PositionX);
+            start = set.StartFrame;
+            end = curve.keys[curve.keys.Count - 1].frame;
+        }
+        else
+        {
+            start = 0;
+            end = 1;
+        }
+        return new KeyValuePair<int, int>(start, end);
+    }
     private string ListToString(List<float> list)
     {
         string ret = "";
@@ -339,18 +435,18 @@ public class GostManager : MonoBehaviour
             if (joleen != null)
             {
                 gostJoleen = Instantiate(joleen, joleen.transform.parent);
-                /* var temp = gostJoleen.GetComponentsInChildren<Renderer>();
+                 var temp = gostJoleen.GetComponentsInChildren<Renderer>();
                  Texture texture = joleen.GetComponentInChildren<Renderer>().material.GetTexture("_ColorMap");
                  foreach (var item in temp)
                  {
                      item.material = gostMaterial;
                      item.material.SetTexture("_ColorMap", texture);
-                 }*/
+                 }
                 if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                     GlobalState.Animation.CopyAnimation(joleen, gostJoleen);
                 else
                     GlobalStateTradi.Animation.CopyAnimation(joleen, gostJoleen);
-                gostJoleen.transform.position += Vector3.forward;
+                gostJoleen.transform.position += Vector3.forward*2;
                 checkAnimationsOfGosts(gostJoleen);
                 AnimationManager manager = gameObject.GetComponent<AnimationManager>();
                 manager.ClearAnimationFormOrigin(joleen);
@@ -377,7 +473,7 @@ public class GostManager : MonoBehaviour
                     GlobalState.Animation.CopyAnimation(abe, gostAbe);
                 else
                     GlobalStateTradi.Animation.CopyAnimation(abe, gostAbe);
-                gostAbe.transform.position += Vector3.forward;
+                gostAbe.transform.position += Vector3.forward*2;
                 checkAnimationsOfGosts(gostAbe);
                 gameObject.GetComponent<AnimationManager>().ClearAnimationFormOrigin(abe);
                 Destroy(gostAbe.GetComponent<Animator>());
@@ -413,7 +509,7 @@ public class GostManager : MonoBehaviour
                     GlobalStateTradi.Animation.ClearAnimations(bottleInit);
                 }
                 gostBottleAnim.enabled = false;
-                bottle.transform.position += Vector3.forward;
+                bottle.transform.position += Vector3.forward*2;
                 MoveAnimation(bottle);
                 checkAnimationsOfGosts(bottle);
                 Destroy(bottle.GetComponent<Animator>());
@@ -461,7 +557,7 @@ public class GostManager : MonoBehaviour
         }
         //go.transform.position = bottleInit.transform.position;
 
-        go.transform.position = Vector3.forward;
+        go.transform.position = Vector3.forward*2;
    
 
     }

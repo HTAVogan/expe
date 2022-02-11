@@ -59,6 +59,7 @@ namespace VRtist
         private readonly Dictionary<string, AvatarController> connectedAvatars = new Dictionary<string, AvatarController>();
         private GameObject avatarPrefab;
         private Transform avatarsContainer;
+        private static GostManager gostManager;
 
         // Selection gripped
         public bool selectionGripped = false;
@@ -165,15 +166,19 @@ namespace VRtist
             Vector3 previous = gobject.transform.position;
             Quaternion quaternion = gobject.transform.rotation;
             ObjectMovingEvent.Invoke(gobject);
-            Vector3 diff = gobject.transform.position - previous;
-            if (translations.TryGetValue(gobject, out List<Vector3> list))
+            if (gostManager.areGostGenerated)
             {
-                list.Add(diff);
+                Vector3 diff = gobject.transform.position - previous;
+                if (translations.TryGetValue(gobject, out List<Vector3> list))
+                {
+                    list.Add(diff);
+                }
+                else
+                {
+                    translations.Add(gobject, new List<Vector3> { diff });
+                }
             }
-            else
-            {
-                translations.Add(gobject, new List<Vector3> { diff });
-            }
+           
 
         }
 
@@ -222,6 +227,7 @@ namespace VRtist
             colorClickedEvent = colorPicker.onClickEvent;
 
             geometryImporter = GetComponent<GeometryImporter>();
+            gostManager = GameObject.Find("GostManager").GetComponent<GostManager>();
         }
 
         private void OnDestroy()

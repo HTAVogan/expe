@@ -11,9 +11,14 @@ public class LauncherManager : MonoBehaviour
     public List<int> scenes = new List<int>() { 1, 2, 3 };
     void Awake()
     {
-        first = Random.Range(1, 3);
+        first = Random.Range(1, 4);
         scenes.Remove(first);
         second = Random.Range(scenes[0], scenes[1]);
+    }
+
+    private void Update()
+    {
+        Debug.Log(Random.Range(1, 4));
     }
 
 }

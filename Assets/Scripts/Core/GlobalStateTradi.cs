@@ -40,7 +40,7 @@ namespace VRtist
         public static Dictionary<GameObject, List<Vector3>> translations;
         private static Dictionary<GameObject, List<Quaternion>> rotations;
         public static AnimationEngineTradi Animation { get { return AnimationEngineTradi.Instance; } }
-
+        private GostManager gostManager;
 
         // FPS
         public static int Fps { get; private set; }
@@ -83,10 +83,11 @@ namespace VRtist
         {
             instance = Instance;
             geometryImporter = GetComponent<GeometryImporter>();
+            gostManager = GameObject.Find("AnimationManager").GetComponent<GostManager>();
         }
 
         private void Update()
-        {if(UnityEditor.Selection.activeGameObject != null)
+        {if(UnityEditor.Selection.activeGameObject != null && gostManager.areGostGenerated)
             {
                 if (UnityEditor.Selection.activeGameObject != null && UnityEditor.Selection.activeGameObject != previousGameObject)
                 {

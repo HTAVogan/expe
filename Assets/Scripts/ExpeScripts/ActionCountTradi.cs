@@ -8,6 +8,8 @@ public class ActionCountTradi : MonoBehaviour
     public int actionsCount;
     public Dictionary<ActionsDone, int> actions = new Dictionary<ActionsDone, int>();
 
+    GostManager manager;
+
     public enum ActionsDone
     {
         LeftClick,
@@ -18,16 +20,20 @@ public class ActionCountTradi : MonoBehaviour
     void Start()
     {
         actionsCount = 0;
+        manager = GameObject.Find("AnimationManager").GetComponent<GostManager>();
     }
 
 
     public void OnClickedEvent(ActionsDone action)
     {
-        actionsCount++;
-        actions.TryGetValue(action, out int currentValue);
-        currentValue++;
-        actions.Remove(action);
-        actions.Add(action, currentValue);
+        if (manager.areGostGenerated)
+        {
+            actionsCount++;
+            actions.TryGetValue(action, out int currentValue);
+            currentValue++;
+            actions.Remove(action);
+            actions.Add(action, currentValue);
+        }
     }
 
     public void LeftClicked(CallbackContext context)
@@ -39,16 +45,16 @@ public class ActionCountTradi : MonoBehaviour
     }
     public void RightClicked(CallbackContext context)
     {
-        if(context.performed)
-        OnClickedEvent(ActionsDone.RightClick);
-    
+        if (context.performed)
+            OnClickedEvent(ActionsDone.RightClick);
+
     }
 
     public void ScrollClicked(CallbackContext context)
     {
         if (context.performed)
             OnClickedEvent(ActionsDone.ScrollClick);
-     
+
     }
 
 }
