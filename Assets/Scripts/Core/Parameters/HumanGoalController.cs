@@ -95,14 +95,17 @@ namespace VRtist
 
             Matrix4x4 trsMatrix = Matrix4x4.identity;
 
-            if (PathToRoot.Count > 1)
-            {
+            if (gameObject != PathToRoot[0].gameObject){
                 for (int i = 0; i < PathToRoot.Count; i++)
                 {
-                    if(AnimToRoot[i] != null)
-                    trsMatrix = trsMatrix * AnimToRoot[i].GetTranformMatrix(frame);
+                    if (AnimToRoot[i] != null)
+                        trsMatrix = trsMatrix * AnimToRoot[i].GetTranformMatrix(frame);
+                    else
+                        trsMatrix = trsMatrix * Matrix4x4.TRS(PathToRoot[i].transform.localPosition, PathToRoot[i].transform.localRotation, PathToRoot[i].transform.localScale);
                 }
             }
+               
+         
             trsMatrix = trsMatrix * Animation.GetTranformMatrix(frame);
 
             Maths.DecomposeMatrix(trsMatrix, out Vector3 parentPosition, out Quaternion quaternion, out Vector3 scale);

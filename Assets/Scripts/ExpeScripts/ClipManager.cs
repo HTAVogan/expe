@@ -48,7 +48,7 @@ public class ClipManager : MonoBehaviour
                 //{
                 //    if (item.gameObject.name.Contains("Hips"))
                 //    {
-                //        InitFirstKeyFrameRecursif(Throw, item.gameObject);
+                //        InitFirstKeyFrame(Throw, item.gameObject);
                 //    }
                 //}
                 animJoleen.enabled = true;
@@ -63,6 +63,7 @@ public class ClipManager : MonoBehaviour
                 animAbe.runtimeAnimatorController = controllerAbe;
                 Dye.ClearCurves();
                 BindPropertiesToClip(abe, Dye, abe);
+                InitFirstKeyFrame(Dye, abe);
                 //foreach (Transform item in abe.transform)
                 //{
                 //    if (item.gameObject.name.Contains("Hips"))

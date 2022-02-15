@@ -18,6 +18,8 @@ public class GostManager : MonoBehaviour
     [Range(1f, 100f)]
     public float delta;
 
+
+    public AnimationClip perfectThrow;
     public AnimationClip clipBottle;
     public RuntimeAnimatorController controllerGostBottle;
     public Dictionary<string, float> percents;
@@ -37,8 +39,7 @@ public class GostManager : MonoBehaviour
         percents.Add("Joleen", 0);
         percents.Add("Abe", 0);
         percents.Add("Botlle", 0);
-        abePerBones = new Dictionary<string, List<float>>();
-        joleenPerBones = new Dictionary<string, List<float>>();
+   
     }
     private void Update()
     {
@@ -65,6 +66,15 @@ public class GostManager : MonoBehaviour
         GetPercent();
     }
 
+    [ContextMenu("Put throw perfect")]
+    public void MoveClip()
+    {
+        if(perfectThrow != null)
+        {
+
+        }
+    }
+
     /// <summary>
     /// Get the animation percent of similitaries between gost and user animations
     /// </summary>
@@ -77,6 +87,8 @@ public class GostManager : MonoBehaviour
         Animator abeAnimator;
         Animator initBottleAnimator;
         AnimationClip Throw, Dye, BottleAnimationClip;
+        abePerBones = new Dictionary<string, List<float>>();
+        joleenPerBones = new Dictionary<string, List<float>>();
         if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
         {
             joleenAnimator = joleen.GetComponent<Animator>();
@@ -112,6 +124,7 @@ public class GostManager : MonoBehaviour
             var gostAbebeHumanGoalControllers = gostAbe.GetComponentsInChildren<HumanGoalController>();
             var joleenHumanGoalControllers = joleen.GetComponentsInChildren<HumanGoalController>();
             var abeHumanGoalControllers = abe.GetComponentsInChildren<HumanGoalController>();
+            joleenPerBones.Add("Sum", new List<float>());
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
             {
                 startFrame = GlobalState.Animation.StartFrame;
@@ -133,9 +146,9 @@ public class GostManager : MonoBehaviour
                 #region tradi
                 if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                 {
-                    Throw.SampleAnimation(joleen, i / 60);
-                    Dye.SampleAnimation(abe, i / 60);
-                    BottleAnimationClip.SampleAnimation(bottleInit, i / 60);
+                    Throw.SampleAnimation(joleen, i / 60f);
+                    Dye.SampleAnimation(abe, i / 60f);
+                    BottleAnimationClip.SampleAnimation(bottleInit, i / 60f);
                     foreach (var joleenController in gostJoleenHumanGoalControllers)
                     {
                         int start, end;
@@ -144,25 +157,29 @@ public class GostManager : MonoBehaviour
                         end = startend.Value;
                         if (gostAndOrigin.TryGetValue(joleenController.gameObject, out GameObject origin) && joleenController.Animation != null && i>=start && i<=end)
                         {
+                            //Debug.Log("Abe controller  = " + joleenController + " i is " + i + "start is " + start + " end is " + end);
+                            //Vector3 vecByHips = origin.transform.position;
                             Vector3 vecByHips = joleen.transform.InverseTransformPoint(origin.transform.position);
                             Vector3 diff = vecByHips - joleenController.LocalFramePosition(i);
-                            if (i < 5)
-                                Debug.Log("Bone : " + joleenController.name + "Origine pos : " + vecByHips + " clone local pos : " + joleenController.LocalFramePosition(i));
+                            Debug.Log(joleenController + ": "  + "vec by hips : " + vecByHips + "diff is :" + diff);
                             joleenDiffSum += 1 - Mathf.Clamp01(diff.magnitude / delta);
                             counterJoleen++;
                             if (joleenPerBones.TryGetValue(joleenController.name, out List<float> value))
                             {
-                                value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
+                                //value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
+                                value.Add(diff.magnitude );
                             }
                             else
                             {
-                                joleenPerBones.Add(joleenController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
+                                // joleenPerBones.Add(joleenController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
+                                joleenPerBones.Add(joleenController.name, new List<float> { diff.magnitude });
                             }
                         }
 
                     }
                     if(counterJoleen !=0)
                     AllFrameSumJoleen += joleenDiffSum / counterJoleen;
+                    joleenPerBones["Sum"].Add(joleenDiffSum / counterJoleen);
                     // dye
                     foreach (var abeController in gostAbebeHumanGoalControllers)
                     {
@@ -170,9 +187,10 @@ public class GostManager : MonoBehaviour
                         KeyValuePair<int, int> startend = GetStartAndEndFrame(abeController);
                         start = startend.Key;
                         end = startend.Value;
-                        Debug.Log("Abe controller anim = " + abeController.Animation + " i is " + i + "start is " + start + " end is " + end);
+                      
                         if (gostAndOrigin.TryGetValue(abeController.gameObject, out GameObject origin) && abeController.Animation != null && i >= start && i <= end)
                         {
+                            
                             Vector3 vecByHips = abe.transform.InverseTransformPoint(origin.transform.position);
                             Vector3 diff = vecByHips - abeController.LocalFramePosition(i);
                             abeDiffSum += 1 - Mathf.Clamp01(diff.magnitude / delta);
@@ -223,7 +241,8 @@ public class GostManager : MonoBehaviour
                             }
                             else
                             {
-                                joleenPerBones.Add(joleenController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
+                               joleenPerBones.Add(joleenController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
+                               
                             }
                         }
                     }

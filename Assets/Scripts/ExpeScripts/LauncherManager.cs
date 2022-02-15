@@ -16,9 +16,9 @@ public class LauncherManager : MonoBehaviour
         second = Random.Range(scenes[0], scenes[1]);
     }
 
-    private void Update()
-    {
-        Debug.Log(Random.Range(1, 4));
-    }
+    //private void Update()
+    //{
+    //    Debug.Log(Random.Range(1, 4));
+    //}
 
 }
