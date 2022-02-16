@@ -244,7 +244,7 @@ namespace VRtist
             //wm
             double targetW = 100d;
             //wb
-            double continuityW = 1d;
+            double continuityW = tanContinuity;
             //wd
             double stiffnessW = 1d;
 
@@ -375,6 +375,7 @@ namespace VRtist
 
             if (theta[ac + 3] <= 0) continuity = Max == 0 ? 0 : Mathf.Clamp((float)-lowerBound[ac + 1] / (float)Max, 0.001f, 1);
             else continuity = Min == 0 ? 0 : Mathf.Clamp((float)-upperBound[ac + 1] / (float)Min, 0.001f, 1);
+
 
             for (int j = 0; j < 4; j++)
             {

@@ -24,7 +24,7 @@ namespace VRtist
             if (null == animationSet) return;
             Curve curve = animationSet.GetCurve(property);
 
-            curve.GetTangentKeys(frame, startFrame, endFrame, ref oldKeys);
+            curve.GetTangentKeys(startFrame, endFrame, ref oldKeys);
             //if (property == AnimatableProperty.PositionX)
             //{
             //    string deb = "new keys : ";

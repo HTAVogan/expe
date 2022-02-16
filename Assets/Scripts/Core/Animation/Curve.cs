@@ -563,15 +563,11 @@ namespace VRtist
             toRemove.ForEach(x => RemoveKey(x.frame));
         }
 
-        public void GetTangentKeys(int frame, int startFrame, int endFrame, ref List<AnimationKey> oldKeys)
+        public void GetTangentKeys(int startFrame, int endFrame, ref List<AnimationKey> oldKeys)
         {
-            //int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, frame - zoneSize);
-            //int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, frame + zoneSize);
-            int prevIndex = Mathf.Max(0, cachedKeysIndices[startFrame]);
-            int nextIndex = Mathf.Min(cachedKeysIndices[endFrame] + 1, keys.Count - 1);
             oldKeys = keys.FindAll(x => x.frame >= startFrame && x.frame <= endFrame);
-            oldKeys.Add(keys[prevIndex]);
-            oldKeys.Add(keys[nextIndex]);
+            //oldKeys.Add(keys[prevIndex]);
+            //oldKeys.Add(keys[nextIndex]);
         }
 
         //public void GetTangentKeys(int frame, int start, int end, ref List<AnimationKey> oldKeys)
