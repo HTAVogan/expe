@@ -13,7 +13,7 @@ namespace VRtist
         readonly List<AnimationKey> newKeys;
         private bool lockTangents = true;
 
-        public CommandAddKeyframeTangent(GameObject obj, AnimatableProperty property, int frame, int zoneSize, List<AnimationKey> keysChanged)
+        public CommandAddKeyframeTangent(GameObject obj, AnimatableProperty property, int frame, int startFrame, int endFrame, List<AnimationKey> keysChanged)
         {
             gObject = obj;
             this.property = property;
@@ -24,7 +24,7 @@ namespace VRtist
             if (null == animationSet) return;
             Curve curve = animationSet.GetCurve(property);
 
-            curve.GetTangentKeys(frame, zoneSize, ref oldKeys);
+            curve.GetTangentKeys(frame, startFrame, endFrame, ref oldKeys);
             //if (property == AnimatableProperty.PositionX)
             //{
             //    string deb = "new keys : ";
@@ -35,18 +35,18 @@ namespace VRtist
             //}
         }
 
-        public CommandAddKeyframeTangent(GameObject obj, AnimatableProperty property, int frame, int start, int end, List<AnimationKey> keysChanged)
-        {
-            gObject = obj;
-            this.property = property;
-            oldKeys = new List<AnimationKey>();
-            newKeys = keysChanged;
-            AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(gObject);
-            if (null == animationSet) return;
-            Curve curve = animationSet.GetCurve(property);
-            lockTangents = true;
-            curve.GetTangentKeys(frame, start, end, ref oldKeys);
-        }
+        //public CommandAddKeyframeTangent(GameObject obj, AnimatableProperty property, int frame, int start, int end, List<AnimationKey> keysChanged)
+        //{
+        //    gObject = obj;
+        //    this.property = property;
+        //    oldKeys = new List<AnimationKey>();
+        //    newKeys = keysChanged;
+        //    AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(gObject);
+        //    if (null == animationSet) return;
+        //    Curve curve = animationSet.GetCurve(property);
+        //    lockTangents = true;
+        //    curve.GetTangentKeys(frame, start, end, ref oldKeys);
+        //}
 
         public override void Redo()
         {

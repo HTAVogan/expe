@@ -58,7 +58,6 @@ namespace VRtist
 
         public PoseManipulation(Transform objectTransform, List<Transform> objectHierarchy, Transform mouthpiece, AnimationTool.PoseEditMode mode)
         {
-            Debug.Log(objectTransform.name + " " + objectTransform.rotation);
             poseMode = mode;
             oTransform = objectTransform;
             fullHierarchy = new List<Transform>(objectHierarchy);

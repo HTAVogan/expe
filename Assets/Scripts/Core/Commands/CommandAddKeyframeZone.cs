@@ -10,7 +10,7 @@ namespace VRtist
         readonly List<AnimationKey> oldKeys;
         readonly List<AnimationKey> newKeys;
 
-        public CommandAddKeyframeZone(GameObject obj, AnimatableProperty property, int frame, float value, int zoneSize, Interpolation interpolation)
+        public CommandAddKeyframeZone(GameObject obj, AnimatableProperty property, int frame, float value, int startFrame, int endFrame, Interpolation interpolation)
         {
             gObject = obj;
             this.property = property;
@@ -23,12 +23,12 @@ namespace VRtist
             if (null == curve) return;
 
             AnimationKey newKey = new AnimationKey(frame, value, interpolation);
-            curve.GetZoneKeyChanges(newKey, zoneSize, oldKeys, newKeys);
+            curve.GetZoneKeyChanges(newKey, startFrame, endFrame, oldKeys, newKeys);
         }
 
         public override void Redo()
         {
-            newKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation, x.inTangent, x.outTangent),false));
+            newKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation, x.inTangent, x.outTangent), false));
         }
 
         public override void Submit()
@@ -40,7 +40,7 @@ namespace VRtist
         public override void Undo()
         {
             newKeys.ForEach(x => SceneManager.RemoveKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation, x.inTangent, x.outTangent), false));
-            oldKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation, x.inTangent, x.outTangent),false));
+            oldKeys.ForEach(x => SceneManager.AddObjectKeyframe(gObject, property, new AnimationKey(x.frame, x.value, x.interpolation, x.inTangent, x.outTangent), false));
         }
     }
 }
