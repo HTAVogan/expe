@@ -61,7 +61,10 @@ namespace VRtist
             poseMode = mode;
             oTransform = objectTransform;
             fullHierarchy = new List<Transform>(objectHierarchy);
-            fullHierarchy.Add(objectTransform);
+            if (!fullHierarchy.Contains(objectTransform))
+            {
+                fullHierarchy.Add(objectTransform);
+            }
             hierarchySize = fullHierarchy.Count;
             InitialTRS = Matrix4x4.TRS(oTransform.localPosition, oTransform.localRotation, oTransform.localScale);
 
@@ -128,24 +131,6 @@ namespace VRtist
                     endScales.Add(x.localScale);
                 });
             }
-
-
-
-            //debugCurrent = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            //debugCurrent.transform.localScale = Vector3.one * 0.05f;
-            //debugCurrent.GetComponent<MeshRenderer>().material.color = Color.red;
-
-            //debugTarget = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            //debugTarget.transform.localScale = Vector3.one * 0.05f;
-
-            //debugCurrent.transform.position = oTransform.position;
-            //debugCurrent.transform.rotation = oTransform.rotation;
-            //Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initialMouthMatrix;
-            //Matrix4x4 target = transformation * initialTransformMatrix;
-            //Maths.DecomposeMatrix(target, out Vector3 position, out Quaternion rotation, out Vector3 scale);
-            //debugTarget.transform.position = position;
-            //debugTarget.transform.rotation = rotation * Quaternion.Euler(180, 0, 0);
-
         }
 
         public void SetDestination(Transform mouthpiece)
@@ -180,7 +165,7 @@ namespace VRtist
                     fullHierarchy[hierarchySize - 2].localRotation = initialRotation * Quaternion.FromToRotation(fromRotation, to);
                     endRotations[1] = fullHierarchy[hierarchySize - 2].localRotation;
                 }
-                else
+                else if (hierarchySize < 2)
                 {
                     oTransform.localPosition = targetPosition;
                     endPositions[0] = targetPosition;
