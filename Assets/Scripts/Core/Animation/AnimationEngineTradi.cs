@@ -420,7 +420,7 @@ namespace VRtist
                     key.value = previousKey.value + delta;
                 }
             }
-            curve.AddZoneKey(key, zoneSize);
+            curve.AddZoneKey(key,currentFrame-zoneSize,currentFrame+zoneSize);
             if (updateCurves) onChangeCurve.Invoke(gobject, property);
         }
 
