@@ -110,6 +110,11 @@ namespace VRtist
                 InitialTRS = Matrix4x4.TRS(initialPosition, initialRotation, initialScale),
                 ScaleIndice = 1f
             };
+            if (manipulationMode == AnimationTool.CurveEditMode.Zone)
+            {
+                startFrame = frame - zoneSize;
+                endFrame = frame + zoneSize;
+            }
             if (manipulationMode == AnimationTool.CurveEditMode.Segment)
             {
                 startFrame = frame - zoneSize;
@@ -217,7 +222,6 @@ namespace VRtist
             Vector3 rotation = qrotation.eulerAngles;
             scale *= scaleIndice;
             GlobalState.Animation.SetObjectAnimations(Target, objectData.Animation);
-            Debug.Log(startFrame + " / " + endFrame);
             CommandGroup group = new CommandGroup("Add Keyframe");
             switch (manipulationMode)
             {
