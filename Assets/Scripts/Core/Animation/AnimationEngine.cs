@@ -501,7 +501,7 @@ namespace VRtist
             if (updateCurves) onChangeCurve.Invoke(gobject, property);
         }
 
-        public void AddFilteredKeyframeZone(GameObject gobject, AnimatableProperty property, AnimationKey key, int zoneSize, bool updateCurves = true)
+        public void AddFilteredKeyframeZone(GameObject gobject, AnimatableProperty property, AnimationKey key, int startFrame, int endFrame, bool updateCurves = true)
         {
             AnimationSet animationSet = GetObjectAnimation(gobject);
             Curve curve = animationSet.GetCurve(property);
@@ -516,7 +516,7 @@ namespace VRtist
                     key.value = previousKey.value + delta;
                 }
             }
-            curve.AddZoneKey(key, zoneSize);
+            curve.AddZoneKey(key, startFrame, endFrame);
             if (updateCurves) onChangeCurve.Invoke(gobject, property);
         }
 

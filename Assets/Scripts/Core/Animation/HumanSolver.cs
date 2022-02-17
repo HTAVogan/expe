@@ -15,7 +15,6 @@ namespace VRtist
         private List<AnimationSet> animationList;
         private List<HumanGoalController> controllers;
         private AnimationSet objectAnimation;
-        private int size;
         private int animationCount;
         private IEnumerator coroutine;
 
@@ -79,7 +78,7 @@ namespace VRtist
             delta_theta,
             theta;
 
-        public HumanSolver(Vector3 targetPosition, Quaternion targetRotation, AnimationSet objectAnim, List<AnimationSet> animation, int frame, int zoneSize, double continuity)
+        public HumanSolver(Vector3 targetPosition, Quaternion targetRotation, AnimationSet objectAnim, List<AnimationSet> animation, int frame, int startFrame, int endFrame, double continuity)
         {
             positionTarget = targetPosition;
             rotationTarget = targetRotation;
@@ -91,7 +90,8 @@ namespace VRtist
             animationCount = animationList.Count;
             tanContinuity = continuity;
             currentFrame = frame;
-            size = zoneSize;
+            firstFrame = startFrame;
+            lastFrame = endFrame;
         }
 
         private void GetCurves(AnimationSet objectAnim, List<AnimationSet> animation)
@@ -139,10 +139,10 @@ namespace VRtist
         public bool Setup()
         {
             Curve rotXCurve = objectAnimation.GetCurve(AnimatableProperty.RotationX);
-            rotXCurve.GetKeyIndex(currentFrame - size, out int firstIndex);
-            firstFrame = rotXCurve.keys[firstIndex].frame;
-            rotXCurve.GetKeyIndex(currentFrame + size, out int lastIndex);
-            lastFrame = rotXCurve.keys[lastIndex].frame;
+            rotXCurve.GetKeyIndex(firstFrame, out int firstIndex);
+            //firstFrame = rotXCurve.keys[firstIndex].frame;
+            rotXCurve.GetKeyIndex(lastFrame, out int lastIndex);
+            //lastFrame = rotXCurve.keys[lastIndex].frame;
 
             if (currentFrame < firstFrame) return false;
             if (currentFrame > lastFrame) return false;
@@ -244,7 +244,7 @@ namespace VRtist
             //wm
             double targetW = 100d;
             //wb
-            double continuityW = 1d;
+            double continuityW = tanContinuity;
             //wd
             double stiffnessW = 1d;
 
@@ -375,6 +375,7 @@ namespace VRtist
 
             if (theta[ac + 3] <= 0) continuity = Max == 0 ? 0 : Mathf.Clamp((float)-lowerBound[ac + 1] / (float)Max, 0.001f, 1);
             else continuity = Min == 0 ? 0 : Mathf.Clamp((float)-upperBound[ac + 1] / (float)Min, 0.001f, 1);
+
 
             for (int j = 0; j < 4; j++)
             {

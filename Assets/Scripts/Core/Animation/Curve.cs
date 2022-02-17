@@ -570,18 +570,10 @@ namespace VRtist
         //    }
         //}
 
-        public void AddZoneKey(AnimationKey key, int zoneSize)
+        public void AddZoneKey(AnimationKey key, int startFrame, int endFrame)
         {
-            int startFrame, endFrame;
-            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-            {
-                startFrame = Mathf.Max(GlobalState.Animation.StartFrame, key.frame - zoneSize);
-                endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
-            }
-            else
-            {
-                startFrame = Mathf.Max(GlobalStateTradi.Animation.StartFrame, key.frame - zoneSize);
-                endFrame = Mathf.Min(GlobalStateTradi.Animation.EndFrame, key.frame + zoneSize);
+            //int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, key.frame - zoneSize);
+            //int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
 
             }
             int firstKeyIndex, lastKeyIndex;
@@ -607,6 +599,7 @@ namespace VRtist
             }
 
             float deltaValue = key.value - value;
+            float zoneSize = endFrame - startFrame;
             for (int i = firstKeyIndex; i <= lastKeyIndex; i++)
             {
                 int deltaFrame = Mathf.Abs(key.frame - keys[i].frame);
@@ -625,21 +618,10 @@ namespace VRtist
             AddKey(key);
         }
 
-        public void GetZoneKeyChanges(AnimationKey key, int zoneSize, List<AnimationKey> oldKeys, List<AnimationKey> newKeys)
+        public void GetZoneKeyChanges(AnimationKey key, int startFrame, int endFrame, List<AnimationKey> oldKeys, List<AnimationKey> newKeys)
         {
-            int startFrame, endFrame;
-            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-            {
-                startFrame = Mathf.Max(GlobalState.Animation.StartFrame, key.frame - zoneSize);
-                endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
-            }
-            else
-            {
-                startFrame = Mathf.Max(GlobalStateTradi.Animation.StartFrame, key.frame - zoneSize);
-                endFrame = Mathf.Min(GlobalStateTradi.Animation.EndFrame, key.frame + zoneSize);
-
-            }
-
+            //int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, key.frame - zoneSize);
+            //int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
 
             int firstKeyIndex, lastKeyIndex;
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
@@ -665,6 +647,7 @@ namespace VRtist
             }
 
             float deltaValue = key.value - value;
+            float zoneSize = endFrame - startFrame;
             for (int i = firstKeyIndex; i <= lastKeyIndex; i++)
             {
                 int deltaFrame = Mathf.Abs(key.frame - keys[i].frame);
@@ -714,23 +697,19 @@ namespace VRtist
             toRemove.ForEach(x => RemoveKey(x.frame));
         }
 
-        public void GetTangentKeys(int frame, int zoneSize, ref List<AnimationKey> oldKeys)
+        public void GetTangentKeys(int startFrame, int endFrame, ref List<AnimationKey> oldKeys)
         {
-            int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, frame - zoneSize);
-            int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, frame + zoneSize);
-            int prevIndex = Mathf.Max(0, cachedKeysIndices[startFrame]);
-            int nextIndex = Mathf.Min(cachedKeysIndices[endFrame] + 1, keys.Count - 1);
             oldKeys = keys.FindAll(x => x.frame >= startFrame && x.frame <= endFrame);
-            oldKeys.Add(keys[prevIndex]);
-            oldKeys.Add(keys[nextIndex]);
+            //oldKeys.Add(keys[prevIndex]);
+            //oldKeys.Add(keys[nextIndex]);
         }
 
-        public void GetTangentKeys(int frame, int start, int end, ref List<AnimationKey> oldKeys)
-        {
-            if (GetKeyIndex(start, out int firstIndex)) oldKeys.Add(keys[firstIndex]);
-            if (GetKeyIndex(end, out int endIndex)) oldKeys.Add(keys[endIndex]);
+        //public void GetTangentKeys(int frame, int start, int end, ref List<AnimationKey> oldKeys)
+        //{
+        //    if (GetKeyIndex(start, out int firstIndex)) oldKeys.Add(keys[firstIndex]);
+        //    if (GetKeyIndex(end, out int endIndex)) oldKeys.Add(keys[endIndex]);
 
-        }
+        //}
 
         public void MoveKey(int oldFrame, int newFrame)
         {
