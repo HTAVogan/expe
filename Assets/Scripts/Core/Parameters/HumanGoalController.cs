@@ -85,7 +85,7 @@ namespace VRtist
 
         public Vector3 LocalFramePosition(int frame)
         {
-            frame = Mathf.Max(1, currentFrame - StartFrame);
+           
             if (null == Animation)
             {
                 if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
