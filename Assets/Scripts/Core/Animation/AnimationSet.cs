@@ -232,6 +232,7 @@ namespace VRtist
 
         public Matrix4x4 GetTranformMatrix(int frame)
         {
+            frame = Mathf.Max(1, frame - StartFrame);
             Vector3 position = Vector3.zero;
             Curve posx = GetCurve(AnimatableProperty.PositionX);
             Curve posy = GetCurve(AnimatableProperty.PositionY);

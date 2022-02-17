@@ -16,6 +16,7 @@ namespace VRtist
         public float stiffness;
         public bool IsGoal;
         public bool ShowCurve;
+        public float weight;
         public Vector3 LowerAngleBound;
         public Vector3 UpperAngleBound;
 
@@ -84,6 +85,7 @@ namespace VRtist
 
         public Vector3 LocalFramePosition(int frame)
         {
+            frame = Mathf.Max(1, currentFrame - StartFrame);
             if (null == Animation)
             {
                 if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
