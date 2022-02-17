@@ -575,7 +575,7 @@ namespace VRtist
             //int startFrame = Mathf.Max(GlobalState.Animation.StartFrame, key.frame - zoneSize);
             //int endFrame = Mathf.Min(GlobalState.Animation.EndFrame, key.frame + zoneSize);
 
-            }
+           
             int firstKeyIndex, lastKeyIndex;
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
             {
