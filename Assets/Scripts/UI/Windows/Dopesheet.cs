@@ -565,28 +565,30 @@ namespace VRtist
             return GlobalState.Animation.autoKeyEnabled;
         }
 
-        public void OnSetStartOffset()
+        private void UpdateKeyframesPosition(GameObject gObject)
         {
-            AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(currentObject);
-            if (null == animationSet) return;
-            if (animationSet.StartFrame == 0) animationOffset = GlobalState.Animation.CurrentFrame;
-            else animationOffset = 0;
-            if (currentObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+            if (gObject == currentObject)
             {
-                RecursiveStartOffset(currentObject.transform, animationOffset);
-            }
-
-            animationSet.StartFrame = animationOffset;
-            UpdateKeyframes();
-        }
-
-        public void RecursiveStartOffset(Transform obj, int value)
-        {
-            AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(obj.gameObject);
-            if (null != animationSet) animationSet.StartFrame = value;
-            foreach (Transform child in obj)
-            {
-                RecursiveStartOffset(child, value);
+                AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(currentObject);
+                if (null == animationSet) return;
+                keys.Clear();
+                if (!currentObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+                {
+                    foreach (AnimationKey key in animationSet.curves[0].keys)
+                    {
+                        if (!keys.TryGetValue(key.frame, out List<AnimKey> keyList))
+                        {
+                            keyList = new List<AnimKey>();
+                            keys[key.frame] = keyList;
+                        }
+                        keyList.Add(new AnimKey(key.value, key.interpolation));
+                    }
+                }
+                else
+                {
+                    controller.GetKeyList(keys);
+                }
+                UpdateKeyframes();
             }
         }
     }
