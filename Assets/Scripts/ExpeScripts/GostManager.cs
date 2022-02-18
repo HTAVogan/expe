@@ -17,7 +17,7 @@ public class GostManager : MonoBehaviour
     private GameObject bottleInit;
     [Range(1f, 100f)]
     public float delta;
-
+    public float bottleValue;
 
     public AnimationClip perfectThrow;
     public AnimationClip clipBottle;
@@ -325,20 +325,20 @@ public class GostManager : MonoBehaviour
                 valueJol = percentJoleen;
                 ret += valueJol;
             }
-            //if (percents.TryGetValue("Abe", out float valueAbe))
-            //{
-            //    valueAbe = percentAbe;
-            //    ret += valueAbe;
-            //}
-            //if (percents.TryGetValue("Bottle", out float valueBottle))
-            //{
-            //    valueBottle = percentBottle;
-            //    ret += valueBottle;
-            //}
+            if (percents.TryGetValue("Abe", out float valueAbe))
+            {
+                valueAbe = percentAbe;
+                ret += valueAbe;
+            }
+            if (percents.TryGetValue("Bottle", out float valueBottle))
+            {
+                valueBottle = percentBottle*bottleValue;
+                ret += valueBottle;
+            }
 
         }
         writeInFile();
-        return (ret /*/ 3f*/);
+        return (ret / (2+bottleValue));
     }
 
     private Transform getOriginalTransform(String goal, GameObject origin)
