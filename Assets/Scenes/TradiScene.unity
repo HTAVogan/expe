@@ -216,6 +216,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gostMaterial: {fileID: 2100000, guid: 7b333695d4efe3a4b94b9e9f8e97d65d, type: 2}
   delta: 50
+  bottleValue: 0.1
   perfectThrow: {fileID: 0}
   clipBottle: {fileID: 7400000, guid: 8885e658aa0b747409efbd9a341e0f4c, type: 2}
   controllerGostBottle: {fileID: 9100000, guid: 5e8264b4ab151f7479d6c17ed0a211c3,

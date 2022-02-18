@@ -55,7 +55,6 @@ namespace VRtist
                 SetCurve(curve.Key, curve.Value.keys);
                 curves[curve.Key].ComputeCache();
             }
-            StartFrame = set.StartFrame;
         }
 
         public void EvaluateAnimation(int currentFrame)
@@ -241,7 +240,15 @@ namespace VRtist
 
         public int GetFirstFrame()
         {
-            int firstFrame = GlobalState.Animation.EndFrame;
+            int firstFrame;
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                firstFrame = GlobalState.Animation.EndFrame;
+            }
+            else
+            {
+                firstFrame = GlobalStateTradi.Animation.EndFrame;
+            }
             foreach (KeyValuePair<AnimatableProperty, Curve> pair in curves)
             {
                 if (pair.Value.keys.Count > 0)
@@ -255,7 +262,7 @@ namespace VRtist
 
         public Matrix4x4 GetTranformMatrix(int frame)
         {
-            frame = Mathf.Max(1, frame - StartFrame);
+            frame = Mathf.Max(1, frame);
             Vector3 position = Vector3.zero;
             Curve posx = GetCurve(AnimatableProperty.PositionX);
             Curve posy = GetCurve(AnimatableProperty.PositionY);

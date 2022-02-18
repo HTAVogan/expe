@@ -404,7 +404,7 @@ public class GostManager : MonoBehaviour
         if (set != null)
         {
             Curve curve = set.GetCurve(AnimatableProperty.PositionX);
-            start = set.StartFrame;
+            start = set.GetFirstFrame();
             end = curve.keys[curve.keys.Count - 1].frame;
         }
         else
@@ -417,7 +417,7 @@ public class GostManager : MonoBehaviour
             }
             else
             {
-                start = controller.Animation.StartFrame;
+                start = controller.Animation.GetFirstFrame();
                 Curve curve = set.GetCurve(AnimatableProperty.PositionX);
                 end = curve.keys[curve.keys.Count - 1].frame;
             }
@@ -440,7 +440,7 @@ public class GostManager : MonoBehaviour
         if (set != null)
         {
             Curve curve = set.GetCurve(AnimatableProperty.PositionX);
-            start = set.StartFrame;
+            start = set.GetFirstFrame();
             end = curve.keys[curve.keys.Count - 1].frame;
         }
         else

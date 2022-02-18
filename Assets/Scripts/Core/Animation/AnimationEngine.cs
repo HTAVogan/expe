@@ -310,8 +310,7 @@ namespace VRtist
                 foreach (KeyValuePair<AnimatableProperty, Curve> curve in sourceAnim.curves)
                 {
                     targetAnim.SetCurve(curve.Key, curve.Value.keys);
-                }
-                targetAnim.StartFrame = sourceAnim.StartFrame;
+                }   
                 SetObjectAnimations(target, targetAnim);
             }
             for (int i = 0; i < source.transform.childCount; i++)
