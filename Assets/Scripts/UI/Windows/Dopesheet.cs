@@ -54,7 +54,6 @@ namespace VRtist
 
         private int localFirstFrame = 0;
         private int localLastFrame = 250;
-        private int animationOffset = 0;
 
         public int LocalFirstFrame { get { return localFirstFrame; } set { localFirstFrame = value; UpdateFirstFrame(); } }
         public int LocalLastFrame { get { return localLastFrame; } set { localLastFrame = value; UpdateLastFrame(); } }
@@ -187,6 +186,7 @@ namespace VRtist
                     GlobalState.Animation.onAddAnimation.AddListener(UpdateCurrentObjectAnimation);
                     GlobalState.Animation.onRemoveAnimation.AddListener(UpdateCurrentObjectAnimation);
                     GlobalState.Animation.onChangeCurve.AddListener(OnCurveUpdated);
+                    GlobalState.Animation.onStartOffsetChanged.AddListener(UpdateKeyframesPosition);
                     UpdateSelectionChanged();
                 }
             }
@@ -204,6 +204,7 @@ namespace VRtist
                     GlobalState.Animation.onAddAnimation.RemoveListener(UpdateCurrentObjectAnimation);
                     GlobalState.Animation.onRemoveAnimation.RemoveListener(UpdateCurrentObjectAnimation);
                     GlobalState.Animation.onChangeCurve.RemoveListener(OnCurveUpdated);
+                    GlobalState.Animation.onStartOffsetChanged.RemoveListener(UpdateKeyframesPosition);
                 }
             }
             listenerAdded = enable;
@@ -264,8 +265,6 @@ namespace VRtist
             Clear();
 
             AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(gObject);
-            if (null != animationSet) animationOffset = animationSet.StartFrame;
-
             if (!gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
             {
                 if (null == animationSet)
@@ -324,7 +323,7 @@ namespace VRtist
             {
                 GameObject keyframe = keyframes.GetChild(i++).gameObject;
 
-                float time = key.Key + animationOffset;
+                float time = key.Key;
                 float currentValue = (float)time;
                 float pct = (float)(currentValue - localFirstFrame) / (float)(localLastFrame - localFirstFrame);
 
@@ -569,20 +568,15 @@ namespace VRtist
         public void OnSetStartOffset()
         {
             AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(currentObject);
-
-
-            //if (animationSet.StartFrame == 0)
-            animationOffset = GlobalState.Animation.CurrentFrame;
-            //else animationOffset = 0;
+            if (null == animationSet) return;
+            if (animationSet.StartFrame == 0) animationOffset = GlobalState.Animation.CurrentFrame;
+            else animationOffset = 0;
             if (currentObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
             {
                 RecursiveStartOffset(currentObject.transform, animationOffset);
             }
 
-            if (null != animationSet)
-            {
-                animationSet.StartFrame = animationOffset;
-            }
+            animationSet.StartFrame = animationOffset;
             UpdateKeyframes();
         }
 
@@ -595,7 +589,6 @@ namespace VRtist
                 RecursiveStartOffset(child, value);
             }
         }
-
     }
 
 }
