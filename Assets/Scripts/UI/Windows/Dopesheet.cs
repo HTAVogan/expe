@@ -139,6 +139,11 @@ namespace VRtist
             UpdateInterpolation();
         }
 
+        public void OnSetStartOffset()
+        {
+            new CommandStartFrame(currentObject, GlobalState.Animation.CurrentFrame).Submit();
+        }
+
         public void OnEditCurrentFrame()
         {
             ToolsUIManager.Instance.OpenNumericKeyboard((float value) => OnChangeCurrentFrame((int)value), currentFrameLabel.transform, GlobalState.Animation.CurrentFrame);
