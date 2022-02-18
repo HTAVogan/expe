@@ -34,7 +34,7 @@ namespace VRtist
     {
         public Transform transform;
         public readonly Dictionary<AnimatableProperty, Curve> curves = new Dictionary<AnimatableProperty, Curve>();
-        public int StartFrame;
+        public int StartFrame = 1;
 
         public AnimationSet(GameObject gobject)
         {
@@ -59,8 +59,6 @@ namespace VRtist
 
         public void EvaluateAnimation(int currentFrame)
         {
-            currentFrame = Mathf.Max(1, currentFrame - StartFrame);
-
             Vector3 position = transform.localPosition;
             Vector3 rotation = transform.localEulerAngles;
             Vector3 scale = transform.localScale;
@@ -219,6 +217,31 @@ namespace VRtist
                 curve.ClearCache();
         }
 
+        public void SetStartOffset(int offset)
+        {
+            foreach (KeyValuePair<AnimatableProperty, Curve> pair in curves)
+            {
+                for (int i = 0; i < pair.Value.keys.Count; i++)
+                {
+                    pair.Value.keys[i].frame += offset;
+                }
+                pair.Value.ComputeCache();
+            }
+        }
+
+        public int GetFirstFrame()
+        {
+            int firstFrame = GlobalState.Animation.EndFrame;
+            foreach (KeyValuePair<AnimatableProperty, Curve> pair in curves)
+            {
+                if (pair.Value.keys.Count > 0)
+                {
+                    int curveFirstFrame = pair.Value.keys[0].frame;
+                    if (curveFirstFrame < firstFrame) firstFrame = curveFirstFrame;
+                }
+            }
+            return firstFrame;
+        }
 
         public Matrix4x4 GetTranformMatrix(int frame)
         {

@@ -54,7 +54,6 @@ namespace VRtist
 
         private int localFirstFrame = 0;
         private int localLastFrame = 250;
-        private int animationOffset = 0;
 
         public int LocalFirstFrame { get { return localFirstFrame; } set { localFirstFrame = value; UpdateFirstFrame(); } }
         public int LocalLastFrame { get { return localLastFrame; } set { localLastFrame = value; UpdateLastFrame(); } }
@@ -187,6 +186,7 @@ namespace VRtist
                     GlobalState.Animation.onAddAnimation.AddListener(UpdateCurrentObjectAnimation);
                     GlobalState.Animation.onRemoveAnimation.AddListener(UpdateCurrentObjectAnimation);
                     GlobalState.Animation.onChangeCurve.AddListener(OnCurveUpdated);
+                    GlobalState.Animation.onStartOffsetChanged.AddListener(UpdateKeyframesPosition);
                     UpdateSelectionChanged();
                 }
             }
@@ -204,6 +204,7 @@ namespace VRtist
                     GlobalState.Animation.onAddAnimation.RemoveListener(UpdateCurrentObjectAnimation);
                     GlobalState.Animation.onRemoveAnimation.RemoveListener(UpdateCurrentObjectAnimation);
                     GlobalState.Animation.onChangeCurve.RemoveListener(OnCurveUpdated);
+                    GlobalState.Animation.onStartOffsetChanged.RemoveListener(UpdateKeyframesPosition);
                 }
             }
             listenerAdded = enable;
@@ -264,8 +265,6 @@ namespace VRtist
             Clear();
 
             AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(gObject);
-            if (null != animationSet) animationOffset = animationSet.StartFrame;
-
             if (!gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
             {
                 if (null == animationSet)
@@ -324,7 +323,7 @@ namespace VRtist
             {
                 GameObject keyframe = keyframes.GetChild(i++).gameObject;
 
-                float time = key.Key + animationOffset;
+                float time = key.Key;
                 float currentValue = (float)time;
                 float pct = (float)(currentValue - localFirstFrame) / (float)(localLastFrame - localFirstFrame);
 
@@ -568,29 +567,35 @@ namespace VRtist
 
         public void OnSetStartOffset()
         {
-            AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(currentObject);
-            if (null == animationSet) return;
-            if (animationSet.StartFrame == 0) animationOffset = GlobalState.Animation.CurrentFrame;
-            else animationOffset = 0;
-            if (currentObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
-            {
-                RecursiveStartOffset(currentObject.transform, animationOffset);
-            }
-
-            animationSet.StartFrame = animationOffset;
-            UpdateKeyframes();
+            new CommandStartFrame(currentObject, GlobalState.Animation.CurrentFrame).Submit();
         }
 
-        public void RecursiveStartOffset(Transform obj, int value)
+        private void UpdateKeyframesPosition(GameObject gObject)
         {
-            AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(obj.gameObject);
-            if (null != animationSet) animationSet.StartFrame = value;
-            foreach (Transform child in obj)
+            if (gObject == currentObject)
             {
-                RecursiveStartOffset(child, value);
+                AnimationSet animationSet = GlobalState.Animation.GetObjectAnimation(currentObject);
+                if (null == animationSet) return;
+                keys.Clear();
+                if (!currentObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+                {
+                    foreach (AnimationKey key in animationSet.curves[0].keys)
+                    {
+                        if (!keys.TryGetValue(key.frame, out List<AnimKey> keyList))
+                        {
+                            keyList = new List<AnimKey>();
+                            keys[key.frame] = keyList;
+                        }
+                        keyList.Add(new AnimKey(key.value, key.interpolation));
+                    }
+                }
+                else
+                {
+                    controller.GetKeyList(keys);
+                }
+                UpdateKeyframes();
             }
         }
-
     }
 
 }

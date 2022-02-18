@@ -164,6 +164,7 @@ namespace VRtist
         public IntChangedEvent onFrameEvent = new IntChangedEvent();
         public GameObjectChangedEvent onAddAnimation = new GameObjectChangedEvent();
         public GameObjectChangedEvent onRemoveAnimation = new GameObjectChangedEvent();
+        public GameObjectChangedEvent onStartOffsetChanged = new GameObjectChangedEvent();
         public CurveChangedEvent onChangeCurve = new CurveChangedEvent();
 
         public Vector2IntChangedEvent onRangeEvent = new Vector2IntChangedEvent();
