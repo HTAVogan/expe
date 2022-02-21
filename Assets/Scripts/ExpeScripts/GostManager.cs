@@ -7,14 +7,14 @@ using VRtist;
 
 public class GostManager : MonoBehaviour
 {
-    private GameObject gostJoleen;
-    private GameObject gostAbe;
-    private GameObject bottle;
+    public GameObject gostJoleen;
+    public GameObject gostAbe;
+    public GameObject bottle;
     public Material gostMaterial;
 
-    private GameObject joleen;
-    private GameObject abe;
-    private GameObject bottleInit;
+    public GameObject joleen;
+    public GameObject abe;
+    public GameObject bottleInit;
     [Range(1f, 100f)]
     public float delta;
     public float bottleValue;
@@ -31,10 +31,11 @@ public class GostManager : MonoBehaviour
     private List<float> SumJoleenFirst;
     private List<float> SumAbeFirst;
     private List<float> SumBottleFirst;
-
+    public Vector3 originPosJoleen;
 
     private float time = 0f;
     public float timeSinceGost = 0f;
+    private bool isReturn = true;
 
     private void Start()
     {
@@ -465,6 +466,7 @@ public class GostManager : MonoBehaviour
         if (gostJoleen == null)
         {
             joleen = GameObject.Find("aj@Throw Object.DD5C871E.9");
+            originPosJoleen = joleen.transform.localPosition;
             if (joleen != null)
             {
                 gostJoleen = Instantiate(joleen, joleen.transform.parent);
@@ -551,7 +553,19 @@ public class GostManager : MonoBehaviour
         areGostGenerated = true;
     }
 
-
+    public void PosGost()
+    {
+        if (isReturn)
+        {
+            isReturn = false;
+            joleen.transform.localPosition = originPosJoleen;
+        }
+        else
+        {
+            isReturn = true;
+            joleen.transform.localPosition = gostJoleen.transform.localPosition;
+        }
+    }
     void CreateDictionnaryGostOrigin(GameObject gost, GameObject origin)
     {
         foreach (Transform item in gost.transform)

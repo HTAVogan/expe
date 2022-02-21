@@ -23,6 +23,7 @@ public class AnimationWindows : EditorWindow
         window.minSize = new Vector2(250, 50);
 
         counter = GlobalStateTradi.Animation.ActionCountTradi;
+        
     }
 
     float hSbarValue;
@@ -32,10 +33,15 @@ public class AnimationWindows : EditorWindow
     bool isPreviewAllow = true;
     public string path = "Assets/Resources/results.txt";
     private string evalMode = "1";
+    public Vector3 originalPos;
 
+    private bool isOriginal = true;
+    private bool isReturnPos = false;
     private void OnGUI()
     {
         // Reference to the root of the window.
+
+
         GUILayout.BeginArea(new Rect(5, 5, position.width - 10, position.height - 10));
         {
             GUILayout.BeginHorizontal();
@@ -70,13 +76,18 @@ public class AnimationWindows : EditorWindow
                 {
                     GenerateGosts();
                 }
-
+            if (GUILayout.Button("Place origin to gost pos", GUILayout.ExpandWidth(false), GUILayout.Height(20)))
+            {
+                PlaceGost();
+            }
             GUILayout.EndVertical();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Calculate similitudes", GUILayout.ExpandWidth(false), GUILayout.Height(20)))
             {
                 Calculate();
             }
+       
+       
 
             GUILayout.Label(similitudes.ToString());
 
@@ -86,9 +97,29 @@ public class AnimationWindows : EditorWindow
                 Validate();
             }
             GUILayout.EndArea();
+         
         }
 
 
+    }
+
+    private void PlaceGost()
+    {
+        if (isOriginal && GlobalStateTradi.Animation.gostManager.areGostGenerated)
+        {
+            isOriginal = false;
+            originalPos = GlobalStateTradi.Animation.gostManager.originPosJoleen;
+        }
+        if (!isReturnPos)
+        {
+        GlobalStateTradi.Animation.gostManager.joleen.transform.localPosition = GlobalStateTradi.Animation.gostManager.gostJoleen.transform.localPosition;
+            isReturnPos = true;
+        }
+        else
+        {
+            isReturnPos = false;
+            GlobalStateTradi.Animation.gostManager.joleen.transform.localPosition = originalPos;
+        }
     }
 
     private void Validate()
