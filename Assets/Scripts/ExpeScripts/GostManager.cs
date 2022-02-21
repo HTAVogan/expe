@@ -463,93 +463,111 @@ public class GostManager : MonoBehaviour
     }
     public void CreateGost()
     {
-        if (gostJoleen == null)
+        if (!areGostGenerated)
         {
-            joleen = GameObject.Find("aj@Throw Object.DD5C871E.9");
-            originPosJoleen = joleen.transform.localPosition;
-            if (joleen != null)
+            if (gostJoleen == null)
             {
-                gostJoleen = Instantiate(joleen, joleen.transform.parent);
-                 //var temp = gostJoleen.GetComponentsInChildren<Renderer>();
-                 //Texture texture = joleen.GetComponentInChildren<Renderer>().material.GetTexture("_ColorMap");
-                 //foreach (var item in temp)
-                 //{
-                 //    item.material = gostMaterial;
-                 //    item.material.SetTexture("_ColorMap", texture);
-                 //}
-                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-                    GlobalState.Animation.CopyAnimation(joleen, gostJoleen);
-                else
-                    GlobalStateTradi.Animation.CopyAnimation(joleen, gostJoleen);
-                gostJoleen.transform.position += Vector3.forward*2;
-                checkAnimationsOfGosts(gostJoleen);
-                AnimationManager manager = gameObject.GetComponent<AnimationManager>();
-                manager.ClearAnimationFormOrigin(joleen);
-                Destroy(gostJoleen.GetComponent<Animator>());
-                CreateDictionnaryGostOrigin(gostJoleen, joleen);
-            }
-
-
-        }
-        if (gostAbe == null)
-        {
-            abe = GameObject.Find("aj@Dying.C69DCA00.10");
-            if (abe != null)
-            {
-                gostAbe = Instantiate(abe, abe.transform.parent);
-                //var temp = gostAbe.GetComponentsInChildren<Renderer>();
-                //Texture texture = abe.GetComponentInChildren<Renderer>().material.GetTexture("_ColorMap");
-                //foreach (var item in temp)
-                //{
-                //    item.material = gostMaterial;
-                //    item.material.SetTexture("_ColorMap", texture);
-                //}
-                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-                    GlobalState.Animation.CopyAnimation(abe, gostAbe);
-                else
-                    GlobalStateTradi.Animation.CopyAnimation(abe, gostAbe);
-                gostAbe.transform.position += Vector3.forward*2;
-                checkAnimationsOfGosts(gostAbe);
-                gameObject.GetComponent<AnimationManager>().ClearAnimationFormOrigin(abe);
-                Destroy(gostAbe.GetComponent<Animator>());
-                CreateDictionnaryGostOrigin(gostAbe, abe);
-            }
-        }
-        if (bottle == null)
-        {
-            bottleInit = GameObject.Find("bottle.7818A175.703");
-            if (bottleInit != null)
-            {
-                bottle = Instantiate(bottleInit, bottleInit.transform.parent);
-                DestroyImmediate(bottle.GetComponent<Animator>());
-                Animator gostBottleAnim = bottle.AddComponent<Animator>();
-                gostBottleAnim.runtimeAnimatorController = controllerGostBottle;
-
-                //var temp = bottle.GetComponentsInChildren<Renderer>();
-                //Texture texture = bottleInit.GetComponentInChildren<Renderer>().material.GetTexture("_ColorMap");
-                //foreach (var item in temp)
-                //{
-                //    item.material = gostMaterial;
-                //    item.material.SetTexture("_ColorMap", texture);
-                //}
-
-                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                joleen = GameObject.Find("aj@Throw Object.DD5C871E.9");
+                originPosJoleen = joleen.transform.localPosition;
+                if (joleen != null)
                 {
-                    GlobalState.Animation.CopyAnimation(bottleInit, bottle);
-                    GlobalState.Animation.ClearAnimations(bottleInit);
+                    gostJoleen = Instantiate(joleen, joleen.transform.parent);
+                    //var temp = gostJoleen.GetComponentsInChildren<Renderer>();
+                    //Texture texture = joleen.GetComponentInChildren<Renderer>().material.GetTexture("_ColorMap");
+                    //foreach (var item in temp)
+                    //{
+                    //    item.material = gostMaterial;
+                    //    item.material.SetTexture("_ColorMap", texture);
+                    //}
+                    if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                        GlobalState.Animation.CopyAnimation(joleen, gostJoleen);
+                    else
+                        GlobalStateTradi.Animation.CopyAnimation(joleen, gostJoleen);
+                    gostJoleen.transform.position += Vector3.forward * 2;
+                    checkAnimationsOfGosts(gostJoleen);
+                    AnimationManager manager = gameObject.GetComponent<AnimationManager>();
+                    manager.ClearAnimationFormOrigin(joleen);
+                    Destroy(gostJoleen.GetComponent<Animator>());
+                    CreateDictionnaryGostOrigin(gostJoleen, joleen);
+                    var joleenCollider = gostJoleen.GetComponent<BoxCollider>();
+                    if (joleenCollider != null)
+                    {
+                        joleenCollider.enabled = false;
+                    }
                 }
-                else
+
+
+            }
+            if (gostAbe == null)
+            {
+                abe = GameObject.Find("aj@Dying.C69DCA00.10");
+                if (abe != null)
                 {
-                    GlobalStateTradi.Animation.CopyAnimation(bottleInit, bottle);
-                    GlobalStateTradi.Animation.ClearAnimations(bottleInit);
+                    gostAbe = Instantiate(abe, abe.transform.parent);
+                    //var temp = gostAbe.GetComponentsInChildren<Renderer>();
+                    //Texture texture = abe.GetComponentInChildren<Renderer>().material.GetTexture("_ColorMap");
+                    //foreach (var item in temp)
+                    //{
+                    //    item.material = gostMaterial;
+                    //    item.material.SetTexture("_ColorMap", texture);
+                    //}
+                    if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                        GlobalState.Animation.CopyAnimation(abe, gostAbe);
+                    else
+                        GlobalStateTradi.Animation.CopyAnimation(abe, gostAbe);
+                    gostAbe.transform.position += Vector3.forward * 2;
+                    checkAnimationsOfGosts(gostAbe);
+                    gameObject.GetComponent<AnimationManager>().ClearAnimationFormOrigin(abe);
+                    Destroy(gostAbe.GetComponent<Animator>());
+                    CreateDictionnaryGostOrigin(gostAbe, abe);
+                    var abeCollider = gostAbe.GetComponent<BoxCollider>();
+                    if (abeCollider != null)
+                    {
+                        abeCollider.enabled = false;
+                    }
+
                 }
-                gostBottleAnim.enabled = false;
-                bottle.transform.position += Vector3.forward*2;
-                MoveAnimation(bottle);
-                checkAnimationsOfGosts(bottle);
-                Destroy(bottle.GetComponent<Animator>());
+            }
+            if (bottle == null)
+            {
+                bottleInit = GameObject.Find("bottle.7818A175.703");
+                if (bottleInit != null)
+                {
+                    bottle = Instantiate(bottleInit, bottleInit.transform.parent);
+                    DestroyImmediate(bottle.GetComponent<Animator>());
+                    Animator gostBottleAnim = bottle.AddComponent<Animator>();
+                    gostBottleAnim.runtimeAnimatorController = controllerGostBottle;
+
+                    //var temp = bottle.GetComponentsInChildren<Renderer>();
+                    //Texture texture = bottleInit.GetComponentInChildren<Renderer>().material.GetTexture("_ColorMap");
+                    //foreach (var item in temp)
+                    //{
+                    //    item.material = gostMaterial;
+                    //    item.material.SetTexture("_ColorMap", texture);
+                    //}
+
+                    if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                    {
+                        GlobalState.Animation.CopyAnimation(bottleInit, bottle);
+                        GlobalState.Animation.ClearAnimations(bottleInit);
+                    }
+                    else
+                    {
+                        GlobalStateTradi.Animation.CopyAnimation(bottleInit, bottle);
+                        GlobalStateTradi.Animation.ClearAnimations(bottleInit);
+                    }
+                    gostBottleAnim.enabled = false;
+                    bottle.transform.position += Vector3.forward * 2;
+                    MoveAnimation(bottle);
+                    checkAnimationsOfGosts(bottle);
+                    Destroy(bottle.GetComponent<Animator>());
+                    var bottleCollider = bottle.GetComponent<BoxCollider>();
+                    if(bottleCollider != null)
+                        bottleCollider.enabled = false;
+                }
             }
         }
+    
         areGostGenerated = true;
     }
 
