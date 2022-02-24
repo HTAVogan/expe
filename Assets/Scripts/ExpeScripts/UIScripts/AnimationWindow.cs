@@ -59,7 +59,7 @@ public class AnimationWindows : EditorWindow
                 this.Focus();
                 hSbarValue = GlobalStateTradi.Animation.CurrentFrame / 10f;
             }
-            if (GlobalStateTradi.Animation != null && !isPlaying)
+            if (GlobalStateTradi.Animation != null)
             {
                 GlobalStateTradi.Animation.CurrentFrame = Mathf.CeilToInt(hSbarValue * 10);
                 if (EditorWindow.HasOpenInstances<AnimationWindow>())
