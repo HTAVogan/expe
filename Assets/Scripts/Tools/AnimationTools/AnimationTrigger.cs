@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,7 +18,15 @@ namespace VRtist
         public void OnTriggerEnter(Collider other)
         {
             if (other.tag == "Curve" && !hoveredCurves.Contains(other.gameObject)) hoveredCurves.Add(other.gameObject);
-            if (other.tag == "Goal" && other.TryGetComponent<HumanGoalController>(out HumanGoalController controller) && !hoveredGoals.Contains(controller)) hoveredGoals.Add(controller);
+            if (other.tag == "Goal" && other.TryGetComponent<HumanGoalController>(out HumanGoalController controller) && !hoveredGoals.Contains(controller))
+            {
+                if (hoveredGoals.Count > 0)
+                {
+                    HideJoint(hoveredGoals[0]);
+                }
+                hoveredGoals.Add(controller);
+                ShowJoint(hoveredGoals[0]);
+            }
         }
 
         public void OnTriggerExit(Collider other)
@@ -29,6 +38,7 @@ namespace VRtist
             }
             if (!isGrip && other.tag == "Goal" && other.TryGetComponent<HumanGoalController>(out HumanGoalController controller) && hoveredGoals.Contains(controller))
             {
+                HideJoint(controller);
                 hoveredGoals.Remove(controller);
             }
         }
@@ -68,6 +78,27 @@ namespace VRtist
                 });
             if (isGrip) animator.DragPose(transform);
             if (hoveredGoals.Count > 0 && hoveredGoals[0] == null) hoveredGoals.RemoveAt(0);
+
+        }
+
+        private void ShowJoint(HumanGoalController controller)
+        {
+            MeshFilter filter = controller.gameObject.AddComponent<MeshFilter>();
+            filter.sharedMesh = gameObject.GetComponent<MeshFilter>().mesh;
+            MeshRenderer renderer = controller.gameObject.AddComponent<MeshRenderer>();
+            renderer.material = gameObject.GetComponent<MeshRenderer>().material;
+        }
+
+        private void HideJoint(HumanGoalController controller)
+        {
+            if (controller.TryGetComponent<MeshFilter>(out MeshFilter filter))
+            {
+                Destroy(filter);
+            }
+            if (controller.TryGetComponent<MeshRenderer>(out MeshRenderer renderer))
+            {
+                Destroy(renderer);
+            }
         }
 
         public void CurveMode()

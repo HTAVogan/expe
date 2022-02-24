@@ -6,6 +6,9 @@ namespace VRtist
     [CreateAssetMenu(menuName = "VRtist/RigConfiguration", fileName = "RigConfig")]
     public class RigConfiguration : ScriptableObject
     {
+        public Mesh mesh;
+        public Material material;
+
         [System.Serializable]
         public class Joint
         {
@@ -38,6 +41,11 @@ namespace VRtist
                 controller.ShowCurve = joint.showCurve;
                 controller.LowerAngleBound = joint.LowerAngleBound;
                 controller.UpperAngleBound = joint.UpperAngleBound;
+
+                MeshFilter filter = transform.gameObject.AddComponent<MeshFilter>();
+                filter.mesh = mesh;
+                MeshRenderer renderer = transform.gameObject.AddComponent<MeshRenderer>();
+                renderer.material = new Material(material);
             }
             path.Add(transform);
             foreach (Transform child in transform)
