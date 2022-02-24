@@ -71,7 +71,8 @@ public class GostManager : MonoBehaviour
 
     public void CalculateSimilitudeButton()
     {
-        GetPercent();
+        if (areGostGenerated) 
+                GetPercent();
     }
 
     [ContextMenu("Put throw perfect")]
@@ -89,257 +90,265 @@ public class GostManager : MonoBehaviour
     /// <returns>% of similtaries</returns>
     public float GetPercent()
     {
-        float ret = 0;
-        //todo enable animators for users characters
-        Animator joleenAnimator;
-        Animator abeAnimator;
-        Animator initBottleAnimator;
-        AnimationClip Throw, Dye, BottleAnimationClip;
-        abePerBones = new Dictionary<string, List<float>>();
-        joleenPerBones = new Dictionary<string, List<float>>();
-        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+        if (areGostGenerated)
         {
-            joleenAnimator = joleen.GetComponent<Animator>();
-            abeAnimator = abe.GetComponent<Animator>();
-            initBottleAnimator = bottleInit.GetComponent<Animator>();
-            joleenAnimator.enabled = true;
-            abeAnimator.enabled = true;
-            initBottleAnimator.enabled = true;
-            Throw = GetComponent<ClipManager>().Throw;
-            Dye = GetComponent<ClipManager>().Dye;
-            BottleAnimationClip = GetComponent<ClipManager>().BottleClip;
-        }
-        #region useless but necessary to compile
-        else
-        {
-            Throw =new AnimationClip();
-            Dye = new AnimationClip();
-            BottleAnimationClip = new AnimationClip();
-        }
-        #endregion
-        if (abe != null && joleen != null && bottleInit != null)
-        {
-            float AllFrameSumAbe = 0f;
-            float AllFrameSumJoleen = 0f;
-            float AllFrameSumBottle = 0f;
 
-            float percentAbe = 0f;
-            float percentJoleen = 0f;
-            float percentBottle = 0f;
-            int startFrame, endFrame;
-
-            var gostJoleenHumanGoalControllers = gostJoleen.GetComponentsInChildren<HumanGoalController>();
-            var gostAbebeHumanGoalControllers = gostAbe.GetComponentsInChildren<HumanGoalController>();
-            var joleenHumanGoalControllers = joleen.GetComponentsInChildren<HumanGoalController>();
-            var abeHumanGoalControllers = abe.GetComponentsInChildren<HumanGoalController>();
-            joleenPerBones.Add("Sum", new List<float>());
-            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            float ret = 0;
+            //todo enable animators for users characters
+            Animator joleenAnimator;
+            Animator abeAnimator;
+            Animator initBottleAnimator;
+            AnimationClip Throw, Dye, BottleAnimationClip;
+            abePerBones = new Dictionary<string, List<float>>();
+            joleenPerBones = new Dictionary<string, List<float>>();
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
             {
-                startFrame = GlobalState.Animation.StartFrame;
-                endFrame = GlobalState.Animation.EndFrame;
+                joleenAnimator = joleen.GetComponent<Animator>();
+                abeAnimator = abe.GetComponent<Animator>();
+                initBottleAnimator = bottleInit.GetComponent<Animator>();
+                joleenAnimator.enabled = true;
+                abeAnimator.enabled = true;
+                initBottleAnimator.enabled = true;
+                Throw = GetComponent<ClipManager>().Throw;
+                Dye = GetComponent<ClipManager>().Dye;
+                BottleAnimationClip = GetComponent<ClipManager>().BottleClip;
             }
+            #region useless but necessary to compile
             else
             {
-                startFrame = GlobalStateTradi.Animation.StartFrame;
-                endFrame = GlobalStateTradi.Animation.EndFrame;
+                Throw = new AnimationClip();
+                Dye = new AnimationClip();
+                BottleAnimationClip = new AnimationClip();
             }
-
-            for (int i = startFrame; i < endFrame; i++)
+            #endregion
+            if (abe != null && joleen != null && bottleInit != null)
             {
-                float weightcounterjol = 0f;
-                float weightcounterAbe = 0f;
-                int counterJoleen = 0;
-                float joleenDiffSum = 0;
-                int counterAbe = 0;
-                float abeDiffSum = 0f;
+                float AllFrameSumAbe = 0f;
+                float AllFrameSumJoleen = 0f;
+                float AllFrameSumBottle = 0f;
 
-                #region tradi
-                if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                float percentAbe = 0f;
+                float percentJoleen = 0f;
+                float percentBottle = 0f;
+                int startFrame, endFrame;
+
+                var gostJoleenHumanGoalControllers = gostJoleen.GetComponentsInChildren<HumanGoalController>();
+                var gostAbebeHumanGoalControllers = gostAbe.GetComponentsInChildren<HumanGoalController>();
+                var joleenHumanGoalControllers = joleen.GetComponentsInChildren<HumanGoalController>();
+                var abeHumanGoalControllers = abe.GetComponentsInChildren<HumanGoalController>();
+                joleenPerBones.Add("Sum", new List<float>());
+                if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                 {
-                    Throw.SampleAnimation(joleen, i / 60f);
-                    Dye.SampleAnimation(abe, i / 60f);
-                    BottleAnimationClip.SampleAnimation(bottleInit, i / 60f);
-                    foreach (var joleenController in gostJoleenHumanGoalControllers)
-                    {
-                        int start, end;
-                        KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
-                        start = startend.Key;
-                        end = startend.Value;
-                        if (gostAndOrigin.TryGetValue(joleenController.gameObject, out GameObject origin) && joleenController.Animation != null && i>=start && i<=end)
-                        {
-                            //Debug.Log("Abe controller  = " + joleenController + " i is " + i + "start is " + start + " end is " + end);
-                            //Vector3 vecByHips = origin.transform.position;
-                            Vector3 vecByHips = joleen.transform.InverseTransformPoint(origin.transform.position);
-                            Vector3 diff = vecByHips - joleenController.LocalFramePosition(i);
-                            Debug.Log(joleenController + ": "  + "vec by hips : " + vecByHips + "diff is :" + diff);
-                            joleenDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta))* joleenController.weight;
-                            counterJoleen++;
-                            weightcounterjol +=  joleenController.weight;
-                            if (joleenPerBones.TryGetValue(joleenController.name, out List<float> value))
-                            {
-                                //value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
-                                value.Add(diff.magnitude  );
-                            }
-                            else
-                            {
-                                // joleenPerBones.Add(joleenController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
-                                joleenPerBones.Add(joleenController.name, new List<float> { diff.magnitude });
-                            }
-                        }
-
-                    }
-                    if(weightcounterjol != 0)
-                    AllFrameSumJoleen += joleenDiffSum / weightcounterjol;
-                    joleenPerBones["Sum"].Add(joleenDiffSum / weightcounterjol);
-                    // dye
-                    foreach (var abeController in gostAbebeHumanGoalControllers)
-                    {
-                        int start, end;
-                        KeyValuePair<int, int> startend = GetStartAndEndFrame(abeController);
-                        start = startend.Key;
-                        end = startend.Value;
-                      
-                        if (gostAndOrigin.TryGetValue(abeController.gameObject, out GameObject origin) && abeController.Animation != null && i >= start && i <= end)
-                        {
-                            
-                            Vector3 vecByHips = abe.transform.InverseTransformPoint(origin.transform.position);
-                            Vector3 diff = vecByHips - abeController.LocalFramePosition(i);
-                            abeDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta)) * abeController.weight;
-                            counterAbe++;
-                            weightcounterAbe += abeController.weight;
-                            if (abePerBones.TryGetValue(abeController.name, out List<float> value))
-                            {
-                                value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
-                            }
-                            else
-                            {
-                                abePerBones.Add(abeController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
-                            }
-                        }
-
-                    }
-                    if(weightcounterAbe!=0)
-                    AllFrameSumAbe += abeDiffSum / weightcounterAbe;
-                    //bouteille
-                    int startBottle, endBottle;
-                    KeyValuePair<int, int> startendBottle = GetStartAndEndFrame(bottle);
-                    startBottle = startendBottle.Key;
-                    endBottle = startendBottle.Value;
-                    if (i<= endBottle && i >= startBottle)
-                    {
-                        Vector3 diffBottle = joleen.transform.InverseTransformPoint(bottleInit.transform.position) - gostJoleen.transform.InverseTransformPoint(bottle.transform.localPosition);
-                        AllFrameSumBottle += 1 - Mathf.Clamp01(diffBottle.magnitude / delta);
-                    }
+                    startFrame = GlobalState.Animation.StartFrame;
+                    endFrame = GlobalState.Animation.EndFrame;
                 }
-                #endregion
-                #region VR
                 else
                 {
-                    foreach (var joleenController in gostJoleenHumanGoalControllers)
-                    {
-                        Vector3 diff = Vector3.zero;
-                        int start, end;
-                        KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
-                        start = startend.Key;
-                        end = startend.Value;
-                        if (joleenController.Animation != null && i >= start && i <= end)
-                        {
-                             diff = joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) - joleenController.LocalFramePosition(i);
-                            joleenDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta))*joleenController.weight;
-                            counterJoleen++;
-                            weightcounterjol += joleenController.weight;
-                            Debug.Log("Name is" + joleenController.name + "Origin animation & pos : " + joleenHumanGoalControllers[counterJoleen].Animation + "& " + joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) + " gost animation and position  : " + joleenController.Animation + " & " + joleenController.LocalFramePosition(i) + " and diff magnitude is " + diff.magnitude + "and diff sum is " + joleenDiffSum);
-                            if (joleenPerBones.TryGetValue(joleenController.name, out List<float> value))
-                            {
-                                value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
-                            }
-                            else
-                            {
-                               joleenPerBones.Add(joleenController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
-                               
-                            }
-                        }
-                    }
-                    if(weightcounterjol != 0)
-                    AllFrameSumJoleen += joleenDiffSum / weightcounterjol;
-                    // dye
-                    foreach (var abeController in gostAbebeHumanGoalControllers)
-                    {
-                        Vector3 diff = Vector3.zero;
-                        int start, end;
-                        KeyValuePair<int, int> startend = GetStartAndEndFrame(abeController);
-                        start = startend.Key;
-                        end = startend.Value;
-                        if (abeController.Animation != null && i >= start && i <= end)
-                        {
-                             diff = abeHumanGoalControllers[counterAbe].LocalFramePosition(i) - abeController.LocalFramePosition(i);
-                            abeDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta))* abeController.weight;
-                            counterAbe++;
-                            weightcounterAbe += abeController.weight;
-                            if (abePerBones.TryGetValue(abeController.name, out List<float> value))
-                            {
-                                value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
-                            }
-                            else
-                            {
-                                abePerBones.Add(abeController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
-                            }
-                        }
-
-                    }
-                    if(weightcounterAbe != 0)
-                    AllFrameSumAbe += abeDiffSum / weightcounterAbe;
-                    //bouteille
-                    AnimationSet set = GlobalState.Animation.GetObjectAnimation(bottleInit);
-                    Vector3 diffBottle = Vector3.zero;
-                    int startBottle, endBottle;
-                    KeyValuePair<int, int> startendBottle = GetStartAndEndFrame(bottle);
-                    startBottle = startendBottle.Key;
-                    endBottle = startendBottle.Value;
-                    if (set != null && i <= endBottle && i >= startBottle)
-                    {
-                        Matrix4x4 matrixInit = set.GetTranformMatrix(i);
-                        Matrix4x4 matrixGost = GlobalState.Animation.GetObjectAnimation(bottle).GetTranformMatrix(i);
-                        Vector3 initPos = Vector3.zero;
-                        Vector3 gostPos = Vector3.zero;
-                        Quaternion initQuaternion = Quaternion.identity;
-                        Quaternion gostQuaternion = Quaternion.identity;
-                        Vector3 initScale = Vector3.zero;
-                        Vector3 gostScale = Vector3.zero;
-                        Maths.DecomposeMatrix(matrixInit, out initPos, out initQuaternion, out initScale);
-                        Maths.DecomposeMatrix(matrixGost, out gostPos, out gostQuaternion, out gostScale);
-                        diffBottle = (initPos - joleenHumanGoalControllers[0].LocalFramePosition(i)) - (gostPos - gostJoleenHumanGoalControllers[0].LocalFramePosition(i));
-                        AllFrameSumBottle += 1 - Mathf.Clamp01(diffBottle.magnitude / delta);
-                    }
-
-
-
-                   
+                    startFrame = GlobalStateTradi.Animation.StartFrame;
+                    endFrame = GlobalStateTradi.Animation.EndFrame;
                 }
-                #endregion
-            }
-            percentJoleen = 100 * (AllFrameSumJoleen / (endFrame - 1));
-            percentAbe = 100 * (AllFrameSumAbe / (endFrame - 1));
-            percentBottle = 100 * (AllFrameSumBottle / (endFrame - 1));
-            if (percents.TryGetValue("Joleen", out float valueJol))
-            {
-                valueJol = percentJoleen;
-                ret += valueJol;
-            }
-            if (percents.TryGetValue("Abe", out float valueAbe))
-            {
-                valueAbe = percentAbe;
-                ret += valueAbe;
-            }
-            if (percents.TryGetValue("Bottle", out float valueBottle))
-            {
-                valueBottle = percentBottle*bottleValue;
-                ret += valueBottle;
-            }
 
+                for (int i = startFrame; i < endFrame; i++)
+                {
+                    float weightcounterjol = 0f;
+                    float weightcounterAbe = 0f;
+                    int counterJoleen = 0;
+                    float joleenDiffSum = 0;
+                    int counterAbe = 0;
+                    float abeDiffSum = 0f;
+
+                    #region tradi
+                    if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                    {
+                        Throw.SampleAnimation(joleen, i / 60f);
+                        Dye.SampleAnimation(abe, i / 60f);
+                        BottleAnimationClip.SampleAnimation(bottleInit, i / 60f);
+                        foreach (var joleenController in gostJoleenHumanGoalControllers)
+                        {
+                            int start, end;
+                            KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
+                            start = startend.Key;
+                            end = startend.Value;
+                            if (gostAndOrigin.TryGetValue(joleenController.gameObject, out GameObject origin) && joleenController.Animation != null && i >= start && i <= end)
+                            {
+                                //Debug.Log("Abe controller  = " + joleenController + " i is " + i + "start is " + start + " end is " + end);
+                                //Vector3 vecByHips = origin.transform.position;
+                                Vector3 vecByHips = joleen.transform.InverseTransformPoint(origin.transform.position);
+                                Vector3 diff = vecByHips - joleenController.LocalFramePosition(i);
+                                Debug.Log(joleenController + ": " + "vec by hips : " + vecByHips + "diff is :" + diff);
+                                joleenDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta)) * joleenController.weight;
+                                counterJoleen++;
+                                weightcounterjol += joleenController.weight;
+                                if (joleenPerBones.TryGetValue(joleenController.name, out List<float> value))
+                                {
+                                    //value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
+                                    value.Add(diff.magnitude);
+                                }
+                                else
+                                {
+                                    // joleenPerBones.Add(joleenController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
+                                    joleenPerBones.Add(joleenController.name, new List<float> { diff.magnitude });
+                                }
+                            }
+
+                        }
+                        if (weightcounterjol != 0)
+                            AllFrameSumJoleen += joleenDiffSum / weightcounterjol;
+                        joleenPerBones["Sum"].Add(joleenDiffSum / weightcounterjol);
+                        // dye
+                        foreach (var abeController in gostAbebeHumanGoalControllers)
+                        {
+                            int start, end;
+                            KeyValuePair<int, int> startend = GetStartAndEndFrame(abeController);
+                            start = startend.Key;
+                            end = startend.Value;
+
+                            if (gostAndOrigin.TryGetValue(abeController.gameObject, out GameObject origin) && abeController.Animation != null && i >= start && i <= end)
+                            {
+
+                                Vector3 vecByHips = abe.transform.InverseTransformPoint(origin.transform.position);
+                                Vector3 diff = vecByHips - abeController.LocalFramePosition(i);
+                                abeDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta)) * abeController.weight;
+                                counterAbe++;
+                                weightcounterAbe += abeController.weight;
+                                if (abePerBones.TryGetValue(abeController.name, out List<float> value))
+                                {
+                                    value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
+                                }
+                                else
+                                {
+                                    abePerBones.Add(abeController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
+                                }
+                            }
+
+                        }
+                        if (weightcounterAbe != 0)
+                            AllFrameSumAbe += abeDiffSum / weightcounterAbe;
+                        //bouteille
+                        int startBottle, endBottle;
+                        KeyValuePair<int, int> startendBottle = GetStartAndEndFrame(bottle);
+                        startBottle = startendBottle.Key;
+                        endBottle = startendBottle.Value;
+                        if (i <= endBottle && i >= startBottle)
+                        {
+                            Vector3 diffBottle = joleen.transform.InverseTransformPoint(bottleInit.transform.position) - gostJoleen.transform.InverseTransformPoint(bottle.transform.localPosition);
+                            AllFrameSumBottle += 1 - Mathf.Clamp01(diffBottle.magnitude / delta);
+                        }
+                    }
+                    #endregion
+                    #region VR
+                    else
+                    {
+                        foreach (var joleenController in gostJoleenHumanGoalControllers)
+                        {
+                            Vector3 diff = Vector3.zero;
+                            int start, end;
+                            KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
+                            start = startend.Key;
+                            end = startend.Value;
+                            if (joleenController.Animation != null && i >= start && i <= end)
+                            {
+                                diff = joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) - joleenController.LocalFramePosition(i);
+                                joleenDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta)) * joleenController.weight;
+                                counterJoleen++;
+                                weightcounterjol += joleenController.weight;
+                                Debug.Log("Name is" + joleenController.name + "Origin animation & pos : " + joleenHumanGoalControllers[counterJoleen].Animation + "& " + joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) + " gost animation and position  : " + joleenController.Animation + " & " + joleenController.LocalFramePosition(i) + " and diff magnitude is " + diff.magnitude + "and diff sum is " + joleenDiffSum);
+                                if (joleenPerBones.TryGetValue(joleenController.name, out List<float> value))
+                                {
+                                    value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
+                                }
+                                else
+                                {
+                                    joleenPerBones.Add(joleenController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
+
+                                }
+                            }
+                        }
+                        if (weightcounterjol != 0)
+                            AllFrameSumJoleen += joleenDiffSum / weightcounterjol;
+                        // dye
+                        foreach (var abeController in gostAbebeHumanGoalControllers)
+                        {
+                            Vector3 diff = Vector3.zero;
+                            int start, end;
+                            KeyValuePair<int, int> startend = GetStartAndEndFrame(abeController);
+                            start = startend.Key;
+                            end = startend.Value;
+                            if (abeController.Animation != null && i >= start && i <= end)
+                            {
+                                diff = abeHumanGoalControllers[counterAbe].LocalFramePosition(i) - abeController.LocalFramePosition(i);
+                                abeDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta)) * abeController.weight;
+                                counterAbe++;
+                                weightcounterAbe += abeController.weight;
+                                if (abePerBones.TryGetValue(abeController.name, out List<float> value))
+                                {
+                                    value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
+                                }
+                                else
+                                {
+                                    abePerBones.Add(abeController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
+                                }
+                            }
+
+                        }
+                        if (weightcounterAbe != 0)
+                            AllFrameSumAbe += abeDiffSum / weightcounterAbe;
+                        //bouteille
+                        AnimationSet set = GlobalState.Animation.GetObjectAnimation(bottleInit);
+                        Vector3 diffBottle = Vector3.zero;
+                        int startBottle, endBottle;
+                        KeyValuePair<int, int> startendBottle = GetStartAndEndFrame(bottle);
+                        startBottle = startendBottle.Key;
+                        endBottle = startendBottle.Value;
+                        if (set != null && i <= endBottle && i >= startBottle)
+                        {
+                            Matrix4x4 matrixInit = set.GetTranformMatrix(i);
+                            Matrix4x4 matrixGost = GlobalState.Animation.GetObjectAnimation(bottle).GetTranformMatrix(i);
+                            Vector3 initPos = Vector3.zero;
+                            Vector3 gostPos = Vector3.zero;
+                            Quaternion initQuaternion = Quaternion.identity;
+                            Quaternion gostQuaternion = Quaternion.identity;
+                            Vector3 initScale = Vector3.zero;
+                            Vector3 gostScale = Vector3.zero;
+                            Maths.DecomposeMatrix(matrixInit, out initPos, out initQuaternion, out initScale);
+                            Maths.DecomposeMatrix(matrixGost, out gostPos, out gostQuaternion, out gostScale);
+                            diffBottle = (initPos - joleenHumanGoalControllers[0].LocalFramePosition(i)) - (gostPos - gostJoleenHumanGoalControllers[0].LocalFramePosition(i));
+                            AllFrameSumBottle += 1 - Mathf.Clamp01(diffBottle.magnitude / delta);
+                        }
+
+
+
+
+                    }
+                    #endregion
+                }
+                percentJoleen = 100 * (AllFrameSumJoleen / (endFrame - 1));
+                percentAbe = 100 * (AllFrameSumAbe / (endFrame - 1));
+                percentBottle = 100 * (AllFrameSumBottle / (endFrame - 1));
+                if (percents.TryGetValue("Joleen", out float valueJol))
+                {
+                    valueJol = percentJoleen;
+                    ret += valueJol;
+                }
+                if (percents.TryGetValue("Abe", out float valueAbe))
+                {
+                    valueAbe = percentAbe;
+                    ret += valueAbe;
+                }
+                if (percents.TryGetValue("Bottle", out float valueBottle))
+                {
+                    valueBottle = percentBottle * bottleValue;
+                    ret += valueBottle;
+                }
+
+            }
+            writeInFile();
+            return (ret / (2 + bottleValue));
         }
-        writeInFile();
-        return (ret / (2+bottleValue));
+        else
+        {
+            return 0;
+        }
     }
 
     private Transform getOriginalTransform(String goal, GameObject origin)
@@ -573,16 +582,20 @@ public class GostManager : MonoBehaviour
 
     public void PosGost()
     {
-        if (isReturn)
+        if (areGostGenerated)
         {
-            isReturn = false;
-            joleen.transform.localPosition = originPosJoleen;
+            if (isReturn)
+            {
+                isReturn = false;
+                joleen.transform.localPosition = originPosJoleen;
+            }
+            else
+            {
+                isReturn = true;
+                joleen.transform.localPosition = gostJoleen.transform.localPosition;
+            }
         }
-        else
-        {
-            isReturn = true;
-            joleen.transform.localPosition = gostJoleen.transform.localPosition;
-        }
+        
     }
     void CreateDictionnaryGostOrigin(GameObject gost, GameObject origin)
     {

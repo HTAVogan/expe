@@ -38,39 +38,41 @@ public class ValidateButtonHandler : MonoBehaviour
 
     public void OnValidateButton()
     {
-        finished = true;
-
-        StreamWriter writer = new StreamWriter(path, true);
-        ActionVRCount counterAction = global.GetComponent<ActionVRCount>();
-       
-        writer.WriteLine("TimeOfEval;Eval mode;Time spent; Percent of similitudes; Number of actions; Actions done; Translation for each animated GO");
-        string line = "";
-        if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+        if (gostManager.GetComponent<GostManager>().areGostGenerated)
         {
-            line = System.DateTime.Now + ";" + evalMode + ";" + time.ToString() + ";" + gostManager.GetComponent<GostManager>().GetPercent().ToString() + ";" + counterAction.numberOfAction.ToString() + ";";
-            foreach (var item in counterAction.inputsDone)
-            {
-                line += item.Key + " : " + item.Value + "/";
-            }
-            line += ";";
-            if (GlobalState.translations != null)
-            {
-         
-                foreach (var item in GlobalState.translations)
-                {
-                    line += item.Key.name + ":";
-                    foreach (var vec in item.Value)
-                    {
-                        line += vec.ToString() + "|";
-                    }
-                    line += ";";
-                }
-          
-            }
-            writer.WriteLine(line);
-            writer.Close();
-        }
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Launcher");
+            finished = true;
 
-    }
+            StreamWriter writer = new StreamWriter(path, true);
+            ActionVRCount counterAction = global.GetComponent<ActionVRCount>();
+
+            writer.WriteLine("TimeOfEval;Eval mode;Time spent; Percent of similitudes; Number of actions; Actions done; Translation for each animated GO");
+            string line = "";
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                line = System.DateTime.Now + ";" + evalMode + ";" + time.ToString() + ";" + gostManager.GetComponent<GostManager>().GetPercent().ToString() + ";" + counterAction.numberOfAction.ToString() + ";";
+                foreach (var item in counterAction.inputsDone)
+                {
+                    line += item.Key + " : " + item.Value + "/";
+                }
+                line += ";";
+                if (GlobalState.translations != null)
+                {
+
+                    foreach (var item in GlobalState.translations)
+                    {
+                        line += item.Key.name + ":";
+                        foreach (var vec in item.Value)
+                        {
+                            line += vec.ToString() + "|";
+                        }
+                        line += ";";
+                    }
+
+                }
+                writer.WriteLine(line);
+                writer.Close();
+            }
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Launcher");
+        }
+ }
 }
