@@ -15,8 +15,8 @@ EditorBuildSettings:
     path: Assets/Scenes/TradiScene.unity
     guid: e96d69bb7b3dd8447a8bb78b9542b31f
   - enabled: 0
-    path: Assets/Scenes/VRTist2D.unity
-    guid: 5450c02db7dbcd641ac9c2c2c9134362
+    path: 
+    guid: 00000000000000000000000000000000
   - enabled: 1
     path: Assets/Scenes/2DVRTist.unity
     guid: 7ae5bebef323c244c89b22760e42a20c
