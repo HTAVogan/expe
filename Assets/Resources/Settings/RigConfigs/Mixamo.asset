@@ -29,7 +29,7 @@ MonoBehaviour:
     UpperAngleBound: {x: 35, y: 45, z: 10}
   - Name: LeftUpLeg
     stiffness: 0
-    isGoal: 0
+    isGoal: 1
     showCurve: 0
     LowerAngleBound: {x: -90, y: -45, z: -30}
     UpperAngleBound: {x: 90, y: 45, z: 30}
@@ -48,7 +48,7 @@ MonoBehaviour:
   - Name: RightUpLeg
     stiffness: 0
     isGoal: 1
-    showCurve: 1
+    showCurve: 0
     LowerAngleBound: {x: -90, y: -45, z: -30}
     UpperAngleBound: {x: 90, y: 45, z: 30}
   - Name: RightLeg
@@ -71,19 +71,19 @@ MonoBehaviour:
     UpperAngleBound: {x: 35, y: 35, z: 20}
   - Name: Spine1
     stiffness: 1
-    isGoal: 0
+    isGoal: 1
     showCurve: 0
     LowerAngleBound: {x: -20, y: -60, z: -30}
     UpperAngleBound: {x: 20, y: 60, z: 30}
   - Name: Spine2
     stiffness: 1
-    isGoal: 0
+    isGoal: 1
     showCurve: 0
     LowerAngleBound: {x: 0, y: 0, z: 0}
     UpperAngleBound: {x: 0, y: 0, z: 0}
   - Name: Neck
     stiffness: 0
-    isGoal: 0
+    isGoal: 1
     showCurve: 0
     LowerAngleBound: {x: -20, y: 0, z: 0}
     UpperAngleBound: {x: 45, y: 0, z: 0}
@@ -95,7 +95,7 @@ MonoBehaviour:
     UpperAngleBound: {x: 10, y: 60, z: 15}
   - Name: LeftShoulder
     stiffness: 1
-    isGoal: 0
+    isGoal: 1
     showCurve: 0
     LowerAngleBound: {x: 0, y: 0, z: 0}
     UpperAngleBound: {x: 0, y: 0, z: 0}
@@ -209,7 +209,7 @@ MonoBehaviour:
     UpperAngleBound: {x: 0, y: 0, z: 0}
   - Name: RightShoulder
     stiffness: 1
-    isGoal: 0
+    isGoal: 1
     showCurve: 0
     LowerAngleBound: {x: 0, y: 0, z: 0}
     UpperAngleBound: {x: 0, y: 0, z: 0}

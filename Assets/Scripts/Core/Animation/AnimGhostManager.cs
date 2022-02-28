@@ -20,6 +20,7 @@ namespace VRtist
             public void ClearNode()
             {
                 Childrens.ForEach(x => x.ClearNode());
+                Childrens.Clear();
                 Destroy(Sphere);
                 Link.ForEach(x => Destroy(x));
                 Link.Clear();
@@ -36,15 +37,35 @@ namespace VRtist
                 Matrix4x4 objectMatrix = parentMatrix * objectAnimation.GetTranformMatrix(frame);
                 Maths.DecomposeMatrix(objectMatrix, out Vector3 objectPosition, out Quaternion objectRotation, out Vector3 objectScale);
 
-                Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                if (Target.TryGetComponent<HumanGoalController>(out HumanGoalController controller) && controller.IsGoal)
+                {
+                    Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                }
+                else
+                {
+                    Sphere = new GameObject();
+                }
                 Sphere.transform.parent = parentNode;
                 Sphere.transform.SetPositionAndRotation(objectPosition, objectRotation);
                 Sphere.transform.localScale = Vector3.one * scale;
                 Sphere.name = targetObject.name + "-" + frame;
+                if (null != controller && !controller.name.Contains("Hips"))
+                {
+                    GameObject link = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                    link.transform.parent = parentNode;
+                    link.transform.localPosition = Sphere.transform.localPosition / 2f;
+                    link.transform.up = Sphere.transform.position - parentNode.position;
+                    link.transform.localScale = new Vector3(scale, Sphere.transform.localPosition.magnitude / 2f, scale);
+                    Link.Add(link);
+                }
 
+
+
+                if (targetObject.transform.childCount > 3) scale = 0.5f;
+                else scale = 1f;
                 foreach (Transform child in targetObject.transform)
                 {
-                    Childrens.Add(new Node(child.gameObject, frame, Sphere.transform, objectMatrix));
+                    Childrens.Add(new Node(child.gameObject, frame, Sphere.transform, objectMatrix, scale));
                 }
             }
 
@@ -64,12 +85,23 @@ namespace VRtist
         public Dictionary<GameObject, Dictionary<int, Node>> ghostDictionary;
         public Transform world;
         public Transform GhostParent;
+        private bool isAnimTool;
 
         public void Start()
         {
             ghostDictionary = new Dictionary<GameObject, Dictionary<int, Node>>();
             Selection.onSelectionChanged.AddListener(OnSelectionChanged);
             GlobalState.Animation.onChangeCurve.AddListener(OnCurveChanged);
+            ToolsUIManager.Instance.OnToolChangedEvent += OnToolChanged;
+        }
+
+
+        private void OnToolChanged(object sender, ToolChangedArgs args)
+        {
+            bool switchToAnim = args.toolName == "Animation";
+            if (switchToAnim && !isAnimTool) UpdateFromSelection();
+            if (!switchToAnim && isAnimTool) ClearGhosts();
+            isAnimTool = switchToAnim;
         }
 
         void OnSelectionChanged(HashSet<GameObject> previousSelectedObjects, HashSet<GameObject> selectedObjects)
@@ -101,13 +133,10 @@ namespace VRtist
                     //Debug.Log("has value");
                     foreach (KeyValuePair<int, Node> pair in value)
                     {
-                        pair.Value.UpdateNode(controller.transform.localToWorldMatrix);
+                        pair.Value.ClearNode();
                     }
                 }
-                else
-                {
-                    CreateGhost(controller);
-                }
+                CreateGhost(controller);
             }
         }
 
@@ -115,7 +144,7 @@ namespace VRtist
         {
             AnimationSet rootAnim = GlobalState.Animation.GetObjectAnimation(controller.RootObject.gameObject);
             if (null == rootAnim) return;
-            ghostDictionary.Add(controller.RootObject.gameObject, new Dictionary<int, Node>());
+            ghostDictionary[controller.RootObject.gameObject] = new Dictionary<int, Node>();
             Curve rotX = rootAnim.GetCurve(AnimatableProperty.RotationX);
             rotX.keys.ForEach(x =>
             {

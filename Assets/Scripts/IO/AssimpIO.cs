@@ -713,7 +713,6 @@ namespace VRtist
                 foreach (Assimp.Node assimpChild in node.Children)
                 {
                     GameObject child = new GameObject();
-                    child.tag = "Goal";
                     if (blocking)
                         ImportHierarchy(assimpChild, go.transform, child, mat, Quaternion.identity).MoveNext();
                     else
