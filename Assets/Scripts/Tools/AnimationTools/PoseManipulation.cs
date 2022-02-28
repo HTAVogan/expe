@@ -165,7 +165,7 @@ namespace VRtist
                     fullHierarchy[hierarchySize - 2].localRotation = initialRotation * Quaternion.FromToRotation(fromRotation, to);
                     endRotations[1] = fullHierarchy[hierarchySize - 2].localRotation;
                 }
-                else if (hierarchySize < 2)
+                else if (hierarchySize <= 2)
                 {
                     oTransform.localPosition = targetPosition;
                     endPositions[0] = targetPosition;

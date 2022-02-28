@@ -42,10 +42,14 @@ namespace VRtist
                 controller.LowerAngleBound = joint.LowerAngleBound;
                 controller.UpperAngleBound = joint.UpperAngleBound;
 
-                MeshFilter filter = transform.gameObject.AddComponent<MeshFilter>();
-                filter.mesh = mesh;
-                MeshRenderer renderer = transform.gameObject.AddComponent<MeshRenderer>();
-                renderer.material = new Material(material);
+                if (joint.isGoal)
+                {
+                    controller.tag = "Goal";
+                    MeshFilter filter = transform.gameObject.AddComponent<MeshFilter>();
+                    filter.mesh = mesh;
+                    MeshRenderer renderer = transform.gameObject.AddComponent<MeshRenderer>();
+                    renderer.material = new Material(material);
+                }
             }
             path.Add(transform);
             foreach (Transform child in transform)
