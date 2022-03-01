@@ -433,7 +433,7 @@ public class GostManager : MonoBehaviour
                     manager.ClearAnimationFormOrigin(joleen);
                     Destroy(gostJoleen.GetComponent<Animator>());
                     CreateDictionnaryGostOrigin(gostJoleen, joleen);
-                    var joleenCollider = gostJoleen.GetComponent<BoxCollider>();
+                    var joleenCollider = gostJoleen.GetComponent<Collider>();
                     if (joleenCollider != null)
                     {
                         joleenCollider.enabled = false;
