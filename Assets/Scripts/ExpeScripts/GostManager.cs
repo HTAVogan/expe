@@ -216,8 +216,7 @@ public class GostManager : MonoBehaviour
                                 diff = joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) - joleenController.LocalFramePosition(i);
                                 joleenDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta)) * joleenController.weight;
                                 weightcounterjol += joleenController.weight;
-                                Debug.Log("Name is" + joleenController.name + "Origin animation & pos : " + joleenHumanGoalControllers[counterJoleen].Animation + "& " + joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) + " gost animation and position  : " + joleenController.Animation + " & " + joleenController.LocalFramePosition(i) + " and diff magnitude is " + diff.magnitude + "and diff sum is " + joleenDiffSum);
-                                if (joleenPerBones.TryGetValue(joleenController.name, out List<float> value))
+                                Debug.Log("Name is" + joleenHumanGoalControllers[counterJoleen].name + "Origin animation & pos : " + joleenHumanGoalControllers[counterJoleen].Animation + "& " + joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) + " gost animation and position  : " + joleenController.Animation.transform + " & " + joleenController.LocalFramePosition(i) + " and diff magnitude is " + diff.magnitude + "and diff sum is " + joleenDiffSum); if (joleenPerBones.TryGetValue(joleenController.name, out List<float> value))
                                 {
                                     value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
                                 }
