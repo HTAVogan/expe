@@ -209,11 +209,11 @@ public class GostManager : MonoBehaviour
                             KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
                             start = startend.Key;
                             end = startend.Value;
+                            counterJoleen++;
                             if (joleenController.Animation != null && i >= start && i <= end)
                             {
                                 diff = joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) - joleenController.LocalFramePosition(i);
                                 joleenDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta)) * joleenController.weight;
-                                counterJoleen++;
                                 weightcounterjol += joleenController.weight;
                                 Debug.Log("Name is" + joleenController.name + "Origin animation & pos : " + joleenHumanGoalControllers[counterJoleen].Animation + "& " + joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) + " gost animation and position  : " + joleenController.Animation + " & " + joleenController.LocalFramePosition(i) + " and diff magnitude is " + diff.magnitude + "and diff sum is " + joleenDiffSum);
                                 if (joleenPerBones.TryGetValue(joleenController.name, out List<float> value))
