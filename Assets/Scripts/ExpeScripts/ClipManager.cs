@@ -10,16 +10,13 @@ public class ClipManager : MonoBehaviour
 
 
     private GameObject joleen;
-    private GameObject abe;
     private GameObject bottle;
     private AnimationEngineTradi engine;
     private AnimationConvert converter;
     public AnimationClip Throw;
-    public AnimationClip Dye;
     public AnimationClip BottleClip;
     public RuntimeAnimatorController controllerJoleen;
     public RuntimeAnimatorController controllerBottle;
-    public RuntimeAnimatorController controllerAbe;
     public GameObject world;
 
 
@@ -52,26 +49,6 @@ public class ClipManager : MonoBehaviour
                 //    }
                 //}
                 animJoleen.enabled = true;
-            }
-        }
-        if (abe == null)
-        {
-            abe = GameObject.Find("aj@Dying.C69DCA00.10");
-            if (abe != null)
-            {
-                Animator animAbe = abe.AddComponent<Animator>();
-                animAbe.runtimeAnimatorController = controllerAbe;
-                Dye.ClearCurves();
-                BindPropertiesToClip(abe, Dye, abe);
-                InitFirstKeyFrame(Dye, abe);
-                //foreach (Transform item in abe.transform)
-                //{
-                //    if (item.gameObject.name.Contains("Hips"))
-                //    {
-                //        InitFirstKeyFrame(Dye, item.gameObject);
-                //    }
-                //}
-                animAbe.enabled = true;
             }
         }
         if (bottle == null)

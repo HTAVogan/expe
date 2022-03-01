@@ -72,11 +72,11 @@ public class AnimationWindows : EditorWindow
             GUILayout.EndHorizontal();
             GUILayout.BeginVertical();
             if (!isGhostAlreadyGen)
-                if (GUILayout.Button("Generate Gosts", GUILayout.ExpandWidth(false), GUILayout.Height(20)))
+                if (GUILayout.Button("Generate Ghosts", GUILayout.ExpandWidth(false), GUILayout.Height(20)))
                 {
                     GenerateGosts();
                 }
-            if (GUILayout.Button("Place origin to gost pos", GUILayout.ExpandWidth(false), GUILayout.Height(20)))
+            if (GUILayout.Button("Place ghost to original pos", GUILayout.ExpandWidth(false), GUILayout.Height(20)))
             {
                 PlaceGost();
             }

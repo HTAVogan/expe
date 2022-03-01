@@ -8,12 +8,10 @@ using VRtist;
 public class GostManager : MonoBehaviour
 {
     public GameObject gostJoleen;
-    public GameObject gostAbe;
     public GameObject bottle;
     public Material gostMaterial;
 
     public GameObject joleen;
-    public GameObject abe;
     public GameObject bottleInit;
     [Range(1f, 100f)]
     public float delta;
@@ -23,13 +21,11 @@ public class GostManager : MonoBehaviour
     public AnimationClip clipBottle;
     public RuntimeAnimatorController controllerGostBottle;
     public Dictionary<string, float> percents;
-    public Dictionary<string, List<float>> abePerBones;
     public Dictionary<string, List<float>> joleenPerBones;
     public string path = "Assets/Resources/resultsPerBone.txt";
     private Dictionary<GameObject, GameObject> gostAndOrigin = new Dictionary<GameObject, GameObject>();
     public bool areGostGenerated = false;
     private List<float> SumJoleenFirst;
-    private List<float> SumAbeFirst;
     private List<float> SumBottleFirst;
     public Vector3 originPosJoleen;
 
@@ -98,30 +94,25 @@ public class GostManager : MonoBehaviour
             Animator joleenAnimator;
             Animator abeAnimator;
             Animator initBottleAnimator;
-            AnimationClip Throw, Dye, BottleAnimationClip;
-            abePerBones = new Dictionary<string, List<float>>();
+            AnimationClip Throw, BottleAnimationClip;
             joleenPerBones = new Dictionary<string, List<float>>();
             if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
             {
                 joleenAnimator = joleen.GetComponent<Animator>();
-                abeAnimator = abe.GetComponent<Animator>();
                 initBottleAnimator = bottleInit.GetComponent<Animator>();
                 joleenAnimator.enabled = true;
-                abeAnimator.enabled = true;
                 initBottleAnimator.enabled = true;
                 Throw = GetComponent<ClipManager>().Throw;
-                Dye = GetComponent<ClipManager>().Dye;
                 BottleAnimationClip = GetComponent<ClipManager>().BottleClip;
             }
             #region useless but necessary to compile
             else
             {
                 Throw = new AnimationClip();
-                Dye = new AnimationClip();
                 BottleAnimationClip = new AnimationClip();
             }
             #endregion
-            if (abe != null && joleen != null && bottleInit != null)
+            if ( joleen != null && bottleInit != null)
             {
                 float AllFrameSumAbe = 0f;
                 float AllFrameSumJoleen = 0f;
@@ -133,9 +124,9 @@ public class GostManager : MonoBehaviour
                 int startFrame, endFrame;
 
                 var gostJoleenHumanGoalControllers = gostJoleen.GetComponentsInChildren<HumanGoalController>();
-                var gostAbebeHumanGoalControllers = gostAbe.GetComponentsInChildren<HumanGoalController>();
+
                 var joleenHumanGoalControllers = joleen.GetComponentsInChildren<HumanGoalController>();
-                var abeHumanGoalControllers = abe.GetComponentsInChildren<HumanGoalController>();
+
                 joleenPerBones.Add("Sum", new List<float>());
                 if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                 {
@@ -161,7 +152,6 @@ public class GostManager : MonoBehaviour
                     if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                     {
                         Throw.SampleAnimation(joleen, i / 60f);
-                        Dye.SampleAnimation(abe, i / 60f);
                         BottleAnimationClip.SampleAnimation(bottleInit, i / 60f);
                         foreach (var joleenController in gostJoleenHumanGoalControllers)
                         {
@@ -195,35 +185,8 @@ public class GostManager : MonoBehaviour
                         if (weightcounterjol != 0)
                             AllFrameSumJoleen += joleenDiffSum / weightcounterjol;
                         joleenPerBones["Sum"].Add(joleenDiffSum / weightcounterjol);
-                        // dye
-                        foreach (var abeController in gostAbebeHumanGoalControllers)
-                        {
-                            int start, end;
-                            KeyValuePair<int, int> startend = GetStartAndEndFrame(abeController);
-                            start = startend.Key;
-                            end = startend.Value;
 
-                            if (gostAndOrigin.TryGetValue(abeController.gameObject, out GameObject origin) && abeController.Animation != null && i >= start && i <= end)
-                            {
-
-                                Vector3 vecByHips = abe.transform.InverseTransformPoint(origin.transform.position);
-                                Vector3 diff = vecByHips - abeController.LocalFramePosition(i);
-                                abeDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta)) * abeController.weight;
-                                counterAbe++;
-                                weightcounterAbe += abeController.weight;
-                                if (abePerBones.TryGetValue(abeController.name, out List<float> value))
-                                {
-                                    value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
-                                }
-                                else
-                                {
-                                    abePerBones.Add(abeController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
-                                }
-                            }
-
-                        }
-                        if (weightcounterAbe != 0)
-                            AllFrameSumAbe += abeDiffSum / weightcounterAbe;
+                 
                         //bouteille
                         int startBottle, endBottle;
                         KeyValuePair<int, int> startendBottle = GetStartAndEndFrame(bottle);
@@ -265,34 +228,11 @@ public class GostManager : MonoBehaviour
                             }
                         }
                         if (weightcounterjol != 0)
-                            AllFrameSumJoleen += joleenDiffSum / weightcounterjol;
-                        // dye
-                        foreach (var abeController in gostAbebeHumanGoalControllers)
                         {
-                            Vector3 diff = Vector3.zero;
-                            int start, end;
-                            KeyValuePair<int, int> startend = GetStartAndEndFrame(abeController);
-                            start = startend.Key;
-                            end = startend.Value;
-                            if (abeController.Animation != null && i >= start && i <= end)
-                            {
-                                diff = abeHumanGoalControllers[counterAbe].LocalFramePosition(i) - abeController.LocalFramePosition(i);
-                                abeDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta)) * abeController.weight;
-                                counterAbe++;
-                                weightcounterAbe += abeController.weight;
-                                if (abePerBones.TryGetValue(abeController.name, out List<float> value))
-                                {
-                                    value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
-                                }
-                                else
-                                {
-                                    abePerBones.Add(abeController.name, new List<float> { 1 - Mathf.Clamp01(diff.magnitude / delta) });
-                                }
-                            }
-
+                            AllFrameSumJoleen += joleenDiffSum / weightcounterjol; 
+                            joleenPerBones["Sum"].Add(joleenDiffSum / weightcounterjol);
                         }
-                        if (weightcounterAbe != 0)
-                            AllFrameSumAbe += abeDiffSum / weightcounterAbe;
+  
                         //bouteille
                         AnimationSet set = GlobalState.Animation.GetObjectAnimation(bottleInit);
                         Vector3 diffBottle = Vector3.zero;
@@ -323,18 +263,18 @@ public class GostManager : MonoBehaviour
                     #endregion
                 }
                 percentJoleen = 100 * (AllFrameSumJoleen / (endFrame - 1));
-                percentAbe = 100 * (AllFrameSumAbe / (endFrame - 1));
+                //percentAbe = 100 * (AllFrameSumAbe / (endFrame - 1));
                 percentBottle = 100 * (AllFrameSumBottle / (endFrame - 1));
                 if (percents.TryGetValue("Joleen", out float valueJol))
                 {
                     valueJol = percentJoleen;
                     ret += valueJol;
                 }
-                if (percents.TryGetValue("Abe", out float valueAbe))
-                {
-                    valueAbe = percentAbe;
-                    ret += valueAbe;
-                }
+                //if (percents.TryGetValue("Abe", out float valueAbe))
+                //{
+                //    valueAbe = percentAbe;
+                //    ret += valueAbe;
+                //}
                 if (percents.TryGetValue("Bottle", out float valueBottle))
                 {
                     valueBottle = percentBottle * bottleValue;
@@ -343,7 +283,7 @@ public class GostManager : MonoBehaviour
 
             }
             writeInFile();
-            return (ret / (2 + bottleValue));
+            return (ret / (1 + bottleValue));
         }
         else
         {
@@ -386,11 +326,6 @@ public class GostManager : MonoBehaviour
 
 
         foreach (var item in joleenPerBones)
-        {
-            writer.WriteLine(item.Key + ": " + ListToString(item.Value));
-        }
-        writer.WriteLine("Abe : ");
-        foreach (var item in abePerBones)
         {
             writer.WriteLine(item.Key + ": " + ListToString(item.Value));
         }
@@ -477,7 +412,7 @@ public class GostManager : MonoBehaviour
             if (gostJoleen == null)
             {
                 joleen = GameObject.Find("aj@Throw Object.DD5C871E.9");
-                originPosJoleen = joleen.transform.localPosition;
+               
                 if (joleen != null)
                 {
                     gostJoleen = Instantiate(joleen, joleen.transform.parent);
@@ -503,39 +438,10 @@ public class GostManager : MonoBehaviour
                     {
                         joleenCollider.enabled = false;
                     }
+                    originPosJoleen = gostJoleen.transform.localPosition;
                 }
 
 
-            }
-            if (gostAbe == null)
-            {
-                abe = GameObject.Find("aj@Dying.C69DCA00.10");
-                if (abe != null)
-                {
-                    gostAbe = Instantiate(abe, abe.transform.parent);
-                    //var temp = gostAbe.GetComponentsInChildren<Renderer>();
-                    //Texture texture = abe.GetComponentInChildren<Renderer>().material.GetTexture("_ColorMap");
-                    //foreach (var item in temp)
-                    //{
-                    //    item.material = gostMaterial;
-                    //    item.material.SetTexture("_ColorMap", texture);
-                    //}
-                    if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
-                        GlobalState.Animation.CopyAnimation(abe, gostAbe);
-                    else
-                        GlobalStateTradi.Animation.CopyAnimation(abe, gostAbe);
-                    gostAbe.transform.position += Vector3.forward * 2;
-                    checkAnimationsOfGosts(gostAbe);
-                    gameObject.GetComponent<AnimationManager>().ClearAnimationFormOrigin(abe);
-                    Destroy(gostAbe.GetComponent<Animator>());
-                    CreateDictionnaryGostOrigin(gostAbe, abe);
-                    var abeCollider = gostAbe.GetComponent<BoxCollider>();
-                    if (abeCollider != null)
-                    {
-                        abeCollider.enabled = false;
-                    }
-
-                }
             }
             if (bottle == null)
             {
@@ -587,12 +493,12 @@ public class GostManager : MonoBehaviour
             if (isReturn)
             {
                 isReturn = false;
-                joleen.transform.localPosition = originPosJoleen;
+                gostJoleen.transform.localPosition = originPosJoleen;
             }
             else
             {
                 isReturn = true;
-                joleen.transform.localPosition = gostJoleen.transform.localPosition;
+                gostJoleen.transform.localPosition = joleen.transform.localPosition;
             }
         }
         
