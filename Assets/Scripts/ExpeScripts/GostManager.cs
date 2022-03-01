@@ -491,7 +491,11 @@ public class GostManager : MonoBehaviour
     {
         foreach (Transform item in transform)
         {
-            item.GetComponent<Collider>().enabled = false;
+          Collider coll=  item.GetComponent<Collider>();
+            if(coll != null)
+            {
+                coll.enabled = false;
+            }
             DisbaledRecursiveCollider(item);
         }
     }
