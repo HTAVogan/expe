@@ -167,7 +167,7 @@ public class GostManager : MonoBehaviour
                                 Vector3 diff = vecByHips - joleenController.LocalFramePosition(i);
                                 Debug.Log(joleenController + ": " + "vec by hips : " + vecByHips + "diff is :" + diff);
                                 joleenDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta)) * joleenController.weight;
-                                counterJoleen++;
+                               
                                 weightcounterjol += joleenController.weight;
                                 if (joleenPerBones.TryGetValue(joleenController.name, out List<float> value))
                                 {
@@ -180,6 +180,7 @@ public class GostManager : MonoBehaviour
                                     joleenPerBones.Add(joleenController.name, new List<float> { diff.magnitude });
                                 }
                             }
+                            counterJoleen++;
 
                         }
                         if (weightcounterjol != 0)
