@@ -433,12 +433,13 @@ public class GostManager : MonoBehaviour
                     manager.ClearAnimationFormOrigin(joleen);
                     Destroy(gostJoleen.GetComponent<Animator>());
                     CreateDictionnaryGostOrigin(gostJoleen, joleen);
-                    var joleenCollider = gostJoleen.GetComponent<Collider>();
+                    var joleenCollider = gostJoleen.GetComponent<BoxCollider>();
                     if (joleenCollider != null)
                     {
                         joleenCollider.enabled = false;
                     }
                     originPosJoleen = gostJoleen.transform.localPosition;
+                    DisbaledRecursiveCollider(gostJoleen.transform);
                 }
 
 
@@ -484,6 +485,15 @@ public class GostManager : MonoBehaviour
         }
     
         areGostGenerated = true;
+    }
+
+    private void DisbaledRecursiveCollider(Transform transform)
+    {
+        foreach (Transform item in transform)
+        {
+            item.GetComponent<Collider>().enabled = false;
+            DisbaledRecursiveCollider(item);
+        }
     }
 
     public void PosGost()
