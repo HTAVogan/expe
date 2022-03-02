@@ -31,8 +31,9 @@ public class GostManager : MonoBehaviour
 
     private float time = 0f;
     public float timeSinceGost = 0f;
-    private bool isReturn = true;
-
+    private bool isReturn = false;
+    private Vector3 previousBottlePos;
+    private GameObject BottleParent;
     private void Start()
     {
         percents = new Dictionary<string, float>();
@@ -71,14 +72,6 @@ public class GostManager : MonoBehaviour
             GetPercent();
     }
 
-    [ContextMenu("Put throw perfect")]
-    public void MoveClip()
-    {
-        if (perfectThrow != null)
-        {
-
-        }
-    }
 
     /// <summary>
     /// Get the animation percent of similitaries between gost and user animations
@@ -122,7 +115,7 @@ public class GostManager : MonoBehaviour
                 float percentJoleen = 0f;
                 float percentBottle = 0f;
                 int startFrame, endFrame;
-
+                int frameModifCounter = 0;
                 var gostJoleenHumanGoalControllers = gostJoleen.GetComponentsInChildren<HumanGoalController>();
 
                 var joleenHumanGoalControllers = joleen.GetComponentsInChildren<HumanGoalController>();
@@ -142,11 +135,9 @@ public class GostManager : MonoBehaviour
                 for (int i = startFrame; i < endFrame; i++)
                 {
                     float weightcounterjol = 0f;
-                    float weightcounterAbe = 0f;
                     int counterJoleen = 0;
                     float joleenDiffSum = 0;
-                    int counterAbe = 0;
-                    float abeDiffSum = 0f;
+         
 
                     #region tradi
                     if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
@@ -159,6 +150,7 @@ public class GostManager : MonoBehaviour
                             KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
                             start = startend.Key;
                             end = startend.Value;
+                            frameModifCounter = end - start;
                             if (gostAndOrigin.TryGetValue(joleenController.gameObject, out GameObject origin) && joleenController.Animation != null && i >= start && i <= end)
                             {
                                 //Debug.Log("Abe controller  = " + joleenController + " i is " + i + "start is " + start + " end is " + end);
@@ -210,6 +202,7 @@ public class GostManager : MonoBehaviour
                             KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
                             start = startend.Key;
                             end = startend.Value;
+                            frameModifCounter = end - start;
                             if (joleenController.Animation != null && i >= start && i <= end)
                             {
                                 diff = joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) - joleenController.LocalFramePosition(i);
@@ -263,7 +256,7 @@ public class GostManager : MonoBehaviour
                     }
                     #endregion
                 }
-                percentJoleen = 100 * (AllFrameSumJoleen / (endFrame - 1));
+                percentJoleen = 100 * (AllFrameSumJoleen / (frameModifCounter - 1));
                 //percentAbe = 100 * (AllFrameSumAbe / (endFrame - 1));
                 percentBottle = 100 * (AllFrameSumBottle / (endFrame - 1));
                 if (percents.TryGetValue("Joleen", out float valueJol))
@@ -417,7 +410,6 @@ public class GostManager : MonoBehaviour
                 if (joleen != null)
                 {
                     gostJoleen = Instantiate(joleen, joleen.transform.parent);
-            
                     if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                         GlobalState.Animation.CopyAnimation(joleen, gostJoleen);
                     else
@@ -445,11 +437,10 @@ public class GostManager : MonoBehaviour
                 if (bottleInit != null)
                 {
                     bottle = Instantiate(bottleInit, bottleInit.transform.parent);
+
                     DestroyImmediate(bottle.GetComponent<Animator>());
                     Animator gostBottleAnim = bottle.AddComponent<Animator>();
                     gostBottleAnim.runtimeAnimatorController = controllerGostBottle;
-
-              
 
                     if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                     {
@@ -463,6 +454,7 @@ public class GostManager : MonoBehaviour
                     }
                     gostBottleAnim.enabled = false;
                     bottle.transform.position += Vector3.forward * 2;
+                    previousBottlePos = bottle.transform.position;
                     MoveAnimation(bottle);
                     checkAnimationsOfGosts(bottle);
                     Destroy(bottle.GetComponent<Animator>());
@@ -497,11 +489,13 @@ public class GostManager : MonoBehaviour
             {
                 isReturn = false;
                 gostJoleen.transform.localPosition = originPosJoleen;
+                BottleParent.transform.localPosition = previousBottlePos;
             }
             else
             {
                 isReturn = true;
                 gostJoleen.transform.localPosition = joleen.transform.localPosition;
+                BottleParent.transform.localPosition = Vector3.zero;
             }
         }
 
@@ -546,7 +540,8 @@ public class GostManager : MonoBehaviour
 
         go.transform.position = Vector3.forward * 2;
 
-
+        BottleParent = go;
+        previousBottlePos = go.transform.localPosition;
     }
 
 

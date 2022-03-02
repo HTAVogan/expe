@@ -105,21 +105,7 @@ public class AnimationWindows : EditorWindow
 
     private void PlaceGost()
     {
-        if (isOriginal && GlobalStateTradi.Animation.gostManager.areGostGenerated)
-        {
-            isOriginal = false;
-            originalPos = GlobalStateTradi.Animation.gostManager.originPosJoleen;
-        }
-        if (!isReturnPos)
-        {
-        GlobalStateTradi.Animation.gostManager.joleen.transform.localPosition = GlobalStateTradi.Animation.gostManager.gostJoleen.transform.localPosition;
-            isReturnPos = true;
-        }
-        else
-        {
-            isReturnPos = false;
-            GlobalStateTradi.Animation.gostManager.joleen.transform.localPosition = originalPos;
-        }
+        GlobalStateTradi.Animation.gostManager.PosGost();
     }
 
     private void Validate()
