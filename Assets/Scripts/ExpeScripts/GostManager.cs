@@ -412,18 +412,12 @@ public class GostManager : MonoBehaviour
         {
             if (gostJoleen == null)
             {
-                joleen = GameObject.Find("aj@Throw Object.DD5C871E.9");
+                joleen = GameObject.Find("aj@ThrowSimple.6C835C64.15");
 
                 if (joleen != null)
                 {
                     gostJoleen = Instantiate(joleen, joleen.transform.parent);
-                    //var temp = gostJoleen.GetComponentsInChildren<Renderer>();
-                    //Texture texture = joleen.GetComponentInChildren<Renderer>().material.GetTexture("_ColorMap");
-                    //foreach (var item in temp)
-                    //{
-                    //    item.material = gostMaterial;
-                    //    item.material.SetTexture("_ColorMap", texture);
-                    //}
+            
                     if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                         GlobalState.Animation.CopyAnimation(joleen, gostJoleen);
                     else
@@ -455,13 +449,7 @@ public class GostManager : MonoBehaviour
                     Animator gostBottleAnim = bottle.AddComponent<Animator>();
                     gostBottleAnim.runtimeAnimatorController = controllerGostBottle;
 
-                    //var temp = bottle.GetComponentsInChildren<Renderer>();
-                    //Texture texture = bottleInit.GetComponentInChildren<Renderer>().material.GetTexture("_ColorMap");
-                    //foreach (var item in temp)
-                    //{
-                    //    item.material = gostMaterial;
-                    //    item.material.SetTexture("_ColorMap", texture);
-                    //}
+              
 
                     if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                     {
@@ -554,7 +542,7 @@ public class GostManager : MonoBehaviour
             go.transform.localScale = Vector3.one;
             go.transform.localRotation = Quaternion.identity;
         }
-        //go.transform.position = bottleInit.transform.position;
+
 
         go.transform.position = Vector3.forward * 2;
 
