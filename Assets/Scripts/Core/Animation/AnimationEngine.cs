@@ -151,7 +151,7 @@ namespace VRtist
             set
             {
                 currentFrame = Mathf.Clamp(value, startFrame, endFrame);
-                
+
                 if (animationState != AnimationState.Playing && animationState != AnimationState.AnimationRecording)
                 {
                     EvaluateAnimations();
@@ -292,7 +292,7 @@ namespace VRtist
             List<GameObject> toDelete = new List<GameObject>();
             foreach (var item in animations)
             {
-                if(item.Key == null)
+                if (item.Key == null)
                 {
                     toDelete.Add(item.Key);
                 }
@@ -311,7 +311,7 @@ namespace VRtist
                 foreach (KeyValuePair<AnimatableProperty, Curve> curve in sourceAnim.curves)
                 {
                     targetAnim.SetCurve(curve.Key, curve.Value.keys);
-                }   
+                }
                 SetObjectAnimations(target, targetAnim);
             }
             for (int i = 0; i < source.transform.childCount; i++)
@@ -377,7 +377,7 @@ namespace VRtist
         {
             foreach (AnimationSet animationSet in animations.Values)
             {
-          
+
                 animationSet.EvaluateAnimation(CurrentFrame);
             }
         }
@@ -428,6 +428,10 @@ namespace VRtist
         {
             if (animations.Remove(gobject) && callEvent)
                 onRemoveAnimation.Invoke(gobject);
+            if (gobject.TryGetComponent<HumanGoalController>(out HumanGoalController controller))
+            {
+                controller.CheckAnimations();
+            }
         }
 
         [ContextMenu("clear ALL animations")]
@@ -500,6 +504,10 @@ namespace VRtist
             curve.AddKey(key, lockTangents);
 
             if (updateCurves) onChangeCurve.Invoke(gobject, property);
+            if (gobject.TryGetComponent<HumanGoalController>(out HumanGoalController controller))
+            {
+                controller.CheckAnimations();
+            }
         }
 
         public void AddFilteredKeyframeZone(GameObject gobject, AnimatableProperty property, AnimationKey key, int startFrame, int endFrame, bool updateCurves = true)

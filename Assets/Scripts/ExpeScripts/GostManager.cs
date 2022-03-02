@@ -40,7 +40,7 @@ public class GostManager : MonoBehaviour
         percents.Add("Abe", 0);
         percents.Add("Botlle", 0);
 
-   
+
     }
 
 
@@ -67,14 +67,14 @@ public class GostManager : MonoBehaviour
 
     public void CalculateSimilitudeButton()
     {
-        if (areGostGenerated) 
-                GetPercent();
+        if (areGostGenerated)
+            GetPercent();
     }
 
     [ContextMenu("Put throw perfect")]
     public void MoveClip()
     {
-        if(perfectThrow != null)
+        if (perfectThrow != null)
         {
 
         }
@@ -112,7 +112,7 @@ public class GostManager : MonoBehaviour
                 BottleAnimationClip = new AnimationClip();
             }
             #endregion
-            if ( joleen != null && bottleInit != null)
+            if (joleen != null && bottleInit != null)
             {
                 float AllFrameSumAbe = 0f;
                 float AllFrameSumJoleen = 0f;
@@ -187,7 +187,7 @@ public class GostManager : MonoBehaviour
                             AllFrameSumJoleen += joleenDiffSum / weightcounterjol;
                         joleenPerBones["Sum"].Add(joleenDiffSum / weightcounterjol);
 
-                 
+
                         //bouteille
                         int startBottle, endBottle;
                         KeyValuePair<int, int> startendBottle = GetStartAndEndFrame(bottle);
@@ -210,13 +210,13 @@ public class GostManager : MonoBehaviour
                             KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
                             start = startend.Key;
                             end = startend.Value;
-                          
                             if (joleenController.Animation != null && i >= start && i <= end)
                             {
                                 diff = joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) - joleenController.LocalFramePosition(i);
                                 joleenDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta)) * joleenController.weight;
                                 weightcounterjol += joleenController.weight;
-                                Debug.Log("Name is" + joleenHumanGoalControllers[counterJoleen].name + "Origin animation & pos : " + joleenHumanGoalControllers[counterJoleen].Animation + "& " + joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) + " gost animation and position  : " + joleenController.Animation.transform + " & " + joleenController.LocalFramePosition(i) + " and diff magnitude is " + diff.magnitude + "and diff sum is " + joleenDiffSum); if (joleenPerBones.TryGetValue(joleenController.name, out List<float> value))
+                                //Debug.Log("Name is" + joleenHumanGoalControllers[counterJoleen].name + "Origin animation & pos : " + joleenHumanGoalControllers[counterJoleen].Animation + "& " + joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) + " gost animation and position  : " + joleenController.Animation.transform + " & " + joleenController.LocalFramePosition(i) + " and diff magnitude is " + diff.magnitude + "and diff sum is " + joleenDiffSum);
+                                if (joleenPerBones.TryGetValue(joleenController.name, out List<float> value))
                                 {
                                     value.Add(1 - Mathf.Clamp01(diff.magnitude / delta));
                                 }
@@ -230,10 +230,10 @@ public class GostManager : MonoBehaviour
                         }
                         if (weightcounterjol != 0)
                         {
-                            AllFrameSumJoleen += joleenDiffSum / weightcounterjol; 
+                            AllFrameSumJoleen += joleenDiffSum / weightcounterjol;
                             joleenPerBones["Sum"].Add(joleenDiffSum / weightcounterjol);
                         }
-  
+
                         //bouteille
                         AnimationSet set = GlobalState.Animation.GetObjectAnimation(bottleInit);
                         Vector3 diffBottle = Vector3.zero;
@@ -335,7 +335,7 @@ public class GostManager : MonoBehaviour
     }
 
 
-    private KeyValuePair<int,int> GetStartAndEndFrame(HumanGoalController controller)
+    private KeyValuePair<int, int> GetStartAndEndFrame(HumanGoalController controller)
     {
         int start, end;
         AnimationSet set;
@@ -356,7 +356,7 @@ public class GostManager : MonoBehaviour
         else
         {
             set = controller.Animation;
-            if(set == null)
+            if (set == null)
             {
                 start = 0;
                 end = 1;
@@ -413,7 +413,7 @@ public class GostManager : MonoBehaviour
             if (gostJoleen == null)
             {
                 joleen = GameObject.Find("aj@Throw Object.DD5C871E.9");
-               
+
                 if (joleen != null)
                 {
                     gostJoleen = Instantiate(joleen, joleen.transform.parent);
@@ -479,12 +479,12 @@ public class GostManager : MonoBehaviour
                     checkAnimationsOfGosts(bottle);
                     Destroy(bottle.GetComponent<Animator>());
                     var bottleCollider = bottle.GetComponent<BoxCollider>();
-                    if(bottleCollider != null)
+                    if (bottleCollider != null)
                         bottleCollider.enabled = false;
                 }
             }
         }
-    
+
         areGostGenerated = true;
     }
 
@@ -492,8 +492,8 @@ public class GostManager : MonoBehaviour
     {
         foreach (Transform item in transform)
         {
-          Collider coll=  item.GetComponent<Collider>();
-            if(coll != null)
+            Collider coll = item.GetComponent<Collider>();
+            if (coll != null)
             {
                 coll.enabled = false;
             }
@@ -516,7 +516,7 @@ public class GostManager : MonoBehaviour
                 gostJoleen.transform.localPosition = joleen.transform.localPosition;
             }
         }
-        
+
     }
     void CreateDictionnaryGostOrigin(GameObject gost, GameObject origin)
     {
@@ -556,8 +556,8 @@ public class GostManager : MonoBehaviour
         }
         //go.transform.position = bottleInit.transform.position;
 
-        go.transform.position = Vector3.forward*2;
-   
+        go.transform.position = Vector3.forward * 2;
+
 
     }
 
