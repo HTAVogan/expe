@@ -127,9 +127,9 @@ public class AnimationWindows : EditorWindow
         StreamWriter writer = new StreamWriter(path, true);
         ActionCountTradi counter = GameObject.Find("ActionCounter").GetComponent<ActionCountTradi>();
 
-        writer.WriteLine("TimeOfEval;Eval mode;Time spent; Percent of similitudes; Number of actions; Actions done; Translation for each animated GO");
+        writer.WriteLine("TimeOfEval;Eval mode;Time spent; Percent of similitudes; frames number with a keyframe;Number of actions; Actions done; Translation for each animated GO");
         string line = "";
-        line = System.DateTime.Now + ";" + evalMode + ";" + GlobalStateTradi.Animation.gostManager.timeSinceGost.ToString() + ";" + GlobalStateTradi.Animation.gostManager.GetComponent<GostManager>().GetPercent().ToString() + ";" + counter.actionsCount.ToString() + ";";
+        line = System.DateTime.Now + ";" + evalMode + ";" + GlobalStateTradi.Animation.gostManager.timeSinceGost.ToString() + ";" + GlobalStateTradi.Animation.gostManager.GetComponent<GostManager>().GetPercent().ToString() + ";" + GetKeyFrameNumber().ToString()+";" + counter.actionsCount.ToString() + ";";
         foreach (var item in counter.actions)
         {
             line += item.Key + " : " + item.Value + "/";
@@ -190,5 +190,11 @@ public class AnimationWindows : EditorWindow
             GlobalStateTradi.Animation.Play();
             isPlaying = true;
         }
+    }
+
+    private int GetKeyFrameNumber()
+    {
+
+        return 0;
     }
 }

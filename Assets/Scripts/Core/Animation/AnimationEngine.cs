@@ -21,6 +21,7 @@
  * SOFTWARE.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -742,6 +743,11 @@ namespace VRtist
             oldAnimations.Clear();
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                 GlobalState.Settings.interpolation = preRecordInterpolation;
+        }
+
+        internal int GetKeyFrameNumber()
+        {
+            return animations.First().Value.GetCurve(AnimatableProperty.PositionX).keys.Count;
         }
     }
 }

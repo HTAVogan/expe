@@ -44,12 +44,12 @@ public class ValidateButtonHandler : MonoBehaviour
 
             StreamWriter writer = new StreamWriter(path, true);
             ActionVRCount counterAction = global.GetComponent<ActionVRCount>();
-
-            writer.WriteLine("TimeOfEval;Eval mode;Time spent; Percent of similitudes; Number of actions; Actions done; Translation for each animated GO");
+            int numberofFrames = GlobalState.Animation.GetKeyFrameNumber();
+            writer.WriteLine("TimeOfEval;Eval mode;Time spent; Percent of similitudes; frame's number with a keyframe;Number of actions; Actions done;Translation for each animated GO");
             string line = "";
             if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
             {
-                line = System.DateTime.Now + ";" + evalMode + ";" + time.ToString() + ";" + gostManager.GetComponent<GostManager>().GetPercent().ToString() + ";" + counterAction.numberOfAction.ToString() + ";";
+                line = System.DateTime.Now + ";" + evalMode + ";" + time.ToString() + ";" + gostManager.GetComponent<GostManager>().GetPercent().ToString() + ";" + numberofFrames +";" + counterAction.numberOfAction.ToString() + ";";
                 foreach (var item in counterAction.inputsDone)
                 {
                     line += item.Key + " : " + item.Value + "/";
