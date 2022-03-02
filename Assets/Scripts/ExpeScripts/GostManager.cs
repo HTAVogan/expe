@@ -31,8 +31,9 @@ public class GostManager : MonoBehaviour
 
     private float time = 0f;
     public float timeSinceGost = 0f;
-    private bool isReturn = true;
+    private bool isReturn = false;
     private Vector3 previousBottlePos;
+    private GameObject BottleParent;
     private void Start()
     {
         percents = new Dictionary<string, float>();
@@ -71,14 +72,6 @@ public class GostManager : MonoBehaviour
             GetPercent();
     }
 
-    [ContextMenu("Put throw perfect")]
-    public void MoveClip()
-    {
-        if (perfectThrow != null)
-        {
-
-        }
-    }
 
     /// <summary>
     /// Get the animation percent of similitaries between gost and user animations
@@ -417,13 +410,6 @@ public class GostManager : MonoBehaviour
                 if (joleen != null)
                 {
                     gostJoleen = Instantiate(joleen, joleen.transform.parent);
-                    //var temp = gostJoleen.GetComponentsInChildren<Renderer>();
-                    //Texture texture = joleen.GetComponentInChildren<Renderer>().material.GetTexture("_ColorMap");
-                    //foreach (var item in temp)
-                    //{
-                    //    item.material = gostMaterial;
-                    //    item.material.SetTexture("_ColorMap", texture);
-                    //}
                     if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                         GlobalState.Animation.CopyAnimation(joleen, gostJoleen);
                     else
@@ -455,14 +441,6 @@ public class GostManager : MonoBehaviour
                     DestroyImmediate(bottle.GetComponent<Animator>());
                     Animator gostBottleAnim = bottle.AddComponent<Animator>();
                     gostBottleAnim.runtimeAnimatorController = controllerGostBottle;
-
-                    //var temp = bottle.GetComponentsInChildren<Renderer>();
-                    //Texture texture = bottleInit.GetComponentInChildren<Renderer>().material.GetTexture("_ColorMap");
-                    //foreach (var item in temp)
-                    //{
-                    //    item.material = gostMaterial;
-                    //    item.material.SetTexture("_ColorMap", texture);
-                    //}
 
                     if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
                     {
@@ -511,13 +489,13 @@ public class GostManager : MonoBehaviour
             {
                 isReturn = false;
                 gostJoleen.transform.localPosition = originPosJoleen;
-                bottle.transform.localPosition = previousBottlePos;
+                BottleParent.transform.localPosition = previousBottlePos;
             }
             else
             {
                 isReturn = true;
                 gostJoleen.transform.localPosition = joleen.transform.localPosition;
-                bottle.transform.localPosition = bottleInit.transform.localPosition;
+                BottleParent.transform.localPosition = Vector3.zero;
             }
         }
 
@@ -562,7 +540,8 @@ public class GostManager : MonoBehaviour
 
         go.transform.position = Vector3.forward * 2;
 
-
+        BottleParent = go;
+        previousBottlePos = go.transform.localPosition;
     }
 
 
