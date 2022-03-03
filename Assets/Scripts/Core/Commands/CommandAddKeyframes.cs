@@ -38,15 +38,20 @@ namespace VRtist
             Interpolation interpolation = GlobalState.Settings.interpolation;
             int frame = GlobalState.Animation.CurrentFrame;
 
-            new CommandAddKeyframe(gObject, AnimatableProperty.PositionX, frame, gObject.transform.localPosition.x, interpolation, updateCurve).Submit();
-            new CommandAddKeyframe(gObject, AnimatableProperty.PositionY, frame, gObject.transform.localPosition.y, interpolation, updateCurve).Submit();
-            new CommandAddKeyframe(gObject, AnimatableProperty.PositionZ, frame, gObject.transform.localPosition.z, interpolation, updateCurve).Submit();
+            bool isHuman = obj.TryGetComponent<SkinMeshController>(out SkinMeshController skinController);
 
-            // convert to ZYX euler
-            Vector3 angles = gObject.transform.localEulerAngles;
-            new CommandAddKeyframe(gObject, AnimatableProperty.RotationX, frame, angles.x, interpolation, updateCurve).Submit();
-            new CommandAddKeyframe(gObject, AnimatableProperty.RotationY, frame, angles.y, interpolation, updateCurve).Submit();
-            new CommandAddKeyframe(gObject, AnimatableProperty.RotationZ, frame, angles.z, interpolation, updateCurve).Submit();
+            if (ToolsManager.CurrentToolName() != "Animation" || !isHuman)
+            {
+                new CommandAddKeyframe(gObject, AnimatableProperty.PositionX, frame, gObject.transform.localPosition.x, interpolation, updateCurve).Submit();
+                new CommandAddKeyframe(gObject, AnimatableProperty.PositionY, frame, gObject.transform.localPosition.y, interpolation, updateCurve).Submit();
+                new CommandAddKeyframe(gObject, AnimatableProperty.PositionZ, frame, gObject.transform.localPosition.z, interpolation, updateCurve).Submit();
+
+                // convert to ZYX euler
+                Vector3 angles = gObject.transform.localEulerAngles;
+                new CommandAddKeyframe(gObject, AnimatableProperty.RotationX, frame, angles.x, interpolation, updateCurve).Submit();
+                new CommandAddKeyframe(gObject, AnimatableProperty.RotationY, frame, angles.y, interpolation, updateCurve).Submit();
+                new CommandAddKeyframe(gObject, AnimatableProperty.RotationZ, frame, angles.z, interpolation, updateCurve).Submit();
+            }
 
             CameraController controller = gObject.GetComponent<CameraController>();
             LightController lcontroller = gObject.GetComponent<LightController>();
@@ -73,7 +78,7 @@ namespace VRtist
                 new CommandAddKeyframe(gObject, AnimatableProperty.ScaleZ, frame, scale.z, interpolation, updateCurve).Submit();
             }
 
-            if (obj.TryGetComponent<SkinMeshController>(out SkinMeshController skinController))
+            if (isHuman && ToolsManager.CurrentToolName() == "Animation")
             {
 
                 foreach (Transform child in gObject.transform)

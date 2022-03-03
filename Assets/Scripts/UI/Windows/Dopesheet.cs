@@ -512,7 +512,7 @@ namespace VRtist
             {
                 foreach (GameObject gObject in Selection.SelectedObjects)
                 {
-                    if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+                    if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller) && ToolsManager.CurrentToolName() != "Animation")
                     {
                         new CommandRemoveRecursiveKeyframes(gObject).Submit();
                     }
