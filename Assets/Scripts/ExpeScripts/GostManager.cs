@@ -34,6 +34,9 @@ public class GostManager : MonoBehaviour
     private bool isReturn = false;
     private Vector3 previousBottlePos;
     private GameObject BottleParent;
+    private GameObject wheel;
+    private GameObject wheelgost;
+
     private void Start()
     {
         percents = new Dictionary<string, float>();
@@ -463,6 +466,16 @@ public class GostManager : MonoBehaviour
                         bottleCollider.enabled = false;
                 }
             }
+            if(wheel == null)
+            {
+                wheel = GameObject.Find("tire.6C835C64.21");
+                if(wheel != null)
+                {
+                    wheelgost = Instantiate(wheel, wheel.transform.parent);
+                    wheelgost.transform.position += Vector3.forward * 2;
+                }
+            }
+
         }
 
         areGostGenerated = true;
