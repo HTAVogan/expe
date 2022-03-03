@@ -8,7 +8,7 @@ namespace VRtist
 
     public class PoseManipulation
     {
-
+        public SkinMeshController MeshController;
         private Transform oTransform;
         private List<Transform> fullHierarchy;
 
@@ -56,8 +56,9 @@ namespace VRtist
         private List<Quaternion> endRotations;
         private List<Vector3> endScales;
 
-        public PoseManipulation(Transform objectTransform, List<Transform> objectHierarchy, Transform mouthpiece, AnimationTool.PoseEditMode mode)
+        public PoseManipulation(Transform objectTransform, List<Transform> objectHierarchy, Transform mouthpiece, SkinMeshController skinController, AnimationTool.PoseEditMode mode)
         {
+            MeshController = skinController;
             poseMode = mode;
             oTransform = objectTransform;
             fullHierarchy = new List<Transform>(objectHierarchy);
