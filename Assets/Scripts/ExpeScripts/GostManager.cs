@@ -90,6 +90,8 @@ public class GostManager : MonoBehaviour
             Animator initBottleAnimator;
             AnimationClip Throw, BottleAnimationClip;
             joleenPerBones = new Dictionary<string, List<float>>();
+            int frameModifCounter = 0;
+            int bottleFrameModifCounter = 0;
             if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
             {
                 joleenAnimator = joleen.GetComponent<Animator>();
@@ -114,7 +116,7 @@ public class GostManager : MonoBehaviour
                 float percentJoleen = 0f;
                 float percentBottle = 0f;
                 int startFrame, endFrame;
-                int frameModifCounter = 0;
+            
                 var gostJoleenHumanGoalControllers = gostJoleen.GetComponentsInChildren<HumanGoalController>();
 
                 var joleenHumanGoalControllers = joleen.GetComponentsInChildren<HumanGoalController>();
@@ -149,16 +151,16 @@ public class GostManager : MonoBehaviour
                             KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
                             start = startend.Key;
                             end = startend.Value;
-                            frameModifCounter = end - start;
+                        
                             if (gostAndOrigin.TryGetValue(joleenController.gameObject, out GameObject origin) && joleenController.Animation != null && i >= start && i <= end)
                             {
                                 //Debug.Log("Abe controller  = " + joleenController + " i is " + i + "start is " + start + " end is " + end);
                                 //Vector3 vecByHips = origin.transform.position;
                                 Vector3 vecByHips = joleen.transform.InverseTransformPoint(origin.transform.position);
                                 Vector3 diff = vecByHips - joleenController.LocalFramePosition(i);
-                                Debug.Log(joleenController + ": " + "vec by hips : " + vecByHips + "diff is :" + diff);
+                                //Debug.Log(joleenController + ": " + "vec by hips : " + vecByHips + "diff is :" + diff);
                                 joleenDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta)) * joleenController.weight;
-                               
+                                frameModifCounter = end - start;
                                 weightcounterjol += joleenController.weight;
                                 if (joleenPerBones.TryGetValue(joleenController.name, out List<float> value))
                                 {
@@ -186,7 +188,8 @@ public class GostManager : MonoBehaviour
                         endBottle = startendBottle.Value;
                         if (i <= endBottle && i >= startBottle)
                         {
-                            Vector3 diffBottle = joleen.transform.InverseTransformPoint(bottleInit.transform.position) - gostJoleen.transform.InverseTransformPoint(bottle.transform.localPosition);
+                            Vector3 diffBottle = joleen.transform.InverseTransformPoint(bottleInit.transform.position) - gostJoleen.transform.InverseTransformPoint(bottle.transform.position);
+                            bottleFrameModifCounter = endBottle - startBottle;
                             AllFrameSumBottle += 1 - Mathf.Clamp01(diffBottle.magnitude / delta);
                             bottleValues.Add(1 - Mathf.Clamp01(diffBottle.magnitude / delta));
                         }
@@ -202,12 +205,13 @@ public class GostManager : MonoBehaviour
                             KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
                             start = startend.Key;
                             end = startend.Value;
-                            frameModifCounter = end - start;
+                         
                             if (joleenController.Animation != null && i >= start && i <= end)
                             {
                                 diff = joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) - joleenController.LocalFramePosition(i);
                                 joleenDiffSum += (1 - Mathf.Clamp01(diff.magnitude / delta)) * joleenController.weight;
                                 weightcounterjol += joleenController.weight;
+                                frameModifCounter = end - start;
                                 //Debug.Log("Name is" + joleenHumanGoalControllers[counterJoleen].name + "Origin animation & pos : " + joleenHumanGoalControllers[counterJoleen].Animation + "& " + joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) + " gost animation and position  : " + joleenController.Animation.transform + " & " + joleenController.LocalFramePosition(i) + " and diff magnitude is " + diff.magnitude + "and diff sum is " + joleenDiffSum);
                                 if (joleenPerBones.TryGetValue(joleenController.name, out List<float> value))
                                 {
@@ -249,6 +253,7 @@ public class GostManager : MonoBehaviour
                             diffBottle = (initPos - joleenHumanGoalControllers[0].LocalFramePosition(i)) - (gostPos - gostJoleenHumanGoalControllers[0].LocalFramePosition(i));
                             AllFrameSumBottle += 1 - Mathf.Clamp01(diffBottle.magnitude / delta);
                             bottleValues.Add(1 - Mathf.Clamp01(diffBottle.magnitude / delta));
+                            bottleFrameModifCounter = endBottle - startBottle;
                         }
 
 
@@ -259,7 +264,7 @@ public class GostManager : MonoBehaviour
                 }
                 percentJoleen = 100 * (AllFrameSumJoleen / (frameModifCounter - 1));
                 //percentAbe = 100 * (AllFrameSumAbe / (endFrame - 1));
-                percentBottle = 100 * (AllFrameSumBottle / (endFrame - 1));
+                percentBottle = 100 * (AllFrameSumBottle / (bottleFrameModifCounter - 1));
                 if (percents.TryGetValue("Joleen", out float valueJol))
                 {
                     valueJol = percentJoleen;
