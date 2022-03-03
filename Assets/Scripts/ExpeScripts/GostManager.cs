@@ -329,8 +329,8 @@ public class GostManager : MonoBehaviour
         {
             writer.WriteLine(item.Key + ": " + ListToString(item.Value));
         }
-        writer.WriteLine("Bottle : ");
-        writer.WriteLine(ListToString(bottleValues));
+
+        writer.WriteLine("Bottle : " + ListToString(bottleValues));
 
         writer.Close();
     }
