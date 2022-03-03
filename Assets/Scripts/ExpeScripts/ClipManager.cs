@@ -33,7 +33,7 @@ public class ClipManager : MonoBehaviour
     {
         if (joleen == null)
         {
-            joleen = GameObject.Find("aj@Throw Object.DD5C871E.9");
+            joleen = GameObject.Find("aj@ThrowSimple.6C835C64.15");
 
             if (joleen != null)
             {
@@ -41,13 +41,6 @@ public class ClipManager : MonoBehaviour
                 animJoleen.runtimeAnimatorController = controllerJoleen;
                 Throw.ClearCurves();
                 BindPropertiesToClip(joleen, Throw, joleen);
-                //foreach (Transform item in joleen.transform)
-                //{
-                //    if (item.gameObject.name.Contains("Hips"))
-                //    {
-                //        InitFirstKeyFrame(Throw, item.gameObject);
-                //    }
-                //}
                 animJoleen.enabled = true;
             }
         }
@@ -60,7 +53,7 @@ public class ClipManager : MonoBehaviour
                 animBottle.runtimeAnimatorController = controllerBottle;
                 BottleClip.ClearCurves();
                 BindPropertiesToClip(bottle, BottleClip, bottle);
-                //InitFirstKeyFrame(BottleClip, bottle);
+
 
             animBottle.enabled = true;
             }

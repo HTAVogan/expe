@@ -22,11 +22,11 @@ public class GostManager : MonoBehaviour
     public RuntimeAnimatorController controllerGostBottle;
     public Dictionary<string, float> percents;
     public Dictionary<string, List<float>> joleenPerBones;
+    List<float> bottleValues = new List<float>();;
     public string path = "Assets/Resources/resultsPerBone.txt";
     private Dictionary<GameObject, GameObject> gostAndOrigin = new Dictionary<GameObject, GameObject>();
     public bool areGostGenerated = false;
-    private List<float> SumJoleenFirst;
-    private List<float> SumBottleFirst;
+
     public Vector3 originPosJoleen;
 
     private float time = 0f;
@@ -41,9 +41,8 @@ public class GostManager : MonoBehaviour
     {
         percents = new Dictionary<string, float>();
         percents.Add("Joleen", 0);
-        percents.Add("Abe", 0);
         percents.Add("Botlle", 0);
-
+        
 
     }
 
@@ -88,7 +87,6 @@ public class GostManager : MonoBehaviour
             float ret = 0;
             //todo enable animators for users characters
             Animator joleenAnimator;
-            Animator abeAnimator;
             Animator initBottleAnimator;
             AnimationClip Throw, BottleAnimationClip;
             joleenPerBones = new Dictionary<string, List<float>>();
@@ -110,11 +108,9 @@ public class GostManager : MonoBehaviour
             #endregion
             if (joleen != null && bottleInit != null)
             {
-                float AllFrameSumAbe = 0f;
                 float AllFrameSumJoleen = 0f;
                 float AllFrameSumBottle = 0f;
 
-                float percentAbe = 0f;
                 float percentJoleen = 0f;
                 float percentBottle = 0f;
                 int startFrame, endFrame;
@@ -192,6 +188,7 @@ public class GostManager : MonoBehaviour
                         {
                             Vector3 diffBottle = joleen.transform.InverseTransformPoint(bottleInit.transform.position) - gostJoleen.transform.InverseTransformPoint(bottle.transform.localPosition);
                             AllFrameSumBottle += 1 - Mathf.Clamp01(diffBottle.magnitude / delta);
+                            bottleValues.Add(1 - Mathf.Clamp01(diffBottle.magnitude / delta));
                         }
                     }
                     #endregion
@@ -251,6 +248,7 @@ public class GostManager : MonoBehaviour
                             Maths.DecomposeMatrix(matrixGost, out gostPos, out gostQuaternion, out gostScale);
                             diffBottle = (initPos - joleenHumanGoalControllers[0].LocalFramePosition(i)) - (gostPos - gostJoleenHumanGoalControllers[0].LocalFramePosition(i));
                             AllFrameSumBottle += 1 - Mathf.Clamp01(diffBottle.magnitude / delta);
+                            bottleValues.Add(1 - Mathf.Clamp01(diffBottle.magnitude / delta));
                         }
 
 
@@ -326,6 +324,8 @@ public class GostManager : MonoBehaviour
         {
             writer.WriteLine(item.Key + ": " + ListToString(item.Value));
         }
+        writer.WriteLine("Bottle : ");
+        writer.WriteLine(ListToString(bottleValues));
 
         writer.Close();
     }
