@@ -22,7 +22,7 @@ public class GostManager : MonoBehaviour
     public RuntimeAnimatorController controllerGostBottle;
     public Dictionary<string, float> percents;
     public Dictionary<string, List<float>> joleenPerBones;
-    List<float> bottleValues = new List<float>();;
+    List<float> bottleValues = new List<float>();
     public string path = "Assets/Resources/resultsPerBone.txt";
     private Dictionary<GameObject, GameObject> gostAndOrigin = new Dictionary<GameObject, GameObject>();
     public bool areGostGenerated = false;
