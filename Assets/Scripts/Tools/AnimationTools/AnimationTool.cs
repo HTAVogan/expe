@@ -330,7 +330,7 @@ namespace VRtist
 
         public void StartPose(HumanGoalController controller, Transform mouthpiece)
         {
-            poseManip = new PoseManipulation(controller.transform, controller.PathToRoot, mouthpiece, PoseMode);
+            poseManip = new PoseManipulation(controller.transform, controller.PathToRoot, mouthpiece, controller.RootController, PoseMode);
         }
         public void DragPose(Transform mouthpiece)
         {
@@ -341,7 +341,9 @@ namespace VRtist
         public void EndPose(Transform mouthpiece)
         {
             poseManip.GetCommand().Submit();
+            if (GlobalState.Animation.autoKeyEnabled) new CommandAddKeyframes(poseManip.MeshController.gameObject, false).Submit();
             poseManip = null;
+
         }
 
         #endregion
