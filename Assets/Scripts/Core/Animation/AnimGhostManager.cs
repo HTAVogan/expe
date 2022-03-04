@@ -92,6 +92,7 @@ namespace VRtist
             ghostDictionary = new Dictionary<GameObject, Dictionary<int, Node>>();
             Selection.onSelectionChanged.AddListener(OnSelectionChanged);
             GlobalState.Animation.onChangeCurve.AddListener(OnCurveChanged);
+            GlobalState.Animation.onRemoveAnimation.AddListener(OnAnimationRemoved);
             ToolsUIManager.Instance.OnToolChangedEvent += OnToolChanged;
         }
 
@@ -112,6 +113,7 @@ namespace VRtist
 
         void UpdateFromSelection()
         {
+            if (ToolsManager.CurrentToolName() != "Animation") return;
             ClearGhosts();
             foreach (GameObject gObject in Selection.SelectedObjects)
             {
@@ -124,6 +126,7 @@ namespace VRtist
 
         public void OnCurveChanged(GameObject gObject, AnimatableProperty property)
         {
+            if (ToolsManager.CurrentToolName() != "Animation") return;
             //Debug.Log("on curve changed " + gObject);
             if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
             {
@@ -140,15 +143,33 @@ namespace VRtist
             }
         }
 
+        public void OnAnimationRemoved(GameObject gobject)
+        {
+            if (gobject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+            {
+                if (ghostDictionary.TryGetValue(controller.RootObject.gameObject, out Dictionary<int, Node> value))
+                {
+                    foreach (KeyValuePair<int, Node> pair in value)
+                    {
+                        pair.Value.ClearNode();
+                    }
+                    ghostDictionary.Remove(controller.RootObject.gameObject);
+                }
+            }
+        }
+
         private void CreateGhost(SkinMeshController controller)
         {
-            AnimationSet rootAnim = GlobalState.Animation.GetObjectAnimation(controller.RootObject.gameObject);
-            if (null == rootAnim) return;
+            AnimationSet HipsAnim = GlobalState.Animation.GetObjectAnimation(controller.RootObject.gameObject);
+            if (null == HipsAnim) return;
+
+            AnimationSet rootAnim = GlobalState.Animation.GetObjectAnimation(controller.gameObject);
             ghostDictionary[controller.RootObject.gameObject] = new Dictionary<int, Node>();
-            Curve rotX = rootAnim.GetCurve(AnimatableProperty.RotationX);
+            Curve rotX = HipsAnim.GetCurve(AnimatableProperty.RotationX);
             rotX.keys.ForEach(x =>
             {
-                ghostDictionary[controller.RootObject.gameObject].Add(x.frame, new Node(controller.RootObject.gameObject, x.frame, GhostParent, controller.transform.localToWorldMatrix, controller.transform.localScale.magnitude * 5));
+                Matrix4x4 rootMatrix = rootAnim != null? rootAnim.GetTranformMatrix(x.frame): Matrix4x4.TRS(controller.transform.localPosition, controller.transform.localRotation, controller.transform.localScale); ;
+                ghostDictionary[controller.RootObject.gameObject].Add(x.frame, new Node(controller.RootObject.gameObject, x.frame, GhostParent, controller.transform.parent.localToWorldMatrix * rootMatrix, controller.transform.localScale.magnitude * 5));
             });
         }
 

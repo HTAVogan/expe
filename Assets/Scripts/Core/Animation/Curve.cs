@@ -443,7 +443,7 @@ namespace VRtist
                     {
                         Vector2 prevKey = new Vector2(keys[index - 1].frame, keys[index - 1].value);
                         Vector2 nextKey = new Vector2(keys[index + 1].frame, keys[index + 1].value);
-                        keys[index].outTangent = (nextKey - prevKey).normalized * ((nextKey - key).magnitude / 3f);
+                        keys[index].outTangent = (nextKey - prevKey).normalized * ((nextKey.x - key.x) / 3f);
                     }
                 }
             }
@@ -477,7 +477,7 @@ namespace VRtist
                     {
                         Vector2 prevKey = new Vector2(keys[index - 1].frame, keys[index - 1].value);
                         Vector2 nextKey = new Vector2(keys[index + 1].frame, keys[index + 1].value);
-                        keys[index].inTangent = (nextKey - prevKey).normalized * ((key - prevKey).magnitude / 3f);
+                        keys[index].inTangent = (nextKey - prevKey).normalized * ((key.x - prevKey.x) / 3f);
                     }
                 }
             }
@@ -514,8 +514,8 @@ namespace VRtist
                     {
                         Vector2 prevKey = new Vector2(keys[index - 1].frame, keys[index - 1].value);
                         Vector2 nextKey = new Vector2(keys[index + 1].frame, keys[index + 1].value);
-                        keys[index].inTangent = (nextKey - prevKey).normalized * ((key - prevKey).magnitude / 3f);
-                        keys[index].outTangent = (nextKey - prevKey).normalized * ((nextKey - key).magnitude / 3f);
+                        keys[index].inTangent = (nextKey - prevKey).normalized * ((key.x - prevKey.x) / 3f);
+                        keys[index].outTangent = (nextKey - prevKey).normalized * ((nextKey.x - key.x) / 3f);
                     }
                 }
             }

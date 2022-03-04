@@ -49,6 +49,8 @@ namespace VRtist
                     filter.mesh = mesh;
                     MeshRenderer renderer = transform.gameObject.AddComponent<MeshRenderer>();
                     renderer.material = new Material(material);
+                    controller.MeshRenderer = renderer;
+                    controller.ShowRenderer(false);
                 }
             }
             path.Add(transform);

@@ -157,6 +157,39 @@ namespace VRtist
             PoseMode = PoseEditMode.FK;
         }
 
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            foreach (GameObject select in Selection.SelectedObjects)
+            {
+                if (select.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+                {
+                    HumanGoalController[] GoalController = controller.GetComponentsInChildren<HumanGoalController>();
+                    for (int i = 0; i < GoalController.Length; i++)
+                    {
+                        GoalController[i].ShowRenderer(true);
+                    }
+                }
+            }
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            foreach (GameObject select in Selection.SelectedObjects)
+            {
+                if (select.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+                {
+                    HumanGoalController[] GoalController = controller.GetComponentsInChildren<HumanGoalController>();
+                    for (int i = 0; i < GoalController.Length; i++)
+                    {
+                        GoalController[i].ShowRenderer(false);
+                    }
+                }
+            }
+        }
+
+
         private UIButton GetCurveModeButton(CurveEditMode mode)
         {
             switch (mode)

@@ -269,10 +269,13 @@ namespace VRtist
             Curve posz = GetCurve(AnimatableProperty.PositionZ);
             if (null != posx && null != posy && null != posz)
             {
-                if (posx.Evaluate(frame, out float px) && posy.Evaluate(frame, out float py) && posz.Evaluate(frame, out float pz))
+                if (!posx.Evaluate(frame, out float px) || !posy.Evaluate(frame, out float py) || !posz.Evaluate(frame, out float pz))
                 {
-                    position = new Vector3(px, py, pz);
+                    px = transform.localPosition.x;
+                    py = transform.localPosition.y;
+                    pz = transform.localPosition.z;
                 }
+                position = new Vector3(px, py, pz);
             }
             Quaternion rotation = Quaternion.identity;
             Curve rotx = GetCurve(AnimatableProperty.RotationX);
@@ -280,10 +283,13 @@ namespace VRtist
             Curve rotz = GetCurve(AnimatableProperty.RotationZ);
             if (null != posx && null != roty && null != rotz)
             {
-                if (rotx.Evaluate(frame, out float rx) && roty.Evaluate(frame, out float ry) && rotz.Evaluate(frame, out float rz))
+                if (!rotx.Evaluate(frame, out float rx) || !roty.Evaluate(frame, out float ry) || !rotz.Evaluate(frame, out float rz))
                 {
-                    rotation = Quaternion.Euler(rx, ry, rz);
+                    rx = transform.localEulerAngles.x;
+                    ry = transform.localEulerAngles.y;
+                    rz = transform.localEulerAngles.z;
                 }
+                rotation = Quaternion.Euler(rx, ry, rz);
             }
             Vector3 scale = Vector3.one;
             Curve scalex = GetCurve(AnimatableProperty.ScaleX);
