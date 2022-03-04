@@ -86,6 +86,7 @@ namespace VRtist
         // Sky
         private GradientSky volumeSky;
         public SkyChangedEvent skyChangedEvent = new SkyChangedEvent();
+        private static Vector3 previous;
         public SkySettings SkySettings
         {
             get
@@ -163,10 +164,9 @@ namespace VRtist
 
         public static void FireObjectMoving(GameObject gobject)
         {
-            Vector3 previous = gobject.transform.position;
             Quaternion quaternion = gobject.transform.rotation;
             ObjectMovingEvent.Invoke(gobject);
-            if (gostManager.areGostGenerated)
+            if (gostManager.areGostGenerated && previous != Vector3.zero)
             {
                 Vector3 diff = gobject.transform.position - previous;
                 if (translations.TryGetValue(gobject, out List<Vector3> list))
@@ -177,8 +177,10 @@ namespace VRtist
                 {
                     translations.Add(gobject, new List<Vector3> { diff });
                 }
+                
+
             }
-           
+            previous = gobject.transform.position;
 
         }
 

@@ -26,6 +26,7 @@ public class ActionVRCount : MonoBehaviour
             VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.grip, onPress: () => Onpressed(VRInput.primaryController), onRelease: () =>
             {
                 numberOfAction++;
+                Debug.Log("Primary gripp pressed, number of action = " + numberOfAction);
                 if (needToUpTranslation)
                 {
                     if (inputsDone.TryGetValue("gripMove", out int number))
