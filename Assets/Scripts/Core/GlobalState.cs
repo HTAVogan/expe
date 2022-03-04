@@ -46,7 +46,8 @@ namespace VRtist
         public Transform paletteController;
         public GameObject colorPanel = null;
         public GameObject cameraFeedback = null;
-
+        public static Dictionary<GameObject, List<Vector3>> translations;
+        private static Dictionary<GameObject, List<Quaternion>> rotations;
         public static Settings Settings { get { return Instance.settings; } }
         public static AnimationEngine Animation { get { return AnimationEngine.Instance; } }
 
@@ -58,6 +59,7 @@ namespace VRtist
         private readonly Dictionary<string, AvatarController> connectedAvatars = new Dictionary<string, AvatarController>();
         private GameObject avatarPrefab;
         private Transform avatarsContainer;
+        private static GostManager gostManager;
 
         // Selection gripped
         public bool selectionGripped = false;
@@ -84,6 +86,7 @@ namespace VRtist
         // Sky
         private GradientSky volumeSky;
         public SkyChangedEvent skyChangedEvent = new SkyChangedEvent();
+        private static Vector3 previous;
         public SkySettings SkySettings
         {
             get
@@ -161,7 +164,24 @@ namespace VRtist
 
         public static void FireObjectMoving(GameObject gobject)
         {
+            Quaternion quaternion = gobject.transform.rotation;
             ObjectMovingEvent.Invoke(gobject);
+            if (gostManager.areGostGenerated && previous != Vector3.zero)
+            {
+                Vector3 diff = gobject.transform.position - previous;
+                if (translations.TryGetValue(gobject, out List<Vector3> list))
+                {
+                    list.Add(diff);
+                }
+                else
+                {
+                    translations.Add(gobject, new List<Vector3> { diff });
+                }
+                
+
+            }
+            previous = gobject.transform.position;
+
         }
 
         public static void FireObjectConstraint(GameObject gobject)
@@ -209,6 +229,7 @@ namespace VRtist
             colorClickedEvent = colorPicker.onClickEvent;
 
             geometryImporter = GetComponent<GeometryImporter>();
+            gostManager = GameObject.Find("GostManager").GetComponent<GostManager>();
         }
 
         private void OnDestroy()
@@ -227,6 +248,7 @@ namespace VRtist
 
             avatarPrefab = Resources.Load<GameObject>("Prefabs/VR Avatar");
             avatarsContainer = world.Find("Avatars");
+            translations = new Dictionary<GameObject, List<Vector3>>();
         }
 
         private void UpdateFps()

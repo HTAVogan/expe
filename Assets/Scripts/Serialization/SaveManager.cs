@@ -451,10 +451,12 @@ namespace VRtist.Serialization
             SceneData.Current.startFrame = AnimationEngine.Instance.StartFrame;
             SceneData.Current.endFrame = AnimationEngine.Instance.EndFrame;
             SceneData.Current.currentFrame = AnimationEngine.Instance.CurrentFrame;
+           
 
             foreach (AnimationSet animSet in AnimationEngine.Instance.GetAllAnimations().Values)
             {
                 AnimationData animData = new AnimationData();
+                animData.startFrame = animSet.StartFrame;
                 Utils.GetTransformRelativePathTo(animSet.transform, rootTransform, out animData.objectPath);
                 foreach (Curve curve in animSet.curves.Values)
                 {
@@ -646,7 +648,8 @@ namespace VRtist.Serialization
                 // Sky
                 GlobalState.Instance.SkySettings = sceneData.skyData;
 
-                // Objects            
+                // Objects
+                
                 foreach (ObjectData data in sceneData.objects)
                 {
                     LoadObject(data);
@@ -745,15 +748,15 @@ namespace VRtist.Serialization
             gobject.transform.localScale = data.scale;
             gobject.name = data.name;
 
+            ParametersController controller = gobject.GetComponent<ParametersController>();
             if (data.lockPosition || data.lockRotation || data.lockScale)
             {
-                ParametersController controller = gobject.GetComponent<ParametersController>();
                 if (null == controller)
                     controller = gobject.AddComponent<ParametersController>();
                 controller.lockPosition = data.lockPosition;
                 controller.lockRotation = data.lockRotation;
                 controller.lockScale = data.lockScale;
-            }
+            }   
         }
 
         private Material[] LoadMaterials(ObjectData data)
@@ -789,6 +792,7 @@ namespace VRtist.Serialization
                 catch (System.Exception e)
                 {
                     Debug.LogError("Failed to load external object: " + e.Message);
+                    Debug.LogError("Trace :" + e.StackTrace);
                     return;
                 }
             }
@@ -952,6 +956,7 @@ namespace VRtist.Serialization
 
             // Create animation
             AnimationSet animSet = new AnimationSet(gobject);
+            animSet.StartFrame = data.startFrame;
             foreach (CurveData curve in data.curves)
             {
                 List<AnimationKey> keys = new List<AnimationKey>();

@@ -18,6 +18,7 @@ namespace VRtist
             public bool showCurve;
             public Vector3 LowerAngleBound;
             public Vector3 UpperAngleBound;
+            public float weight;
         }
 
         public List<Joint> JointsList;
@@ -35,6 +36,7 @@ namespace VRtist
                 collider.isTrigger = true;
                 controller.SetPathToRoot(rootController, path);
                 controller.stiffness = joint.stiffness;
+                controller.weight = joint.weight;   
                 controller.IsGoal = joint.isGoal;
                 controller.ShowCurve = joint.showCurve;
                 controller.LowerAngleBound = joint.LowerAngleBound;

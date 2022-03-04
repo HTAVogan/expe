@@ -925,11 +925,13 @@ namespace VRtist.Serialization
     {
         public string objectPath;
         public List<CurveData> curves = new List<CurveData>();
+        public int startFrame;
 
         public byte[] ToBytes()
         {
             byte[] nameBuffer = Converter.StringToBytes(objectPath);
             byte[] curveCountBuffer = Converter.IntToBytes(curves.Count);
+            byte[] startFrameBuffer = Converter.IntToBytes(startFrame);
             List<byte[]> curvesBufferList = new List<byte[]>();
             foreach (CurveData curve in curves)
             {
@@ -940,7 +942,8 @@ namespace VRtist.Serialization
             {
                 nameBuffer,
                 curveCountBuffer,
-                curvesBuffer
+                curvesBuffer,
+                startFrameBuffer
             });
             return bytes;
         }
@@ -955,6 +958,7 @@ namespace VRtist.Serialization
                 curveData.FromBytes(buffer, ref index);
                 curves.Add(curveData);
             }
+            startFrame = Converter.GetInt(buffer, ref index);
         }
     }
 

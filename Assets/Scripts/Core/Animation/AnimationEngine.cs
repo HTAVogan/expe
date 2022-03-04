@@ -21,8 +21,9 @@
  * SOFTWARE.
  */
 
+using System;
 using System.Collections.Generic;
-
+using System.Linq;
 using UnityEngine;
 
 namespace VRtist
@@ -63,7 +64,7 @@ namespace VRtist
         {
             this.frame = frame;
             this.value = value;
-            this.interpolation = interpolation ?? GlobalState.Settings.interpolation;
+            this.interpolation = interpolation ?? Interpolation.Bezier;
             this.inTangent = inTangent;
             this.outTangent = outTangent;
         }
@@ -104,10 +105,12 @@ namespace VRtist
         readonly Dictionary<GameObject, AnimationSet> recordingObjects = new Dictionary<GameObject, AnimationSet>();
         readonly Dictionary<GameObject, AnimationSet> oldAnimations = new Dictionary<GameObject, AnimationSet>();
 
+        public GameObject UIDopeSheetExpe;
+
         readonly List<TimeHook> timeHooks = new List<TimeHook>();
         public bool timeHooksEnabled = true;
 
-        public float fps = 24f;
+        public float fps = 60f;
         float playStartTime;
         int playStartFrame;
 
@@ -126,7 +129,7 @@ namespace VRtist
             }
         }
 
-        private int endFrame = 250;
+        private int endFrame = 500;
         public int EndFrame
         {
             get { return endFrame; }
@@ -196,9 +199,12 @@ namespace VRtist
         {
             countdown.onCountdownFinished.AddListener(StartRecording);
             onRangeEvent.AddListener(RecomputeCurvesCache);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                GlobalState.ObjectAddedEvent.AddListener(OnObjectAdded);
+                GlobalState.ObjectRemovedEvent.AddListener(OnObjectRemoved);
 
-            GlobalState.ObjectAddedEvent.AddListener(OnObjectAdded);
-            GlobalState.ObjectRemovedEvent.AddListener(OnObjectRemoved);
+            }
         }
 
         public void RegisterTimeHook(TimeHook timeHook)
@@ -281,6 +287,22 @@ namespace VRtist
             }
         }
 
+        public void ClearAnimationsOnDeletedObject()
+        {
+            List<GameObject> toDelete = new List<GameObject>();
+            foreach (var item in animations)
+            {
+                if (item.Key == null)
+                {
+                    toDelete.Add(item.Key);
+                }
+            }
+            foreach (var item in toDelete)
+            {
+                animations.Remove(item);
+            }
+        }
+
         public void CopyAnimation(GameObject source, GameObject target)
         {
             if (animations.TryGetValue(source, out AnimationSet sourceAnim))
@@ -355,6 +377,7 @@ namespace VRtist
         {
             foreach (AnimationSet animationSet in animations.Values)
             {
+
                 animationSet.EvaluateAnimation(CurrentFrame);
             }
         }
@@ -405,8 +428,17 @@ namespace VRtist
         {
             if (animations.Remove(gobject) && callEvent)
                 onRemoveAnimation.Invoke(gobject);
+            if (gobject.TryGetComponent<HumanGoalController>(out HumanGoalController controller))
+            {
+                controller.CheckAnimations();
+            }
         }
 
+        [ContextMenu("clear ALL animations")]
+        public void ClearAllAnimations()
+        {
+            animations.Clear();
+        }
         public void MoveKeyframe(GameObject gobject, AnimatableProperty property, int frame, int newFrame)
         {
             AnimationSet animationSet = GetObjectAnimation(gobject);
@@ -472,6 +504,10 @@ namespace VRtist
             curve.AddKey(key, lockTangents);
 
             if (updateCurves) onChangeCurve.Invoke(gobject, property);
+            if (gobject.TryGetComponent<HumanGoalController>(out HumanGoalController controller))
+            {
+                controller.CheckAnimations();
+            }
         }
 
         public void AddFilteredKeyframeZone(GameObject gobject, AnimatableProperty property, AnimationKey key, int startFrame, int endFrame, bool updateCurves = true)
@@ -576,7 +612,8 @@ namespace VRtist
         {
             animationState = AnimationState.Playing;
             onAnimationStateEvent.Invoke(animationState);
-
+            UIDopeSheetExpe.SetActive(true);
+            UIDopeSheetExpe.transform.position = gameObject.GetComponent<ToolsManager>().Tools.Values.FirstOrDefault().transform.position;
             playStartFrame = currentFrame;
             playStartTime = Time.time;
         }
@@ -596,6 +633,7 @@ namespace VRtist
                     Selection.enabled = true;
                     break;
             }
+            UIDopeSheetExpe.SetActive(false);
             animationState = AnimationState.Stopped;
             onAnimationStateEvent.Invoke(animationState);
         }
@@ -606,8 +644,12 @@ namespace VRtist
             playStartTime = Time.time;
             animationState = AnimationState.AnimationRecording;
             onAnimationStateEvent.Invoke(animationState);
-            preRecordInterpolation = GlobalState.Settings.interpolation;
-            GlobalState.Settings.interpolation = Interpolation.Linear;
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                preRecordInterpolation = GlobalState.Settings.interpolation;
+                GlobalState.Settings.interpolation = Interpolation.Linear;
+
+            }
         }
 
         void RecordFrame()
@@ -707,7 +749,13 @@ namespace VRtist
 
             recordingObjects.Clear();
             oldAnimations.Clear();
-            GlobalState.Settings.interpolation = preRecordInterpolation;
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                GlobalState.Settings.interpolation = preRecordInterpolation;
+        }
+
+        internal int GetKeyFrameNumber()
+        {
+            return animations.First().Value.GetCurve(AnimatableProperty.PositionX).keys.Count;
         }
     }
 }

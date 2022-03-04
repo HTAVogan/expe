@@ -139,6 +139,11 @@ namespace VRtist
             UpdateInterpolation();
         }
 
+        public void OnSetStartOffset()
+        {
+            new CommandStartFrame(currentObject, GlobalState.Animation.CurrentFrame).Submit();
+        }
+
         public void OnEditCurrentFrame()
         {
             ToolsUIManager.Instance.OpenNumericKeyboard((float value) => OnChangeCurrentFrame((int)value), currentFrameLabel.transform, GlobalState.Animation.CurrentFrame);
@@ -563,11 +568,6 @@ namespace VRtist
         public bool IsAutoKeyEnabled()
         {
             return GlobalState.Animation.autoKeyEnabled;
-        }
-
-        public void OnSetStartOffset()
-        {
-            new CommandStartFrame(currentObject, GlobalState.Animation.CurrentFrame).Submit();
         }
 
         private void UpdateKeyframesPosition(GameObject gObject)

@@ -182,6 +182,7 @@ namespace VRtist.Serialization
         {
             int count = GetInt(data, ref currentIndex);
             int size = count * sizeof(float) * 3;
+           // Debug.Log(count + "and curtrent index is :" + currentIndex);
             Vector3[] vectors = new Vector3[count];
             float[] float3Values = new float[count * 3];
             Buffer.BlockCopy(data, currentIndex, float3Values, 0, size);

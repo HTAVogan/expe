@@ -14,8 +14,18 @@ namespace VRtist
 
         public void Start()
         {
-            GlobalState.Animation.onFrameEvent.AddListener(RefreshCollider);
-            RefreshCollider(GlobalState.Animation.CurrentFrame);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+
+                GlobalState.Animation.onFrameEvent.AddListener(RefreshCollider);
+                RefreshCollider(GlobalState.Animation.CurrentFrame);
+            }
+            else
+            {
+                GlobalStateTradi.Animation.onFrameEvent.AddListener(RefreshCollider);
+                RefreshCollider(GlobalStateTradi.Animation.CurrentFrame);
+            }
+
         }
 
         public void RefreshCollider(int frame)
@@ -26,7 +36,11 @@ namespace VRtist
 
         public void OnDisable()
         {
-            GlobalState.Animation.onFrameEvent.RemoveListener(RefreshCollider);
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+                GlobalState.Animation.onFrameEvent.RemoveListener(RefreshCollider);
+            else
+                GlobalStateTradi.Animation.onFrameEvent.RemoveListener(RefreshCollider);
+
         }
 
         internal void GetKeyList(SortedList<int, List<Dopesheet.AnimKey>> keys)

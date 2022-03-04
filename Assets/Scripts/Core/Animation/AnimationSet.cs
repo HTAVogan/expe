@@ -168,8 +168,17 @@ namespace VRtist
             }
             curve.SetKeys(keys);
         }
+        public void SetCurveWithAdd(AnimatableProperty property, List<AnimationKey> keys)
+        {
+            if (!curves.TryGetValue(property, out Curve curve))
+            {
+                Debug.LogError("Curve not found : " + transform.name + " " + property.ToString());
+                return;
+            }
+            curve.SetKeysWithAdd(keys);
+        }
 
-        private void CreatePositionRotationCurves()
+        public void CreatePositionRotationCurves()
         {
             curves.Add(AnimatableProperty.PositionX, new Curve(AnimatableProperty.PositionX));
             curves.Add(AnimatableProperty.PositionY, new Curve(AnimatableProperty.PositionY));
@@ -231,7 +240,15 @@ namespace VRtist
 
         public int GetFirstFrame()
         {
-            int firstFrame = GlobalState.Animation.EndFrame;
+            int firstFrame;
+            if (!UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+            {
+                firstFrame = GlobalState.Animation.EndFrame;
+            }
+            else
+            {
+                firstFrame = GlobalStateTradi.Animation.EndFrame;
+            }
             foreach (KeyValuePair<AnimatableProperty, Curve> pair in curves)
             {
                 if (pair.Value.keys.Count > 0)
@@ -245,6 +262,7 @@ namespace VRtist
 
         public Matrix4x4 GetTranformMatrix(int frame)
         {
+            frame = Mathf.Max(1, frame);
             Vector3 position = Vector3.zero;
             Curve posx = GetCurve(AnimatableProperty.PositionX);
             Curve posy = GetCurve(AnimatableProperty.PositionY);
