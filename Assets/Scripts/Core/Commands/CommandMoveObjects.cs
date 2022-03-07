@@ -105,6 +105,11 @@ namespace VRtist
             {
                 Redo();
                 CommandManager.AddCommand(this);
+                if (GlobalState.reHold)
+                {
+                    GlobalState.reHold = false;
+                    GlobalState.SaveTranslation(objects);
+                }
             }
         }
     }

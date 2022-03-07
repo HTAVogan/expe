@@ -21,6 +21,7 @@
  * SOFTWARE.
  */
 
+using System;
 using System.Collections.Generic;
 
 using TMPro;
@@ -108,6 +109,8 @@ namespace VRtist
             }
         }
 
+      
+
         // Cursor
         public PaletteCursor cursor = null;
         public bool useRayColliders = false; // DEBUG. Remove once the UI ray collision is good.
@@ -164,23 +167,13 @@ namespace VRtist
 
         public static void FireObjectMoving(GameObject gobject)
         {
-            Quaternion quaternion = gobject.transform.rotation;
+         
             ObjectMovingEvent.Invoke(gobject);
-            if (gostManager.areGostGenerated && previous != Vector3.zero)
+            if (!reHold)
             {
-                Vector3 diff = gobject.transform.position - previous;
-                if (translations.TryGetValue(gobject, out List<Vector3> list))
-                {
-                    list.Add(diff);
-                }
-                else
-                {
-                    translations.Add(gobject, new List<Vector3> { diff });
-                }
-                
-
+                reHold = true;
+                previous = gobject.transform.position;
             }
-            previous = gobject.transform.position;
 
         }
 
@@ -189,10 +182,33 @@ namespace VRtist
             ObjectConstraintEvent.Invoke(gobject);
         }
 
+        internal static void SaveTranslation(List<GameObject> gobjects)
+        {
+            foreach (var gobject in gobjects)
+            {
+                if (gostManager.areGostGenerated)
+                {
+                    Vector3 diff = gobject.transform.position - previous;
+                    if (translations.TryGetValue(gobject, out List<Vector3> list))
+                    {
+                        list.Add(diff);
+                    }
+                    else
+                    {
+                        translations.Add(gobject, new List<Vector3> { diff });
+                    }
+
+                }
+            }
+ 
+        }
+
         public MessageBox messageBox = null;
 
         // Singleton
         private static GlobalState instance = null;
+        internal static bool reHold;
+
         public static GlobalState Instance
         {
             get

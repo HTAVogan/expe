@@ -28,6 +28,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Rendering.HighDefinition;
 using UnityEditor;
+using System;
 
 namespace VRtist
 {
@@ -86,31 +87,7 @@ namespace VRtist
             gostManager = GameObject.Find("AnimationManager").GetComponent<GostManager>();
         }
 
-        private void Update()
-        {if(UnityEditor.Selection.activeGameObject != null && gostManager.areGostGenerated)
-            {
-                if (UnityEditor.Selection.activeGameObject != null && UnityEditor.Selection.activeGameObject != previousGameObject)
-                {
-                    previousGameObject = UnityEditor.Selection.activeGameObject;
-                    previousPos = previousGameObject.transform.position;
-                }
-                else if (UnityEditor.Selection.activeGameObject.transform.position != previousPos)
-                {
-                    Vector3 diff = UnityEditor.Selection.activeGameObject.transform.position - previousPos;
-                    previousPos = UnityEditor.Selection.activeGameObject.transform.position;
 
-                    if (translations.TryGetValue(UnityEditor.Selection.activeGameObject, out List<Vector3> list))
-                    {
-                        list.Add(diff);
-                    }
-                    else
-                    {
-                        translations.Add(UnityEditor.Selection.activeGameObject, new List<Vector3> { diff });
-                    }
-                }
-            }
-            
-        }
 
 
         private void Start()
@@ -198,5 +175,35 @@ namespace VRtist
             }
         }
 
+        internal void ModifyPrevious()
+        {
+            if(UnityEditor.Selection.activeGameObject != null && gostManager.areGostGenerated)
+            {
+                Debug.Log("pos before : " + previousPos);
+                previousPos = UnityEditor.Selection.activeGameObject.transform.localPosition;
+                Debug.Log("pos after : " + previousPos);
+
+            }
+        }
+
+        internal void RecordTranslation()
+        {
+            if (UnityEditor.Selection.activeGameObject != null && gostManager.areGostGenerated)
+            {
+                Vector3 diff = UnityEditor.Selection.activeGameObject.transform.localPosition - previousPos;
+
+                if(diff != Vector3.zero && previousPos != Vector3.zero)
+                {
+                    if (translations.TryGetValue(UnityEditor.Selection.activeGameObject, out List<Vector3> list))
+                    {
+                        list.Add(diff);
+                    }
+                    else
+                    {
+                        translations.Add(UnityEditor.Selection.activeGameObject, new List<Vector3> { diff });
+                    }
+                }
+            }
+        }
     }
 }
