@@ -23,6 +23,8 @@ namespace VRtist
         private Vector3 fromRotation;
         private Quaternion initialRotation;
 
+        private float rootScale;
+
         private AnimationTool.PoseEditMode poseMode;
 
         private struct State
@@ -74,6 +76,8 @@ namespace VRtist
             InitialParentMatrixWorldToLocal = oTransform.parent.worldToLocalMatrix;
             InitialTRS = Matrix4x4.TRS(oTransform.localPosition, oTransform.localRotation, oTransform.localScale);
             initialTransformMatrix = oTransform.localToWorldMatrix;
+
+            rootScale = skinController.transform.localScale.x;
 
             controllers = new List<HumanGoalController>();
             for (int i = 0; i < hierarchySize; i++)
@@ -251,7 +255,7 @@ namespace VRtist
             }
 
             double wm = 10f;
-            double wd = 10f;
+            double wd = rootScale;
 
             Q_opt = Add(Add(Multiply(2d * wm, Multiply(Transpose(Js), Js)), Multiply(2d * wd, DT_D)), Multiply((double)Mathf.Pow(10, -6), Identity(p)));
 

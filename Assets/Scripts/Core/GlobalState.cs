@@ -36,6 +36,7 @@ namespace VRtist
     /// </summary>
     public class GlobalState : MonoBehaviour
     {
+
         public Settings settings;
         public NetworkSettings networkSettings;
 

@@ -64,19 +64,19 @@ MonoBehaviour:
     LowerAngleBound: {x: -30, y: -30, z: -10}
     UpperAngleBound: {x: 30, y: 30, z: 10}
   - Name: Spine
-    stiffness: 1
+    stiffness: 0.8
     isGoal: 0
     showCurve: 0
     LowerAngleBound: {x: -35, y: -35, z: -20}
     UpperAngleBound: {x: 35, y: 35, z: 20}
   - Name: Spine1
-    stiffness: 1
+    stiffness: 0.7
     isGoal: 1
     showCurve: 0
     LowerAngleBound: {x: -20, y: -60, z: -30}
     UpperAngleBound: {x: 20, y: 60, z: 30}
   - Name: Spine2
-    stiffness: 1
+    stiffness: 0.6
     isGoal: 1
     showCurve: 0
     LowerAngleBound: {x: 0, y: 0, z: 0}
