@@ -42,6 +42,10 @@ namespace VRtist
 
         private bool isAnimTool = false;
 
+        private float currentOffset;
+
+        private Dictionary<SkinMeshController, List<GameObject>> ControllerCurves = new Dictionary<SkinMeshController, List<GameObject>>();
+
         void Start()
         {
             Selection.onSelectionChanged.AddListener(OnSelectionChanged);
@@ -49,6 +53,7 @@ namespace VRtist
             GlobalState.Animation.onRemoveAnimation.AddListener(OnAnimationRemoved);
             GlobalState.Animation.onChangeCurve.AddListener(OnCurveChanged);
             ToolsUIManager.Instance.OnToolChangedEvent += OnToolChanged;
+            GlobalState.Animation.onFrameEvent.AddListener(UpdateOffset);
         }
 
         void Update()
@@ -61,7 +66,11 @@ namespace VRtist
                 else
                     ClearCurves();
             }
-
+            if (currentOffset != GlobalState.Settings.CurveForwardOffset)
+            {
+                currentOffset = GlobalState.Settings.CurveForwardOffset;
+                UpdateOffsetValue();
+            }
             UpdateCurvesWidth();
         }
 
@@ -96,6 +105,7 @@ namespace VRtist
             if (controllers.Length > 0)
             {
                 UpdateHumanCurve(controllers);
+                AddCurve(gObject, false);
                 return;
             }
             if (property != AnimatableProperty.PositionX && property != AnimatableProperty.PositionY && property != AnimatableProperty.PositionZ)
@@ -120,6 +130,7 @@ namespace VRtist
             if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
             {
                 RecursiveDeleteCurve(gObject.transform);
+                if (ControllerCurves.ContainsKey(controller)) ControllerCurves.Remove(controller);
             }
             else
             {
@@ -134,6 +145,10 @@ namespace VRtist
             {
                 UpdateFromSelection();
             }
+            if (!switchToAnim && isAnimTool)
+            {
+                DeleteGoalCurves();
+            }
             isAnimTool = switchToAnim;
         }
 
@@ -142,6 +157,7 @@ namespace VRtist
             foreach (GameObject curve in curves.Values)
                 Destroy(curve);
             curves.Clear();
+            ControllerCurves.Clear();
         }
 
         void DeleteCurve(GameObject gObject)
@@ -162,25 +178,42 @@ namespace VRtist
             }
         }
 
+        void DeleteGoalCurves()
+        {
+            List<GameObject> removedKeys = new List<GameObject>();
+            foreach (KeyValuePair<GameObject, GameObject> pair in curves)
+            {
+                if (pair.Key.TryGetComponent<HumanGoalController>(out HumanGoalController controller) && controller.PathToRoot[0] != controller.transform)
+                {
+                    Destroy(pair.Value);
+                    removedKeys.Add(pair.Key);
+                }
+            }
+            ControllerCurves.Clear();
+            removedKeys.ForEach(x => curves.Remove(x));
+        }
+
         void UpdateCurve(GameObject gObject)
         {
-            DeleteCurve(gObject);
+            //DeleteCurve(gObject);
             AddCurve(gObject);
         }
 
         private void UpdateHumanCurve(HumanGoalController[] controllers)
         {
+            if (ToolsManager.CurrentToolName() != "Animation") return;
+            if (ControllerCurves.ContainsKey(controllers[0].RootController)) ControllerCurves.Remove(controllers[0].RootController);
             for (int i = 0; i < controllers.Length; i++)
             {
                 DeleteCurve(controllers[i].gameObject);
-                GetAHumanAnimationCurve(controllers[i]);
+                GetAHumanAnimationCurve(controllers[i], controllers[i].RootController);
             }
         }
 
 
-        void AddCurve(GameObject gObject)
+        void AddCurve(GameObject gObject, bool testHuman = true)
         {
-            if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+            if (testHuman && gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
             {
                 AddHumanCurve(gObject, controller);
             }
@@ -222,7 +255,7 @@ namespace VRtist
             }
 
             int count = positions.Count;
-            GameObject curve = Instantiate(curvePrefab, curvesParent);
+            GameObject curve = curves.TryGetValue(gObject, out GameObject current) ? current : Instantiate(curvePrefab, curvesParent);
 
             LineRenderer line = curve.GetComponent<LineRenderer>();
             line.positionCount = count;
@@ -238,7 +271,7 @@ namespace VRtist
             line.BakeMesh(lineMesh);
             collider.sharedMesh = lineMesh;
 
-            curves.Add(gObject, curve);
+            curves[gObject] = curve;
         }
 
         private void AddHumanCurve(GameObject gObject, SkinMeshController controller)
@@ -252,16 +285,16 @@ namespace VRtist
                 HumanGoalController[] controllers = goalController.GetComponentsInChildren<HumanGoalController>();
                 foreach (HumanGoalController ctrl in controllers)
                 {
-                    GetAHumanAnimationCurve(ctrl);
+                    GetAHumanAnimationCurve(ctrl, controller);
                 }
             }
             else
             {
-                GetAHumanAnimationCurve(goalController);
+                GetAHumanAnimationCurve(goalController, controller);
             }
         }
 
-        private void GetAHumanAnimationCurve(HumanGoalController goalController)
+        private void GetAHumanAnimationCurve(HumanGoalController goalController, SkinMeshController skinController)
         {
             if (!goalController.ShowCurve) return;
             AnimationSet rootAnimation = GlobalState.Animation.GetObjectAnimation(goalController.gameObject);
@@ -272,12 +305,14 @@ namespace VRtist
             int frameEnd = Mathf.Clamp(positionX.keys[positionX.keys.Count - 1].frame, GlobalState.Animation.StartFrame, GlobalState.Animation.EndFrame);
 
             List<Vector3> positions = new List<Vector3>();
-            GameObject curve = Instantiate(curvePrefab, curvesParent);
+            GameObject curve = curves.TryGetValue(goalController.gameObject, out GameObject current) ? current : Instantiate(curvePrefab, curvesParent);
+
+            Vector3 forwardVector = (skinController.transform.forward * skinController.transform.localScale.x) * currentOffset;
 
             goalController.CheckAnimations();
             for (int i = frameStart; i <= frameEnd; i++)
             {
-                Vector3 position = curve.transform.InverseTransformDirection(goalController.FramePosition(i));
+                Vector3 position = curve.transform.InverseTransformDirection(goalController.FramePosition(i) - (forwardVector * i));
                 positions.Add(position);
             }
             LineRenderer line = curve.GetComponent<LineRenderer>();
@@ -287,11 +322,22 @@ namespace VRtist
             line.startWidth = lineWidth / GlobalState.WorldScale;
             line.endWidth = line.startWidth;
 
+            curve.transform.position = forwardVector * GlobalState.Animation.CurrentFrame;
+
             MeshCollider collider = curve.GetComponent<MeshCollider>();
             Mesh lineMesh = new Mesh();
             line.BakeMesh(lineMesh);
             collider.sharedMesh = lineMesh;
-            curves.Add(goalController.gameObject, curve);
+            curves[goalController.gameObject] = curve;
+            if (ControllerCurves.ContainsKey(skinController))
+            {
+                ControllerCurves[skinController].Add(curve);
+            }
+            else
+            {
+                ControllerCurves[skinController] = new List<GameObject>();
+                ControllerCurves[skinController].Add(curve);
+            }
         }
 
         public GameObject GetObjectFromCurve(GameObject curve)
@@ -311,6 +357,26 @@ namespace VRtist
                 return false;
             }
             return (value.TryGetComponent<LineRenderer>(out line));
+        }
+
+        private void UpdateOffsetValue()
+        {
+            foreach (KeyValuePair<SkinMeshController, List<GameObject>> curves in ControllerCurves)
+            {
+                UpdateCurve(curves.Key.gameObject);
+            }
+        }
+
+        private void UpdateOffset(int frame)
+        {
+            foreach (KeyValuePair<SkinMeshController, List<GameObject>> curves in ControllerCurves)
+            {
+                Vector3 forwardVector = (curves.Key.transform.forward * curves.Key.transform.localScale.x) * currentOffset;
+                curves.Value.ForEach(x =>
+                {
+                    x.transform.position = forwardVector * frame;
+                });
+            }
         }
     }
 }

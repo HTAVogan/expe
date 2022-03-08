@@ -135,17 +135,21 @@ namespace VRtist
                 else animator.DrawCurveGhost();
             }
 
-            VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.triggerButton, () =>
-            {
-                if (hoveredCurves.Count > 0)
-                {
-                    animator.SelectCurve(hoveredCurves[0], transform);
-                }
-            },
-            () =>
-            {
+            //VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.triggerButton, () =>
+            //{
+            //    if (hoveredCurves.Count > 0)
+            //    {
+            //        animator.SelectCurve(hoveredCurves[0], transform);
+            //    }
+            //    else
+            //    {
+            //        animator.ClearSelectCurves();
+            //    }
+            //},
+            //() =>
+            //{
 
-            });
+            //});
 
         }
 

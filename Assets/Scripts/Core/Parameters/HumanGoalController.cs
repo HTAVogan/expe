@@ -12,12 +12,12 @@ namespace VRtist
         public AnimationSet Animation;
         public SkinMeshController RootController;
 
-        [Range(0, 1)]
         public float stiffness;
         public bool IsGoal;
         public bool ShowCurve;
         public Vector3 LowerAngleBound;
         public Vector3 UpperAngleBound;
+        public Renderer MeshRenderer;
 
         public void SetPathToRoot(SkinMeshController controller, List<Transform> path)
         {
@@ -38,7 +38,10 @@ namespace VRtist
             if (null == Animation) Animation = GlobalState.Animation.GetObjectAnimation(this.gameObject);
             if (null == Animation) return Vector3.zero;
 
-            Matrix4x4 trsMatrix = PathToRoot[0].parent.localToWorldMatrix;
+            AnimationSet rootAnimation = GlobalState.Animation.GetObjectAnimation(RootController.gameObject);
+            Matrix4x4 trsMatrix = RootController.transform.parent.localToWorldMatrix;
+            if (null != rootAnimation) trsMatrix = trsMatrix * rootAnimation.GetTranformMatrix(frame);
+            else trsMatrix = trsMatrix * Matrix4x4.TRS(RootController.transform.localPosition, RootController.transform.localRotation, RootController.transform.localScale);
 
             if (PathToRoot.Count > 1)
             {
@@ -80,6 +83,11 @@ namespace VRtist
                 AnimToRoot.Add(GlobalState.Animation.GetObjectAnimation(x.gameObject));
             });
             Animation = GlobalState.Animation.GetObjectAnimation(gameObject);
+        }
+
+        public void ShowRenderer(bool state)
+        {
+            if (null != MeshRenderer) MeshRenderer.enabled = state;
         }
     }
 }

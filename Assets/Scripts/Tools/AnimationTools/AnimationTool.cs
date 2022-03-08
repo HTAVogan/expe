@@ -29,6 +29,8 @@ namespace VRtist
         private Transform FKModeButton;
         private Transform IKModeButton;
         private Transform ContSlider;
+        private Transform SkeletonDisplay;
+        private Transform OffsetLabel;
 
         private int zoneSize;
         private float tanCont;
@@ -44,6 +46,8 @@ namespace VRtist
 
         private CurveManipulation curveManip;
         private PoseManipulation poseManip;
+
+        private List<GameObject> SelectedCurves = new List<GameObject>();
 
         public enum EditMode { Curve, Pose }
         private EditMode editMode = EditMode.Pose;
@@ -86,6 +90,26 @@ namespace VRtist
             }
         }
 
+        private float offsetValue;
+        public float Offsetvalue
+        {
+            get { return offsetValue; }
+            set
+            {
+                offsetValue = value;
+                GlobalState.Settings.curveForwardOffset = offsetValue;
+                OffsetLabel.GetComponent<UILabel>().Text = "Offset : " + offsetValue;
+            }
+        }
+
+        public void AddOffset()
+        {
+            Offsetvalue += 0.5f;
+        }
+        public void RemoveOffset()
+        {
+            Offsetvalue -= 0.5f;
+        }
 
         public void SetCurveMode()
         {
@@ -136,6 +160,13 @@ namespace VRtist
             tanCont = value;
             ContSlider.GetComponent<UISlider>().Value = tanCont;
         }
+
+        public void SetSkeleton(bool value)
+        {
+            Debug.Log(value);
+            GlobalState.Settings.DisplaySkeletons = value;
+        }
+
         protected override void Awake()
         {
             base.Awake();
@@ -150,12 +181,49 @@ namespace VRtist
             FKModeButton = panel.Find("FK");
             IKModeButton = panel.Find("IK");
             ContSlider = panel.Find("Tangents");
+            SkeletonDisplay = panel.Find("Skeleton");
+            OffsetLabel = panel.Find("OffsetValue");
+            SkeletonDisplay.GetComponent<UICheckbox>().Checked = GlobalState.Settings.DisplaySkeletons;
 
+            Offsetvalue = GlobalState.Settings.CurveForwardOffset;
             zoneSize = Mathf.RoundToInt(ZoneSlider.GetComponent<UISlider>().Value);
             CurveMode = CurveEditMode.AddKeyframe;
             Mode = EditMode.Curve;
             PoseMode = PoseEditMode.FK;
         }
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            foreach (GameObject select in Selection.SelectedObjects)
+            {
+                if (select.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+                {
+                    HumanGoalController[] GoalController = controller.GetComponentsInChildren<HumanGoalController>();
+                    for (int i = 0; i < GoalController.Length; i++)
+                    {
+                        GoalController[i].ShowRenderer(true);
+                    }
+                }
+            }
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            foreach (GameObject select in Selection.SelectedObjects)
+            {
+                if (select.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
+                {
+                    HumanGoalController[] GoalController = controller.GetComponentsInChildren<HumanGoalController>();
+                    for (int i = 0; i < GoalController.Length; i++)
+                    {
+                        GoalController[i].ShowRenderer(false);
+                    }
+                }
+            }
+        }
+
 
         private UIButton GetCurveModeButton(CurveEditMode mode)
         {
@@ -397,11 +465,20 @@ namespace VRtist
             return closestPoint + GlobalState.Animation.StartFrame;
         }
 
-        public void SelectCurve(GameObject curve, Transform mouthpiece)
-        {
-            GameObject target = CurveManager.GetObjectFromCurve(gameObject);
-            Debug.Log(target);
-        }
+        //public void SelectCurve(GameObject curve, Transform mouthpiece)
+        //{
+        //    GameObject target = CurveManager.GetObjectFromCurve(curve);
+        //    if (SelectedCurves.Contains(target))
+        //        return;
+        //    SelectedCurves.Add(target);
+        //    AnimationEngine.Instance.OnCurveSelectionChanged.Invoke(SelectedCurves);
+        //}
+
+        //public void ClearSelectCurves()
+        //{
+        //    SelectedCurves.Clear();
+        //    AnimationEngine.Instance.OnCurveSelectionChanged.Invoke(SelectedCurves);
+        //}
 
         #endregion
     }
