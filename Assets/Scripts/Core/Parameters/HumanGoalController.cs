@@ -12,7 +12,6 @@ namespace VRtist
         public AnimationSet Animation;
         public SkinMeshController RootController;
 
-        [Range(0, 1)]
         public float stiffness;
         public bool IsGoal;
         public bool ShowCurve;
