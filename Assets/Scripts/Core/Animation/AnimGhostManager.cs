@@ -17,6 +17,8 @@ namespace VRtist
             public List<GameObject> Link;
             public int Frame;
 
+            private Vector3 worldPosition;
+
             public void ClearNode()
             {
                 Childrens.ForEach(x => x.ClearNode());
@@ -35,7 +37,7 @@ namespace VRtist
                 Link = new List<GameObject>();
                 if (null == objectAnimation) return;
                 Matrix4x4 objectMatrix = parentMatrix * objectAnimation.GetTranformMatrix(frame);
-                Maths.DecomposeMatrix(objectMatrix, out Vector3 objectPosition, out Quaternion objectRotation, out Vector3 objectScale);
+                Maths.DecomposeMatrix(objectMatrix, out worldPosition, out Quaternion objectRotation, out Vector3 objectScale);
 
                 if (Target.TryGetComponent<HumanGoalController>(out HumanGoalController controller) && controller.IsGoal)
                 {
@@ -46,7 +48,7 @@ namespace VRtist
                     Sphere = new GameObject();
                 }
                 Sphere.transform.parent = parentNode;
-                Sphere.transform.SetPositionAndRotation(objectPosition, objectRotation);
+                Sphere.transform.SetPositionAndRotation(worldPosition, objectRotation);
                 Sphere.transform.localScale = Vector3.one * scale;
                 Sphere.name = targetObject.name + "-" + frame;
                 if (null != controller && !controller.name.Contains("Hips"))
@@ -80,22 +82,56 @@ namespace VRtist
                 }
                 Childrens.ForEach(x => x.UpdateNode(objectMatrix));
             }
+
+            public void SetOffset(Vector3 offset)
+            {
+                Sphere.transform.position = worldPosition + offset;
+            }
         }
 
-        public Dictionary<GameObject, Dictionary<int, Node>> ghostDictionary;
+        public Dictionary<SkinMeshController, Dictionary<int, Node>> ghostDictionary;
         public Transform world;
         public Transform GhostParent;
         private bool isAnimTool;
 
+        private bool showSkeleton;
+
+        private float currentOffset;
+
         public void Start()
         {
-            ghostDictionary = new Dictionary<GameObject, Dictionary<int, Node>>();
+            ghostDictionary = new Dictionary<SkinMeshController, Dictionary<int, Node>>();
             Selection.onSelectionChanged.AddListener(OnSelectionChanged);
             GlobalState.Animation.onChangeCurve.AddListener(OnCurveChanged);
             GlobalState.Animation.onRemoveAnimation.AddListener(OnAnimationRemoved);
+            GlobalState.Animation.onFrameEvent.AddListener(UpdateOffset);
             ToolsUIManager.Instance.OnToolChangedEvent += OnToolChanged;
+
+            showSkeleton = GlobalState.Settings.DisplaySkeletons;
+            currentOffset = GlobalState.Settings.CurveForwardOffset;
         }
 
+        public void Update()
+        {
+            if (showSkeleton != GlobalState.Settings.DisplaySkeletons)
+            {
+                showSkeleton = GlobalState.Settings.DisplaySkeletons;
+                if (showSkeleton)
+                {
+                    UpdateFromSelection();
+                }
+                else
+                {
+                    ClearGhosts();
+                }
+            }
+
+            if (currentOffset != GlobalState.Settings.CurveForwardOffset)
+            {
+                currentOffset = GlobalState.Settings.CurveForwardOffset;
+                UpdateOffset(GlobalState.Animation.CurrentFrame);
+            }
+        }
 
         private void OnToolChanged(object sender, ToolChangedArgs args)
         {
@@ -107,13 +143,12 @@ namespace VRtist
 
         void OnSelectionChanged(HashSet<GameObject> previousSelectedObjects, HashSet<GameObject> selectedObjects)
         {
-            if (GlobalState.Settings.display3DCurves)
-                UpdateFromSelection();
+            UpdateFromSelection();
         }
 
         void UpdateFromSelection()
         {
-            if (ToolsManager.CurrentToolName() != "Animation") return;
+            if (ToolsManager.CurrentToolName() != "Animation" || !showSkeleton) return;
             ClearGhosts();
             foreach (GameObject gObject in Selection.SelectedObjects)
             {
@@ -126,12 +161,12 @@ namespace VRtist
 
         public void OnCurveChanged(GameObject gObject, AnimatableProperty property)
         {
-            if (ToolsManager.CurrentToolName() != "Animation") return;
+            if (ToolsManager.CurrentToolName() != "Animation" || !showSkeleton) return;
             //Debug.Log("on curve changed " + gObject);
             if (gObject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
             {
                 //Debug.Log("curve humang controller " + controller);
-                if (ghostDictionary.TryGetValue(controller.RootObject.gameObject, out Dictionary<int, Node> value))
+                if (ghostDictionary.TryGetValue(controller, out Dictionary<int, Node> value))
                 {
                     //Debug.Log("has value");
                     foreach (KeyValuePair<int, Node> pair in value)
@@ -147,13 +182,13 @@ namespace VRtist
         {
             if (gobject.TryGetComponent<SkinMeshController>(out SkinMeshController controller))
             {
-                if (ghostDictionary.TryGetValue(controller.RootObject.gameObject, out Dictionary<int, Node> value))
+                if (ghostDictionary.TryGetValue(controller, out Dictionary<int, Node> value))
                 {
                     foreach (KeyValuePair<int, Node> pair in value)
                     {
                         pair.Value.ClearNode();
                     }
-                    ghostDictionary.Remove(controller.RootObject.gameObject);
+                    ghostDictionary.Remove(controller);
                 }
             }
         }
@@ -164,26 +199,40 @@ namespace VRtist
             if (null == HipsAnim) return;
 
             AnimationSet rootAnim = GlobalState.Animation.GetObjectAnimation(controller.gameObject);
-            ghostDictionary[controller.RootObject.gameObject] = new Dictionary<int, Node>();
+            ghostDictionary[controller] = new Dictionary<int, Node>();
             Curve rotX = HipsAnim.GetCurve(AnimatableProperty.RotationX);
             rotX.keys.ForEach(x =>
             {
-                Matrix4x4 rootMatrix = rootAnim != null? rootAnim.GetTranformMatrix(x.frame): Matrix4x4.TRS(controller.transform.localPosition, controller.transform.localRotation, controller.transform.localScale); ;
-                ghostDictionary[controller.RootObject.gameObject].Add(x.frame, new Node(controller.RootObject.gameObject, x.frame, GhostParent, controller.transform.parent.localToWorldMatrix * rootMatrix, controller.transform.localScale.magnitude * 5));
+                Matrix4x4 rootMatrix = rootAnim != null ? rootAnim.GetTranformMatrix(x.frame) : Matrix4x4.TRS(controller.transform.localPosition, controller.transform.localRotation, controller.transform.localScale); ;
+                ghostDictionary[controller].Add(x.frame,
+                    new Node(controller.RootObject.gameObject, x.frame, GhostParent, controller.transform.parent.localToWorldMatrix * rootMatrix, controller.transform.localScale.magnitude * 5));
             });
+            UpdateOffset(GlobalState.Animation.CurrentFrame);
+        }
+
+        public void UpdateOffset(int currentFrame)
+        {
+            foreach (KeyValuePair<SkinMeshController, Dictionary<int, Node>> pair in ghostDictionary)
+            {
+                Vector3 forwardVector = (pair.Key.transform.forward * pair.Key.transform.localScale.x) * currentOffset;
+                foreach (KeyValuePair<int, Node> node in pair.Value)
+                {
+                    int offsetSize = currentFrame - node.Key;
+                    node.Value.SetOffset(forwardVector * offsetSize);
+                }
+            }
         }
 
         private void ClearGhosts()
         {
-            foreach (KeyValuePair<GameObject, Dictionary<int, Node>> pair in ghostDictionary)
+            foreach (KeyValuePair<SkinMeshController, Dictionary<int, Node>> pair in ghostDictionary)
             {
                 foreach (KeyValuePair<int, Node> nodePairs in pair.Value)
                 {
                     nodePairs.Value.ClearNode();
                 }
             }
-            ghostDictionary = new Dictionary<GameObject, Dictionary<int, Node>>();
-            Debug.Log("clear ghost");
+            ghostDictionary.Clear();
         }
     }
 

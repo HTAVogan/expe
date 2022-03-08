@@ -23,6 +23,8 @@ namespace VRtist
         private Vector3 fromRotation;
         private Quaternion initialRotation;
 
+        private float rootScale;
+
         private AnimationTool.PoseEditMode poseMode;
 
         private struct State
@@ -74,6 +76,8 @@ namespace VRtist
             InitialParentMatrixWorldToLocal = oTransform.parent.worldToLocalMatrix;
             InitialTRS = Matrix4x4.TRS(oTransform.localPosition, oTransform.localRotation, oTransform.localScale);
             initialTransformMatrix = oTransform.localToWorldMatrix;
+
+            rootScale = skinController.transform.localScale.x;
 
             controllers = new List<HumanGoalController>();
             for (int i = 0; i < hierarchySize; i++)
@@ -200,13 +204,13 @@ namespace VRtist
 
             currentState = new State()
             {
-                position = oTransform.position,
+                position = MeshController.transform.InverseTransformPoint(oTransform.position),
                 rotation = oTransform.rotation
             };
             //Debug.Log("current : " + currentState.position + " / " + currentState.rotation + " // " + oTransform.eulerAngles);
             desiredState = new State()
             {
-                position = targetPosition,
+                position = MeshController.transform.InverseTransformPoint(targetPosition),
                 rotation = targetRotation
             };
             //Debug.Log("target : " + desiredState.position + " / " + desiredState.rotation);
@@ -235,7 +239,14 @@ namespace VRtist
             for (int i = 0; i < 3; i++)
             {
                 int j = 3 * hierarchySize + i;
-                DT_D[j, j] = 1d;
+                if (fullHierarchy[0].TryGetComponent<HumanGoalController>(out HumanGoalController controller))
+                {
+                    DT_D[i, i] = controller.stiffness;
+                }
+                else
+                {
+                    DT_D[j, j] = 1d;
+                }
             }
 
             double[,] Delta_s_prime = new double[7, 1];
@@ -243,15 +254,20 @@ namespace VRtist
             {
                 Delta_s_prime[i, 0] = desiredState.position[i] - currentState.position[i];
             }
-            if (/*Mathf.Sign(desiredState.rotation.w) != Mathf.Sign(currentState.rotation.w) &&*/ (currentState.rotation * Quaternion.Inverse(desiredState.rotation)).w < 0)
+            if ((currentState.rotation * Quaternion.Inverse(desiredState.rotation)).w < 0)
                 desiredState.rotation = new Quaternion(-desiredState.rotation.x, -desiredState.rotation.y, -desiredState.rotation.z, -desiredState.rotation.w);
             for (int i = 0; i < 4; i++)
             {
                 Delta_s_prime[i + 3, 0] = desiredState.rotation[i] - currentState.rotation[i];
             }
 
-            double wm = 10f;
-            double wd = 10f;
+            //float posMagn = new Vector3((float)Delta_s_prime[0, 0], (float)Delta_s_prime[1, 0], (float)Delta_s_prime[2, 0]).magnitude;
+            //float rotMagn = Quaternion.Angle(Quaternion.identity, new Quaternion((float)Delta_s_prime[3, 0], (float)Delta_s_prime[4, 0], (float)Delta_s_prime[5, 0], (float)Delta_s_prime[6, 0]));
+            //string debug = "Position : " + posMagn + " Rotation : " + rotMagn;
+            //Debug.Log(debug);
+
+            double wm = 10;
+            double wd = 0.01f;
 
             Q_opt = Add(Add(Multiply(2d * wm, Multiply(Transpose(Js), Js)), Multiply(2d * wd, DT_D)), Multiply((double)Mathf.Pow(10, -6), Identity(p)));
 
@@ -362,19 +378,19 @@ namespace VRtist
                     rotation[i] = 1;
                     currentTransform.localRotation *= Quaternion.Euler(rotation);
 
-                    Vector3 plusPosition = oTransform.position;
+                    Vector3 plusPosition = MeshController.transform.InverseTransformPoint(oTransform.position);
                     Quaternion plusRotation = oTransform.rotation;
 
                     currentTransform.localRotation = currentRotation;
 
-                    Vector3 minusPosition = oTransform.position;
+                    Vector3 minusPosition = MeshController.transform.InverseTransformPoint(oTransform.position);
                     Quaternion minusRotation = oTransform.rotation;
 
                     int col = 3 * l + i;
 
-                    Js[0, col] = (plusPosition.x - minusPosition.x) / dtheta;
-                    Js[1, col] = (plusPosition.y - minusPosition.y) / dtheta;
-                    Js[2, col] = (plusPosition.z - minusPosition.z) / dtheta;
+                    Js[0, col] = (plusPosition.x - minusPosition.x) / 0.05f;
+                    Js[1, col] = (plusPosition.y - minusPosition.y) / 0.05f;
+                    Js[2, col] = (plusPosition.z - minusPosition.z) / 0.05f;
                     Js[3, col] = (plusRotation.x - minusRotation.x) / dtheta;
                     Js[4, col] = (plusRotation.y - minusRotation.y) / dtheta;
                     Js[5, col] = (plusRotation.z - minusRotation.z) / dtheta;
@@ -388,20 +404,20 @@ namespace VRtist
                 rootPosition[i] += dtheta;
                 rootTransform.localPosition = rootPosition;
 
-                Vector3 plusPosition = oTransform.position;
+                Vector3 plusPosition = MeshController.transform.InverseTransformPoint(oTransform.position);
                 Quaternion plusRotation = oTransform.rotation;
 
                 rootPosition[i] -= dtheta;
                 rootTransform.localPosition = rootPosition;
 
-                Vector3 minusPosition = oTransform.position;
+                Vector3 minusPosition = MeshController.transform.InverseTransformPoint(oTransform.position);
                 Quaternion minusRotation = oTransform.rotation;
 
                 int col = 3 * hierarchySize + i;
 
-                Js[0, col] = (plusPosition.x - minusPosition.x) / dtheta;
-                Js[1, col] = (plusPosition.y - minusPosition.y) / dtheta;
-                Js[2, col] = (plusPosition.z - minusPosition.z) / dtheta;
+                Js[0, col] = 0;//lusPosition.x - minusPosition.x) / 0.05f;
+                Js[1, col] = 0;//lusPosition.y - minusPosition.y) / 0.05f;
+                Js[2, col] = 0;//(plusPosition.z - minusPosition.z) / 0.05f;
                 Js[3, col] = (plusRotation.x - minusRotation.x) / dtheta;
                 Js[4, col] = (plusRotation.y - minusRotation.y) / dtheta;
                 Js[5, col] = (plusRotation.z - minusRotation.z) / dtheta;

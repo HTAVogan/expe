@@ -157,7 +157,7 @@ namespace VRtist
         {
             Matrix4x4 target = transformation * humanData.InitFrameMatrix;
             Maths.DecomposeMatrix(target, out Vector3 targetPos, out Quaternion targetRot, out Vector3 targetScale);
-            HumanSolver solver = new HumanSolver(targetPos, targetRot, humanData.Controller.Animation, humanData.Controller.AnimToRoot, Frame, startFrame, endFrame, continuity);
+            HumanSolver solver = new HumanSolver(targetPos, targetRot, humanData.Controller.Animation, humanData.Controller.AnimToRoot, Frame, startFrame, endFrame, continuity, humanData.Controller.RootController.transform.localScale.x);
             solver.TrySolver();
             humanData.Solver = solver;
             GlobalState.Animation.onChangeCurve.Invoke(humanData.Controller.RootController.gameObject, AnimatableProperty.PositionX);

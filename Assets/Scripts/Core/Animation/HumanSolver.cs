@@ -22,6 +22,8 @@ namespace VRtist
         private int firstFrame;
         private int lastFrame;
 
+        private float rootScale;
+
         private List<Curve> curves;
 
         struct Constraints
@@ -78,7 +80,7 @@ namespace VRtist
             delta_theta,
             theta;
 
-        public HumanSolver(Vector3 targetPosition, Quaternion targetRotation, AnimationSet objectAnim, List<AnimationSet> animation, int frame, int startFrame, int endFrame, double continuity)
+        public HumanSolver(Vector3 targetPosition, Quaternion targetRotation, AnimationSet objectAnim, List<AnimationSet> animation, int frame, int startFrame, int endFrame, double continuity, float scale)
         {
             positionTarget = targetPosition;
             rotationTarget = targetRotation;
@@ -92,6 +94,7 @@ namespace VRtist
             currentFrame = frame;
             firstFrame = startFrame;
             lastFrame = endFrame;
+            rootScale = scale;
         }
 
         private void GetCurves(AnimationSet objectAnim, List<AnimationSet> animation)
@@ -242,11 +245,11 @@ namespace VRtist
         public bool Compute()
         {
             //wm
-            double targetW = 100d;
+            double targetW = 10;
             //wb
             double continuityW = tanContinuity;
             //wd
-            double stiffnessW = 1d;
+            double stiffnessW = 0.01f;
 
             double[,] Js = ThetaFromJob(p);
 
