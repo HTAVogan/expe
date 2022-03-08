@@ -42,6 +42,7 @@ namespace VRtist
         private static Dictionary<GameObject, List<Quaternion>> rotations;
         public static AnimationEngineTradi Animation { get { return AnimationEngineTradi.Instance; } }
         private GostManager gostManager;
+        private GameObject prevGO;
 
         // FPS
         public static int Fps { get; private set; }
@@ -177,23 +178,27 @@ namespace VRtist
 
         internal void ModifyPrevious()
         {
-            if(UnityEditor.Selection.activeGameObject != null && gostManager.areGostGenerated)
+            if(UnityEditor.Selection.activeGameObject != null && gostManager.areGostGenerated && UnityEditor.Selection.activeGameObject.transform.childCount>0)
             {
-                Debug.Log("pos before : " + previousPos);
-                previousPos = UnityEditor.Selection.activeGameObject.transform.localPosition;
-                Debug.Log("pos after : " + previousPos);
+
+                previousPos = UnityEditor.Selection.activeGameObject.transform.GetChild(0).position;
+                prevGO = UnityEditor.Selection.activeGameObject.transform.GetChild(0).gameObject;
+                Debug.Log("pré : " + UnityEditor.Selection.activeGameObject.transform.GetChild(0) + ": " + UnityEditor.Selection.activeGameObject.transform.GetChild(0).position);
+
 
             }
         }
 
         internal void RecordTranslation()
         {
-            if (UnityEditor.Selection.activeGameObject != null && gostManager.areGostGenerated)
+            if (UnityEditor.Selection.activeGameObject != null && gostManager.areGostGenerated && UnityEditor.Selection.activeGameObject.transform.childCount > 0)
             {
-                Vector3 diff = UnityEditor.Selection.activeGameObject.transform.localPosition - previousPos;
+             
+                Vector3 diff = UnityEditor.Selection.activeGameObject.transform.GetChild(0).position - previousPos;
 
-                if(diff != Vector3.zero && previousPos != Vector3.zero)
+                if (diff != Vector3.zero && previousPos != Vector3.zero && prevGO == UnityEditor.Selection.activeGameObject.transform.GetChild(0).gameObject)
                 {
+                    Debug.Log("after : " + UnityEditor.Selection.activeGameObject.transform.GetChild(0) + ": " + UnityEditor.Selection.activeGameObject.transform.GetChild(0).position);
                     if (translations.TryGetValue(UnityEditor.Selection.activeGameObject, out List<Vector3> list))
                     {
                         list.Add(diff);
