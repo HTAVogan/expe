@@ -23,7 +23,7 @@ public class AnimationWindows : EditorWindow
         window.minSize = new Vector2(250, 50);
 
         counter = GlobalStateTradi.Animation.ActionCountTradi;
-        
+
     }
 
     float hSbarValue;
@@ -34,7 +34,6 @@ public class AnimationWindows : EditorWindow
     public string path = "Assets/Resources/results.txt";
     private string evalMode = "1";
     public Vector3 originalPos;
-
     private bool isOriginal = true;
     private bool isReturnPos = false;
     private void OnGUI()
@@ -86,8 +85,8 @@ public class AnimationWindows : EditorWindow
             {
                 Calculate();
             }
-       
-       
+
+
 
             GUILayout.Label(similitudes.ToString());
 
@@ -97,11 +96,13 @@ public class AnimationWindows : EditorWindow
                 Validate();
             }
             GUILayout.EndArea();
-         
+
         }
 
 
     }
+
+
 
     private void PlaceGost()
     {
@@ -115,7 +116,7 @@ public class AnimationWindows : EditorWindow
 
         writer.WriteLine("TimeOfEval;Eval mode;Time spent; Percent of similitudes; frames number with a keyframe;Number of actions; Actions done; Translation for each animated GO");
         string line = "";
-        line = System.DateTime.Now + ";" + evalMode + ";" + GlobalStateTradi.Animation.gostManager.timeSinceGost.ToString() + ";" + GlobalStateTradi.Animation.gostManager.GetComponent<GostManager>().GetPercent().ToString() + ";" + GetKeyFrameNumber().ToString()+";" + counter.actionsCount.ToString() + ";";
+        line = System.DateTime.Now + ";" + evalMode + ";" + GlobalStateTradi.Animation.gostManager.timeSinceGost.ToString() + ";" + GlobalStateTradi.Animation.gostManager.GetComponent<GostManager>().GetPercent().ToString() + ";" + GetKeyFrameNumber().ToString() + ";" + counter.actionsCount.ToString() + ";";
         foreach (var item in counter.actions)
         {
             line += item.Key + " : " + item.Value + "/";
@@ -156,6 +157,7 @@ public class AnimationWindows : EditorWindow
     {
         GlobalStateTradi.Animation.gostManager.CreateGost();
         isGhostAlreadyGen = true;
+        GenerateHierarchy(GlobalStateTradi.Animation.gostManager.gostJoleen);
     }
 
     private void PauseAnimation()
@@ -182,5 +184,39 @@ public class AnimationWindows : EditorWindow
     {
 
         return 0;
+    }
+
+    private void GenerateHierarchy(GameObject gostOrigin)
+    {
+        foreach (Transform item in gostOrigin.transform)
+        {
+            if (item.name.Contains("Hips"))
+            {
+                GenerateHierarchyRecursive(item);
+            }
+        }
+    }
+
+    private void GenerateHierarchyRecursive(Transform t)
+    {
+        Debug.Log("Done");
+        foreach (Transform item in t)
+        {
+            Button button = GenerateButton(item);
+            rootVisualElement.Add(button);
+            GenerateHierarchyRecursive(item);
+        }
+    }
+
+    private Button GenerateButton(Transform item)
+    {
+        Button button = new Button(() => Clicked(item));
+        button.text = item.name;
+        return button;
+    }
+
+    private void Clicked(Transform t)
+    {
+        UnityEditor.Selection.activeGameObject = t.gameObject;
     }
 }

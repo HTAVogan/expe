@@ -183,7 +183,6 @@ namespace VRtist
 
                 previousPos = UnityEditor.Selection.activeGameObject.transform.GetChild(0).position;
                 prevGO = UnityEditor.Selection.activeGameObject.transform.GetChild(0).gameObject;
-                Debug.Log("pré : " + UnityEditor.Selection.activeGameObject.transform.GetChild(0) + ": " + UnityEditor.Selection.activeGameObject.transform.GetChild(0).position);
 
 
             }
@@ -198,7 +197,6 @@ namespace VRtist
 
                 if (diff != Vector3.zero && previousPos != Vector3.zero && prevGO == UnityEditor.Selection.activeGameObject.transform.GetChild(0).gameObject)
                 {
-                    Debug.Log("after : " + UnityEditor.Selection.activeGameObject.transform.GetChild(0) + ": " + UnityEditor.Selection.activeGameObject.transform.GetChild(0).position);
                     if (translations.TryGetValue(UnityEditor.Selection.activeGameObject, out List<Vector3> list))
                     {
                         list.Add(diff);
