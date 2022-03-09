@@ -481,6 +481,65 @@ namespace VRtist
         //}
 
         #endregion
+
+        #region DragObject
+
+        Matrix4x4 initMouthPieceWorldToLocal;
+        List<GameObject> movedObjects = new List<GameObject>();
+        Dictionary<GameObject, Matrix4x4> initParentMatrixLtW = new Dictionary<GameObject, Matrix4x4>();
+        Dictionary<GameObject, Matrix4x4> initParentMatrixWtL = new Dictionary<GameObject, Matrix4x4>();
+        Dictionary<GameObject, Vector3> initPositions = new Dictionary<GameObject, Vector3>();
+        Dictionary<GameObject, Quaternion> initRotation = new Dictionary<GameObject, Quaternion>();
+        Dictionary<GameObject, Vector3> initScale = new Dictionary<GameObject, Vector3>();
+
+        public void StartDragObject(GameObject gobject, Transform mouthpiece)
+        {
+            initMouthPieceWorldToLocal = mouthpiece.worldToLocalMatrix;
+
+            initParentMatrixLtW[gobject] = gobject.transform.parent.localToWorldMatrix;
+            initParentMatrixWtL[gobject] = gobject.transform.parent.worldToLocalMatrix;
+            initPositions[gobject] = gobject.transform.localPosition;
+            initRotation[gobject] = gobject.transform.localRotation;
+            initScale[gobject] = gobject.transform.localScale;
+            movedObjects.Add(gobject);
+        }
+
+        public void DragObject(Transform mouthpiece)
+        {
+            Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initMouthPieceWorldToLocal;
+            movedObjects.ForEach(x =>
+            {
+                Matrix4x4 transformed = initParentMatrixWtL[x] * transformation * initParentMatrixLtW[x] * Matrix4x4.TRS(initPositions[x], initRotation[x], initScale[x]);
+                Maths.DecomposeMatrix(transformed, out Vector3 pos, out Quaternion rot, out Vector3 scale);
+                x.transform.localPosition = pos;
+                x.transform.localRotation = rot;
+                x.transform.localScale = scale;
+            });
+        }
+
+        public void EndDragObject(Transform transform)
+        {
+            List<Vector3> beginPositions = new List<Vector3>();
+            List<Quaternion> beginRotations = new List<Quaternion>();
+            List<Vector3> beginScales = new List<Vector3>();
+            List<Vector3> endPositions = new List<Vector3>();
+            List<Quaternion> endRotations = new List<Quaternion>();
+            List<Vector3> endScales = new List<Vector3>();
+
+            foreach (GameObject gobject in movedObjects)
+            {
+                beginPositions.Add(initPositions[gobject]);
+                beginRotations.Add(initRotation[gobject]);
+                beginScales.Add(initScale[gobject]);
+                endPositions.Add(gobject.transform.localPosition);
+                endRotations.Add(gobject.transform.localRotation);
+                endScales.Add(gobject.transform.localScale);
+            }
+
+            new CommandMoveObjects(movedObjects, beginPositions, beginRotations, beginScales, endPositions, endRotations, endScales).Submit();
+        }
+        #endregion
+
     }
 
 }
