@@ -42,7 +42,7 @@ public class GostManager : MonoBehaviour
         percents = new Dictionary<string, float>();
         percents.Add("Joleen", 0);
         percents.Add("Botlle", 0);
-        
+
 
     }
 
@@ -116,7 +116,7 @@ public class GostManager : MonoBehaviour
                 float percentJoleen = 0f;
                 float percentBottle = 0f;
                 int startFrame, endFrame;
-            
+
                 var gostJoleenHumanGoalControllers = gostJoleen.GetComponentsInChildren<HumanGoalController>();
 
                 var joleenHumanGoalControllers = joleen.GetComponentsInChildren<HumanGoalController>();
@@ -138,7 +138,7 @@ public class GostManager : MonoBehaviour
                     float weightcounterjol = 0f;
                     int counterJoleen = 0;
                     float joleenDiffSum = 0;
-         
+
 
                     #region tradi
                     if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
@@ -151,7 +151,7 @@ public class GostManager : MonoBehaviour
                             KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
                             start = startend.Key;
                             end = startend.Value;
-                        
+
                             if (gostAndOrigin.TryGetValue(joleenController.gameObject, out GameObject origin) && joleenController.Animation != null && i >= start && i <= end)
                             {
                                 //Debug.Log("Abe controller  = " + joleenController + " i is " + i + "start is " + start + " end is " + end);
@@ -205,7 +205,7 @@ public class GostManager : MonoBehaviour
                             KeyValuePair<int, int> startend = GetStartAndEndFrame(joleenController);
                             start = startend.Key;
                             end = startend.Value;
-                         
+
                             if (joleenController.Animation != null && i >= start && i <= end)
                             {
                                 diff = joleenHumanGoalControllers[counterJoleen].LocalFramePosition(i) - joleenController.LocalFramePosition(i);
@@ -471,10 +471,10 @@ public class GostManager : MonoBehaviour
                         bottleCollider.enabled = false;
                 }
             }
-            if(wheel == null)
+            if (wheel == null)
             {
                 wheel = GameObject.Find("tire.6C835C64.21");
-                if(wheel != null)
+                if (wheel != null)
                 {
                     wheelgost = Instantiate(wheel, wheel.transform.parent);
                     wheelgost.transform.position += Vector3.forward * 2;
@@ -484,7 +484,67 @@ public class GostManager : MonoBehaviour
         }
 
         areGostGenerated = true;
+        HideHierarchy(true);
     }
+
+    [ContextMenu("ShowHierarchy")]
+    public void ShowHierarchy()
+    {
+        HideHierarchy(false);
+    }
+
+    [ContextMenu("HideHierarchy")]
+    public void HideHierarchy()
+    {
+        HideHierarchy(true);
+    }
+
+
+    private void HideHierarchy(bool hide)
+    {
+        HideFlags hider;
+
+        if (hide)
+        {
+            hider = HideFlags.HideInHierarchy;
+        }
+        else
+        {
+            hider = HideFlags.None;
+        }
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.Contains("Tradi"))
+        {
+            GameObject world = GameObject.Find("World");
+            GameObject aj = world;
+            foreach (Transform item in world.transform)
+            {
+             
+                if (item.name.Contains("aj") && item.name.Contains("Clone"))
+                {
+                    aj = item.gameObject;
+                }
+                else if (!(item.name=="New Game Object"))
+                    item.gameObject.hideFlags = hider;
+
+                
+
+            }
+            foreach (Transform item in aj.transform)
+            {
+                if (!item.name.Contains("Hips"))
+                {
+                    item.gameObject.hideFlags = hider;
+                }
+            }
+            GameObject.Find("Main Camera").hideFlags = hider;
+            GameObject.Find("Directional Light").hideFlags = hider;
+            GameObject.Find("Game Manager").hideFlags = hider;
+           // GameObject.Find("AnimationManager").hideFlags = hider;
+            GameObject.Find("ActionCounter").hideFlags = hider;
+        
+        }
+    }
+
 
     private void DisbaledRecursiveCollider(Transform transform)
     {

@@ -157,7 +157,7 @@ public class AnimationWindows : EditorWindow
     {
         GlobalStateTradi.Animation.gostManager.CreateGost();
         isGhostAlreadyGen = true;
-        GenerateHierarchy(GlobalStateTradi.Animation.gostManager.gostJoleen);
+      //  GenerateHierarchy(GlobalStateTradi.Animation.gostManager.gostJoleen);
     }
 
     private void PauseAnimation()
@@ -199,7 +199,6 @@ public class AnimationWindows : EditorWindow
 
     private void GenerateHierarchyRecursive(Transform t)
     {
-        Debug.Log("Done");
         foreach (Transform item in t)
         {
             Button button = GenerateButton(item);
