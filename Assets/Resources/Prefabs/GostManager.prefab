@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 582309316043709833}
   - component: {fileID: 582309316043709832}
+  - component: {fileID: 1810356152}
   m_Layer: 0
   m_Name: GostManager
   m_TagString: Untagged
@@ -43,5 +44,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e159815f8f8997340bc83e998575e077, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gostJoleen: {fileID: 0}
+  bottle: {fileID: 0}
   gostMaterial: {fileID: 2100000, guid: 7b333695d4efe3a4b94b9e9f8e97d65d, type: 2}
-  delta: 1
+  joleen: {fileID: 0}
+  bottleInit: {fileID: 0}
+  delta: 50
+  bottleValue: 0
+  perfectThrow: {fileID: 0}
+  clipBottle: {fileID: 7400000, guid: 8885e658aa0b747409efbd9a341e0f4c, type: 2}
+  controllerGostBottle: {fileID: 9100000, guid: 5e8264b4ab151f7479d6c17ed0a211c3,
+    type: 2}
+  path: Assets/Resources/resultsPerBone.txt
+  areGostGenerated: 0
+  originPosJoleen: {x: 0, y: 0, z: 0}
+  timeSinceGost: 0
+--- !u!114 &1810356152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 582309316043709834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e46e2bc17aad794ca5302754bdcb8ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
