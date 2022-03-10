@@ -320,8 +320,6 @@ public class GostManager : MonoBehaviour
     {
         StreamWriter writer = new StreamWriter(path, true);
 
-        writer.WriteLine("session : " + System.DateTime.Now);
-
         writer.WriteLine("Joleen : ");
 
 
