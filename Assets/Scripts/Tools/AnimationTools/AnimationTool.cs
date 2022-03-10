@@ -202,10 +202,11 @@ namespace VRtist
                     HumanGoalController[] GoalController = controller.GetComponentsInChildren<HumanGoalController>();
                     for (int i = 0; i < GoalController.Length; i++)
                     {
-                        GoalController[i].ShowRenderer(true);
+                        GoalController[i].UseGoal(true);
                     }
                 }
             }
+            GlobalState.Instance.onGripWorldEvent.AddListener(OnGripWorld);
         }
 
         protected override void OnDisable()
@@ -218,10 +219,11 @@ namespace VRtist
                     HumanGoalController[] GoalController = controller.GetComponentsInChildren<HumanGoalController>();
                     for (int i = 0; i < GoalController.Length; i++)
                     {
-                        GoalController[i].ShowRenderer(false);
+                        GoalController[i].UseGoal(false);
                     }
                 }
             }
+            //GlobalState.Instance.onGripWorldEvent.RemoveListener(OnGripWorld);
         }
 
 
@@ -282,6 +284,12 @@ namespace VRtist
                     }
                 }
             }
+        }
+        public void OnGripWorld(bool state)
+        {
+            if (state && poseManip != null) EndPose();
+            if (state && curveManip != null) ReleaseCurve();
+            if (state && movedObjects.Count > 0) EndDragObject();
         }
 
         #region Ghost&Curve
@@ -400,18 +408,19 @@ namespace VRtist
         {
             poseManip = new PoseManipulation(controller.transform, controller.PathToRoot, mouthpiece, controller.RootController, PoseMode);
         }
-        public void DragPose(Transform mouthpiece)
+        public bool DragPose(Transform mouthpiece)
         {
+            if (poseManip == null) return false;
             poseManip.SetDestination(mouthpiece);
             poseManip.TrySolver();
+            return true;
         }
 
-        public void EndPose(Transform mouthpiece)
+        public void EndPose()
         {
             poseManip.GetCommand().Submit();
             if (GlobalState.Animation.autoKeyEnabled) new CommandAddKeyframes(poseManip.MeshController.gameObject, false).Submit();
             poseManip = null;
-
         }
 
         #endregion
@@ -419,7 +428,6 @@ namespace VRtist
         #region CurveMode
         public void StartDrag(GameObject gameObject, Transform mouthpiece)
         {
-
             LineRenderer line = gameObject.GetComponent<LineRenderer>();
             GameObject target = CurveManager.GetObjectFromCurve(gameObject);
             int frame = GetFrameFromPoint(line, mouthpiece.position);
@@ -434,17 +442,21 @@ namespace VRtist
             }
         }
 
-        internal void DragCurve(Transform mouthpiece)
+        internal bool DragCurve(Transform mouthpiece)
         {
+            if (curveManip == null) return false;
             scaleIndice = 1f;
             curveManip.DragCurve(mouthpiece, scaleIndice);
+            return true;
         }
 
-        public void ReleaseCurve(Transform mouthpiece)
+        public void ReleaseCurve()
         {
-            curveManip.ReleaseCurve(mouthpiece, scaleIndice);
+            curveManip.ReleaseCurve();
             curveManip = null;
         }
+
+
 
         private int GetFrameFromPoint(LineRenderer line, Vector3 point)
         {
@@ -517,7 +529,7 @@ namespace VRtist
             });
         }
 
-        public void EndDragObject(Transform transform)
+        public void EndDragObject()
         {
             List<Vector3> beginPositions = new List<Vector3>();
             List<Quaternion> beginRotations = new List<Quaternion>();
@@ -537,6 +549,7 @@ namespace VRtist
             }
 
             new CommandMoveObjects(movedObjects, beginPositions, beginRotations, beginScales, endPositions, endRotations, endScales).Submit();
+            movedObjects.Clear();
         }
         #endregion
 

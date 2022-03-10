@@ -21,12 +21,7 @@ namespace VRtist
             if (other.tag == "Curve" && !hoveredCurves.Contains(other.gameObject)) hoveredCurves.Add(other.gameObject);
             if (other.tag == "Goal" && other.TryGetComponent<HumanGoalController>(out HumanGoalController controller) && !hoveredGoals.Contains(controller))
             {
-                //if (hoveredGoals.Count > 0)
-                //{
-                //    HideJoint(hoveredGoals[0]);
-                //}
                 hoveredGoals.Add(controller);
-                //ShowJoint(hoveredGoals[0]);
             }
         }
 
@@ -39,7 +34,6 @@ namespace VRtist
             }
             if (!isGrip && other.tag == "Goal" && other.TryGetComponent<HumanGoalController>(out HumanGoalController controller) && hoveredGoals.Contains(controller))
             {
-                //HideJoint(controller);
                 hoveredGoals.Remove(controller);
             }
         }
@@ -80,17 +74,17 @@ namespace VRtist
                 {
                     if (isGrip)
                     {
-                        animator.EndPose(transform);
+                        animator.EndPose();
                         hoveredGoals.Clear();
                         isGrip = false;
                     }
                     if (dragedObject.Count > 0)
                     {
-                        dragedObject.ForEach(x => animator.EndDragObject(transform));
+                        dragedObject.ForEach(x => animator.EndDragObject());
                         dragedObject.Clear();
                     }
                 });
-            if (isGrip) animator.DragPose(transform);
+            if (isGrip) isGrip = animator.DragPose(transform);
             if (dragedObject.Count > 0)
             {
                 dragedObject.ForEach(x => animator.DragObject(transform));
@@ -134,13 +128,13 @@ namespace VRtist
                 {
                     if (isGrip)
                     {
-                        animator.ReleaseCurve(transform);
+                        animator.ReleaseCurve();
                         hoveredCurves.Clear();
                         animator.ShowGhost(false);
                         isGrip = false;
                     }
                 });
-            if (isGrip) animator.DragCurve(transform);
+            if (isGrip) isGrip = animator.DragCurve(transform);
 
             if (hoveredCurves.Count > 0 && hoveredCurves[0] == null)
             {
@@ -152,22 +146,6 @@ namespace VRtist
                 if (!isGrip) animator.DrawCurveGhost(hoveredCurves[0], transform.position);
                 else animator.DrawCurveGhost();
             }
-
-            //VRInput.ButtonEvent(VRInput.primaryController, CommonUsages.triggerButton, () =>
-            //{
-            //    if (hoveredCurves.Count > 0)
-            //    {
-            //        animator.SelectCurve(hoveredCurves[0], transform);
-            //    }
-            //    else
-            //    {
-            //        animator.ClearSelectCurves();
-            //    }
-            //},
-            //() =>
-            //{
-
-            //});
 
         }
 

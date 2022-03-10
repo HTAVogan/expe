@@ -85,7 +85,7 @@ namespace VRtist
                 controllers.Add(fullHierarchy[i].GetComponent<HumanGoalController>());
             }
 
-            if (mode == AnimationTool.PoseEditMode.FK)
+            if (mode == AnimationTool.PoseEditMode.FK || fullHierarchy.Count == 1)
             {
 
                 movedObjects = new List<GameObject>() { oTransform.gameObject };
@@ -138,10 +138,11 @@ namespace VRtist
             }
         }
 
+
         public void SetDestination(Transform mouthpiece)
         {
             Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initialMouthMatrix;
-            if (poseMode == AnimationTool.PoseEditMode.FK)
+            if (poseMode == AnimationTool.PoseEditMode.FK || fullHierarchy.Count == 1)
             {
 
                 Matrix4x4 transformed = InitialParentMatrixWorldToLocal *
@@ -162,7 +163,7 @@ namespace VRtist
 
         public bool TrySolver()
         {
-            if (poseMode == AnimationTool.PoseEditMode.FK)
+            if (poseMode == AnimationTool.PoseEditMode.FK || fullHierarchy.Count == 1)
             {
                 if (hierarchySize > 2)
                 {
