@@ -14,6 +14,7 @@ namespace VRtist
         private List<GameObject> hoveredCurves = new List<GameObject>();
         private List<HumanGoalController> hoveredGoals = new List<HumanGoalController>();
         private bool isGrip;
+        private List<GameObject> dragedObject = new List<GameObject>();
 
         public void OnTriggerEnter(Collider other)
         {
@@ -66,6 +67,14 @@ namespace VRtist
                         animator.StartPose(hoveredGoals[0], transform);
                         isGrip = true;
                     }
+                    foreach (GameObject gobject in Selection.SelectedObjects)
+                    {
+                        if (!gobject.TryGetComponent(out SkinMeshController controller))
+                        {
+                            animator.StartDragObject(gobject, transform);
+                            dragedObject.Add(gobject);
+                        }
+                    }
                 },
                 () =>
                 {
@@ -75,8 +84,17 @@ namespace VRtist
                         hoveredGoals.Clear();
                         isGrip = false;
                     }
+                    if (dragedObject.Count > 0)
+                    {
+                        dragedObject.ForEach(x => animator.EndDragObject(transform));
+                        dragedObject.Clear();
+                    }
                 });
             if (isGrip) animator.DragPose(transform);
+            if (dragedObject.Count > 0)
+            {
+                dragedObject.ForEach(x => animator.DragObject(transform));
+            }
             if (hoveredGoals.Count > 0 && hoveredGoals[0] == null) hoveredGoals.RemoveAt(0);
 
         }
