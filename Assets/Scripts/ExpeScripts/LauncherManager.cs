@@ -24,10 +24,10 @@ public class LauncherManager : MonoBehaviour
         }
         else
         {
-            Destroy(this);
+            DestroyImmediate(this);
         }
         Debug.Log("HEY I WENT THERE");
-        first = Random.Range(1, 4);
+        first = Random.Range(1, 4) ;
         scenes.Remove(first);
         second = Random.Range(scenes[0], scenes[1]);
 

@@ -183,7 +183,7 @@ namespace VRtist
             ContSlider = panel.Find("Tangents");
             SkeletonDisplay = panel.Find("Skeleton");
             OffsetLabel = panel.Find("OffsetValue");
-            SkeletonDisplay.GetComponent<UICheckbox>().Checked = GlobalState.Settings.DisplaySkeletons;
+            if (SkeletonDisplay != null) SkeletonDisplay.GetComponent<UICheckbox>().Checked = GlobalState.Settings.DisplaySkeletons;
 
             Offsetvalue = GlobalState.Settings.CurveForwardOffset;
             zoneSize = Mathf.RoundToInt(ZoneSlider.GetComponent<UISlider>().Value);

@@ -17,7 +17,7 @@ public class ButtonLauncherScene : MonoBehaviour
     }
     public void OnNextSceneClicked()
     {
-        LauncherManager launcher = gameManager.GetComponent<LauncherManager>();
+        LauncherManager launcher = LauncherManager.launcher;
         if(launcher != null)
         {
             if(launcher.first != 0)
