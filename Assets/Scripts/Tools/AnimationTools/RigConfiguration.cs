@@ -31,9 +31,9 @@ namespace VRtist
             Joint joint = JointsList.Find(x => x.Name == boneName);
             if (null != joint)
             {
-                HumanGoalController controller = transform.gameObject.AddComponent<HumanGoalController>();
                 SphereCollider collider = transform.gameObject.AddComponent<SphereCollider>();
                 collider.isTrigger = true;
+                HumanGoalController controller = transform.gameObject.AddComponent<HumanGoalController>();
                 controller.SetPathToRoot(rootController, path);
                 controller.stiffness = joint.stiffness;
                 controller.weight = joint.weight;   
@@ -44,13 +44,15 @@ namespace VRtist
 
                 if (joint.isGoal)
                 {
+                    controller.goalCollider = collider;
                     controller.tag = "Goal";
                     MeshFilter filter = transform.gameObject.AddComponent<MeshFilter>();
                     filter.mesh = mesh;
                     MeshRenderer renderer = transform.gameObject.AddComponent<MeshRenderer>();
                     renderer.material = new Material(material);
                     controller.MeshRenderer = renderer;
-                    controller.ShowRenderer(false);
+
+                    controller.UseGoal(false);
                 }
             }
             path.Add(transform);

@@ -19,6 +19,7 @@ namespace VRtist
         public Vector3 LowerAngleBound;
         public Vector3 UpperAngleBound;
         public Renderer MeshRenderer;
+        public Collider goalCollider;
 
         public void SetPathToRoot(SkinMeshController controller, List<Transform> path)
         {
@@ -165,9 +166,19 @@ namespace VRtist
             }
         }
 
-        public void ShowRenderer(bool state)
+        public void UseGoal(bool state)
+        {
+            ShowRenderer(state);
+            UseCollider(state);
+        }
+
+        private void ShowRenderer(bool state)
         {
             if (null != MeshRenderer) MeshRenderer.enabled = state;
+        }
+        private void UseCollider(bool state)
+        {
+            if (null != goalCollider) goalCollider.enabled = state;
         }
     }
 }

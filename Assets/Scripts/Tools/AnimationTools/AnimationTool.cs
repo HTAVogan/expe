@@ -202,10 +202,11 @@ namespace VRtist
                     HumanGoalController[] GoalController = controller.GetComponentsInChildren<HumanGoalController>();
                     for (int i = 0; i < GoalController.Length; i++)
                     {
-                        GoalController[i].ShowRenderer(true);
+                        GoalController[i].UseGoal(true);
                     }
                 }
             }
+            GlobalState.Instance.onGripWorldEvent.AddListener(OnGripWorld);
         }
 
         protected override void OnDisable()
@@ -218,10 +219,11 @@ namespace VRtist
                     HumanGoalController[] GoalController = controller.GetComponentsInChildren<HumanGoalController>();
                     for (int i = 0; i < GoalController.Length; i++)
                     {
-                        GoalController[i].ShowRenderer(false);
+                        GoalController[i].UseGoal(false);
                     }
                 }
             }
+            //GlobalState.Instance.onGripWorldEvent.RemoveListener(OnGripWorld);
         }
 
 
@@ -282,6 +284,12 @@ namespace VRtist
                     }
                 }
             }
+        }
+        public void OnGripWorld(bool state)
+        {
+            if (state && poseManip != null) EndPose();
+            if (state && curveManip != null) ReleaseCurve();
+            if (state && movedObjects.Count > 0) EndDragObject();
         }
 
         #region Ghost&Curve
@@ -400,18 +408,19 @@ namespace VRtist
         {
             poseManip = new PoseManipulation(controller.transform, controller.PathToRoot, mouthpiece, controller.RootController, PoseMode);
         }
-        public void DragPose(Transform mouthpiece)
+        public bool DragPose(Transform mouthpiece)
         {
+            if (poseManip == null) return false;
             poseManip.SetDestination(mouthpiece);
             poseManip.TrySolver();
+            return true;
         }
 
-        public void EndPose(Transform mouthpiece)
+        public void EndPose()
         {
             poseManip.GetCommand().Submit();
             if (GlobalState.Animation.autoKeyEnabled) new CommandAddKeyframes(poseManip.MeshController.gameObject, false).Submit();
             poseManip = null;
-
         }
 
         #endregion
@@ -419,7 +428,6 @@ namespace VRtist
         #region CurveMode
         public void StartDrag(GameObject gameObject, Transform mouthpiece)
         {
-
             LineRenderer line = gameObject.GetComponent<LineRenderer>();
             GameObject target = CurveManager.GetObjectFromCurve(gameObject);
             int frame = GetFrameFromPoint(line, mouthpiece.position);
@@ -434,17 +442,21 @@ namespace VRtist
             }
         }
 
-        internal void DragCurve(Transform mouthpiece)
+        internal bool DragCurve(Transform mouthpiece)
         {
+            if (curveManip == null) return false;
             scaleIndice = 1f;
             curveManip.DragCurve(mouthpiece, scaleIndice);
+            return true;
         }
 
-        public void ReleaseCurve(Transform mouthpiece)
+        public void ReleaseCurve()
         {
-            curveManip.ReleaseCurve(mouthpiece, scaleIndice);
+            curveManip.ReleaseCurve();
             curveManip = null;
         }
+
+
 
         private int GetFrameFromPoint(LineRenderer line, Vector3 point)
         {
@@ -481,6 +493,66 @@ namespace VRtist
         //}
 
         #endregion
+
+        #region DragObject
+
+        Matrix4x4 initMouthPieceWorldToLocal;
+        List<GameObject> movedObjects = new List<GameObject>();
+        Dictionary<GameObject, Matrix4x4> initParentMatrixLtW = new Dictionary<GameObject, Matrix4x4>();
+        Dictionary<GameObject, Matrix4x4> initParentMatrixWtL = new Dictionary<GameObject, Matrix4x4>();
+        Dictionary<GameObject, Vector3> initPositions = new Dictionary<GameObject, Vector3>();
+        Dictionary<GameObject, Quaternion> initRotation = new Dictionary<GameObject, Quaternion>();
+        Dictionary<GameObject, Vector3> initScale = new Dictionary<GameObject, Vector3>();
+
+        public void StartDragObject(GameObject gobject, Transform mouthpiece)
+        {
+            initMouthPieceWorldToLocal = mouthpiece.worldToLocalMatrix;
+
+            initParentMatrixLtW[gobject] = gobject.transform.parent.localToWorldMatrix;
+            initParentMatrixWtL[gobject] = gobject.transform.parent.worldToLocalMatrix;
+            initPositions[gobject] = gobject.transform.localPosition;
+            initRotation[gobject] = gobject.transform.localRotation;
+            initScale[gobject] = gobject.transform.localScale;
+            movedObjects.Add(gobject);
+        }
+
+        public void DragObject(Transform mouthpiece)
+        {
+            Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initMouthPieceWorldToLocal;
+            movedObjects.ForEach(x =>
+            {
+                Matrix4x4 transformed = initParentMatrixWtL[x] * transformation * initParentMatrixLtW[x] * Matrix4x4.TRS(initPositions[x], initRotation[x], initScale[x]);
+                Maths.DecomposeMatrix(transformed, out Vector3 pos, out Quaternion rot, out Vector3 scale);
+                x.transform.localPosition = pos;
+                x.transform.localRotation = rot;
+                x.transform.localScale = scale;
+            });
+        }
+
+        public void EndDragObject()
+        {
+            List<Vector3> beginPositions = new List<Vector3>();
+            List<Quaternion> beginRotations = new List<Quaternion>();
+            List<Vector3> beginScales = new List<Vector3>();
+            List<Vector3> endPositions = new List<Vector3>();
+            List<Quaternion> endRotations = new List<Quaternion>();
+            List<Vector3> endScales = new List<Vector3>();
+
+            foreach (GameObject gobject in movedObjects)
+            {
+                beginPositions.Add(initPositions[gobject]);
+                beginRotations.Add(initRotation[gobject]);
+                beginScales.Add(initScale[gobject]);
+                endPositions.Add(gobject.transform.localPosition);
+                endRotations.Add(gobject.transform.localRotation);
+                endScales.Add(gobject.transform.localScale);
+            }
+
+            new CommandMoveObjects(movedObjects, beginPositions, beginRotations, beginScales, endPositions, endRotations, endScales).Submit();
+            movedObjects.Clear();
+        }
+        #endregion
+
     }
 
 }
