@@ -40,6 +40,11 @@ namespace VRtist
             public Vector3 position;
             public Quaternion rotation;
             public int time;
+
+            public override string ToString()
+            {
+                return "position : " + position + " rotation : " + rotation + " time : " + time;
+            }
         }
 
         struct JobData
@@ -225,6 +230,8 @@ namespace VRtist
 
             };
 
+            //Debug.Log(currentState.ToString() + '\n' + desiredState.ToString());
+
             Delta_s_prime = new double[7, 1];
             for (int i = 0; i < 3; i++)
             {
@@ -313,7 +320,7 @@ namespace VRtist
                     ModifyTangents(curve, index, inTangent, outTangent);
                 }
             }
-
+            //Debug.Log("apply");
             return true;
         }
 

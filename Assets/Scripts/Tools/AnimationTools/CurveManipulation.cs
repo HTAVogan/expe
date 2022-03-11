@@ -19,6 +19,11 @@ namespace VRtist
             public Matrix4x4 InitialTRS;
             public float ScaleIndice;
             public TangentSimpleSolver Solver;
+
+            public Vector3 lastPosition;
+            public Vector3 lastRotation;
+            public Quaternion lastQRotation;
+            public Vector3 lastScale;
         }
         private ObjectData objectData;
 
@@ -169,20 +174,20 @@ namespace VRtist
                 transformation * objectData.InitialParentMatrix *
                 objectData.InitialTRS;
 
-            Maths.DecomposeMatrix(transformed, out Vector3 position, out Quaternion qrotation, out Vector3 scale);
-            Vector3 rotation = qrotation.eulerAngles;
-            scale *= scaleIndice;
+            Maths.DecomposeMatrix(transformed, out objectData.lastPosition, out objectData.lastQRotation, out objectData.lastScale);
+            objectData.lastRotation = objectData.lastQRotation.eulerAngles;
+            objectData.lastScale *= scaleIndice;
 
             Interpolation interpolation = GlobalState.Settings.interpolation;
-            AnimationKey posX = new AnimationKey(Frame, position.x, interpolation);
-            AnimationKey posY = new AnimationKey(Frame, position.y, interpolation);
-            AnimationKey posZ = new AnimationKey(Frame, position.z, interpolation);
-            AnimationKey rotX = new AnimationKey(Frame, rotation.x, interpolation);
-            AnimationKey rotY = new AnimationKey(Frame, rotation.y, interpolation);
-            AnimationKey rotZ = new AnimationKey(Frame, rotation.z, interpolation);
-            AnimationKey scalex = new AnimationKey(Frame, scale.z, interpolation);
-            AnimationKey scaley = new AnimationKey(Frame, scale.z, interpolation);
-            AnimationKey scalez = new AnimationKey(Frame, scale.z, interpolation);
+            AnimationKey posX = new AnimationKey(Frame, objectData.lastPosition.x, interpolation);
+            AnimationKey posY = new AnimationKey(Frame, objectData.lastPosition.y, interpolation);
+            AnimationKey posZ = new AnimationKey(Frame, objectData.lastPosition.z, interpolation);
+            AnimationKey rotX = new AnimationKey(Frame, objectData.lastRotation.x, interpolation);
+            AnimationKey rotY = new AnimationKey(Frame, objectData.lastRotation.y, interpolation);
+            AnimationKey rotZ = new AnimationKey(Frame, objectData.lastRotation.z, interpolation);
+            AnimationKey scalex = new AnimationKey(Frame, objectData.lastScale.z, interpolation);
+            AnimationKey scaley = new AnimationKey(Frame, objectData.lastScale.z, interpolation);
+            AnimationKey scalez = new AnimationKey(Frame, objectData.lastScale.z, interpolation);
 
             switch (manipulationMode)
             {
@@ -193,43 +198,35 @@ namespace VRtist
                     AddFilteredKeyframeZone(Target, posX, posY, posZ, rotX, rotY, rotZ, scalex, scaley, scalez);
                     break;
                 case AnimationTool.CurveEditMode.Segment:
-                    objectData.Solver = new TangentSimpleSolver(position, qrotation, GlobalState.Animation.GetObjectAnimation(Target), Frame, startFrame, endFrame, continuity);
+                    objectData.Solver = new TangentSimpleSolver(objectData.lastPosition, objectData.lastQRotation, GlobalState.Animation.GetObjectAnimation(Target), Frame, startFrame, endFrame, continuity);
                     objectData.Solver.TrySolver();
                     GlobalState.Animation.onChangeCurve.Invoke(Target, AnimatableProperty.PositionX);
                     break;
                 case AnimationTool.CurveEditMode.Tangents:
-                    objectData.Solver = new TangentSimpleSolver(position, qrotation, GlobalState.Animation.GetObjectAnimation(Target), Frame, startFrame, endFrame, continuity);
+                    objectData.Solver = new TangentSimpleSolver(objectData.lastPosition, objectData.lastQRotation, GlobalState.Animation.GetObjectAnimation(Target), Frame, startFrame, endFrame, continuity);
                     objectData.Solver.TrySolver();
                     GlobalState.Animation.onChangeCurve.Invoke(Target, AnimatableProperty.PositionX);
                     break;
             }
         }
 
-        public void ReleaseCurve(Transform mouthpiece, float scaleIndice)
+        public void ReleaseCurve()
         {
             if (isHuman) ReleaseHuman();
-            else ReleaseObject(mouthpiece, scaleIndice);
+            else ReleaseObject();
         }
 
-        private void ReleaseObject(Transform mouthpiece, float scaleIndice)
+        private void ReleaseObject()
         {
-            Matrix4x4 transformation = mouthpiece.localToWorldMatrix * initialMouthMatrix;
-            Matrix4x4 transformed = objectData.InitialParentMatrixWorldToLocal *
-                transformation * objectData.InitialParentMatrix *
-                objectData.InitialTRS;
-
-            Maths.DecomposeMatrix(transformed, out Vector3 position, out Quaternion qrotation, out Vector3 scale);
-            Vector3 rotation = qrotation.eulerAngles;
-            scale *= scaleIndice;
             GlobalState.Animation.SetObjectAnimations(Target, objectData.Animation);
             CommandGroup group = new CommandGroup("Add Keyframe");
             switch (manipulationMode)
             {
                 case AnimationTool.CurveEditMode.AddKeyframe:
-                    new CommandAddKeyframes(Target, Frame, position, rotation, scale).Submit();
+                    new CommandAddKeyframes(Target, Frame, objectData.lastPosition, objectData.lastRotation, objectData.lastScale).Submit();
                     break;
                 case AnimationTool.CurveEditMode.Zone:
-                    new CommandAddKeyframes(Target, Frame, startFrame, endFrame, position, rotation, scale).Submit();
+                    new CommandAddKeyframes(Target, Frame, startFrame, endFrame, objectData.lastPosition, objectData.lastRotation, objectData.lastScale).Submit();
                     break;
 
                 case AnimationTool.CurveEditMode.Segment:
@@ -267,6 +264,9 @@ namespace VRtist
             }
             group.Submit();
         }
+
+
+
 
         private void ReleaseHuman()
         {
