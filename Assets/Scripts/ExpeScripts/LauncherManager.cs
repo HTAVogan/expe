@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
+
+
 public class LauncherManager : MonoBehaviour
 {
     public int first;
@@ -12,9 +14,20 @@ public class LauncherManager : MonoBehaviour
     public string pathBones = "Assets/Resources/resultsPerBone.txt";
 
     public List<int> scenes = new List<int>() { 1, 2, 3 };
+    public static LauncherManager launcher;
     void Awake()
     {
-        first = Random.Range(1, 4);
+        if (launcher == null)
+        {
+            launcher = this;
+            Object.DontDestroyOnLoad(this);
+        }
+        else
+        {
+            DestroyImmediate(this);
+        }
+        Debug.Log("HEY I WENT THERE");
+        first = Random.Range(1, 4) ;
         scenes.Remove(first);
         second = Random.Range(scenes[0], scenes[1]);
 
